@@ -2,27 +2,34 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel de Alta Performance — Sincronizado na Nuvem</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Painel de Performance</title>
+  
+  <!-- Configurações de Web App para abrir em Tela Cheia no Celular -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Performance">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#121316">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
-      background-color: #0f172a;
-      color: #f8fafc;
+      background-color: #121316;
+      color: #e4e4e7;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
     .glass-card {
-      background: rgba(30, 41, 59, 0.75);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: #18191d;
+      border: 1px solid #27282f;
     }
     .custom-checkbox:checked + div {
-      background-color: #10b981;
-      border-color: #10b981;
+      background-color: #52637a;
+      border-color: #64748b;
     }
-    .timer-glow {
-      text-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
+    .timer-sober {
+      letter-spacing: -0.03em;
     }
   </style>
 </head>
@@ -30,70 +37,68 @@
 
   <!-- Notificação Toast Interna -->
   <div id="toastNotification" class="fixed bottom-5 right-5 z-50 hidden transform transition-all duration-300">
-    <div class="glass-card px-4 py-3 rounded-xl shadow-2xl border border-emerald-500/40 flex items-center gap-3">
-      <span id="toastIcon" class="text-lg">✅</span>
-      <span id="toastMessage" class="text-xs md:text-sm font-medium text-slate-100">Operação realizada!</span>
+    <div class="glass-card px-4 py-3 rounded-xl shadow-2xl border border-zinc-600 flex items-center gap-3">
+      <span id="toastIcon" class="text-base">✓</span>
+      <span id="toastMessage" class="text-xs md:text-sm font-medium text-zinc-200">Operação realizada.</span>
     </div>
   </div>
 
   <div class="max-w-7xl mx-auto space-y-6">
     
-    <!-- Cabeçalho com Status da Nuvem, Alertas e Backup -->
-    <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+    <!-- Cabeçalho Sóbrio -->
+    <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-zinc-800">
       <div>
         <div class="flex items-center gap-3">
-          <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-white">Painel de Hábitos, Horas & Questões</h1>
-          <span id="cloudStatusPill" onclick="toggleCloudConfig()" class="cursor-pointer text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700 hover:border-slate-500 transition flex items-center gap-1.5" title="Clique para configurar a sincronização com o Google Drive">
-            <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-slate-500"></span>
+          <h1 class="text-xl md:text-2xl font-semibold tracking-tight text-zinc-100">Painel de Hábitos & Estudo</h1>
+          <span id="cloudStatusPill" onclick="toggleCloudConfig()" class="cursor-pointer text-[11px] font-medium px-2.5 py-0.5 rounded-md bg-zinc-900 text-zinc-400 border border-zinc-800 hover:border-zinc-600 transition flex items-center gap-1.5" title="Configurar sincronização com o Google Drive">
+            <span id="cloudStatusDot" class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
             <span id="cloudStatusText">Nuvem Off</span>
           </span>
         </div>
-        <p class="text-slate-400 text-sm mt-1">Sincronização automática via Google Drive, dias programáveis, horas líquidas e histórico semanal.</p>
+        <p class="text-zinc-500 text-xs mt-1">Registro de consistência, tempo líquido de estudo e desempenho em questões.</p>
       </div>
       
       <div class="flex flex-wrap items-center gap-2">
         <input type="file" id="importFileInput" accept=".json,.csv" class="hidden" onchange="handleFileImport(event)">
         
-        <button onclick="toggleCloudConfig()" class="px-3 py-2 text-xs font-semibold text-teal-300 bg-teal-950/50 hover:bg-teal-900/60 rounded-xl transition border border-teal-700/50 flex items-center gap-1.5">
-          <span>☁️</span> Nuvem (Drive)
+        <button onclick="toggleCloudConfig()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-800">
+          Nuvem (Drive)
         </button>
 
-        <button id="notifBtn" onclick="requestDesktopNotifications()" class="px-3 py-2 text-xs font-medium text-amber-300 bg-amber-950/40 hover:bg-amber-900/50 rounded-xl transition border border-amber-700/50 flex items-center gap-1.5" title="Receber alertas do Pomodoro mesmo em outra aba">
-          <span>🔔</span> <span id="notifBtnText">Alertas</span>
+        <button id="notifBtn" onclick="requestDesktopNotifications()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-800">
+          <span id="notifBtnText">Alertas</span>
         </button>
 
-        <button onclick="exportJSON()" class="px-3 py-2 text-xs font-medium text-emerald-300 bg-emerald-950/50 hover:bg-emerald-900/60 rounded-xl transition border border-emerald-700/50 flex items-center gap-1.5">
-          <span>⬇️</span> JSON
+        <button onclick="exportJSON()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-800">
+          Exportar JSON
         </button>
 
-        <button onclick="exportCSV()" class="px-3 py-2 text-xs font-medium text-sky-300 bg-sky-950/50 hover:bg-sky-900/60 rounded-xl transition border border-sky-700/50 flex items-center gap-1.5">
-          <span>📊</span> CSV
+        <button onclick="exportCSV()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-800">
+          Exportar CSV
         </button>
 
-        <button onclick="document.getElementById('importFileInput').click()" class="px-3 py-2 text-xs font-medium text-indigo-300 bg-indigo-950/50 hover:bg-indigo-900/60 rounded-xl transition border border-indigo-700/50 flex items-center gap-1.5">
-          <span>⬆️</span> Importar
+        <button onclick="document.getElementById('importFileInput').click()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-800">
+          Importar
         </button>
 
-        <button onclick="archiveAndResetWeek()" class="px-3.5 py-2 text-xs font-semibold text-purple-200 bg-purple-900/60 hover:bg-purple-800/80 rounded-xl transition border border-purple-600/60 flex items-center gap-1.5">
-          <span>📦</span> Arquivar Semana
+        <button onclick="archiveAndResetWeek()" class="px-3 py-1.5 text-xs font-medium text-zinc-200 bg-slate-800 hover:bg-slate-700 rounded-lg transition border border-slate-700">
+          Arquivar Semana
         </button>
 
-        <button onclick="resetWeekOnly()" class="px-2.5 py-2 text-xs font-medium text-slate-400 bg-slate-800/80 hover:bg-rose-950/60 hover:text-rose-300 rounded-xl transition border border-slate-700" title="Zerar semana atual sem arquivar">
+        <button onclick="resetWeekOnly()" class="px-2.5 py-1.5 text-xs font-medium text-zinc-500 bg-zinc-900 hover:text-zinc-300 rounded-lg transition border border-zinc-800" title="Zerar semana atual sem arquivar">
           ↺
         </button>
       </div>
     </header>
 
     <!-- Gaveta de Configuração da Sincronização Google Drive -->
-    <section id="cloudConfigPanel" class="hidden glass-card p-5 rounded-2xl border border-teal-500/30 space-y-4">
+    <section id="cloudConfigPanel" class="hidden glass-card p-5 rounded-xl border border-zinc-700 space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
         <div>
-          <h2 class="text-sm md:text-base font-semibold text-white flex items-center gap-2">
-            <span>☁️</span> Sincronização Automática — Google Planilhas (Apps Script)
-          </h2>
-          <p class="text-xs text-slate-400">Cole abaixo a <b>URL do App da Web</b> gerada no seu Google Apps Script. O painel salvará automaticamente suas alterações na nuvem.</p>
+          <h2 class="text-sm font-semibold text-zinc-200">Sincronização — Google Planilhas (Apps Script)</h2>
+          <p class="text-xs text-zinc-500">Insira a URL do seu App da Web terminada em /exec.</p>
         </div>
-        <button onclick="toggleCloudConfig()" class="text-xs text-slate-400 hover:text-white self-end md:self-auto">Fechar ✕</button>
+        <button onclick="toggleCloudConfig()" class="text-xs text-zinc-400 hover:text-white self-end md:self-auto">Fechar ✕</button>
       </div>
 
       <div class="flex flex-col sm:flex-row gap-2">
@@ -101,85 +106,72 @@
           type="url" 
           id="gasUrlInput" 
           placeholder="https://script.google.com/macros/s/.../exec" 
-          class="flex-1 bg-slate-900/90 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500"
+          class="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-slate-500"
         >
-        <button onclick="saveGasUrl()" class="bg-teal-600 hover:bg-teal-500 text-white font-semibold px-4 py-2 rounded-xl text-xs transition">
+        <button onclick="saveGasUrl()" class="bg-slate-700 hover:bg-slate-600 text-zinc-100 font-medium px-4 py-2 rounded-lg text-xs transition">
           Salvar & Conectar
         </button>
       </div>
 
-      <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800 text-xs">
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-zinc-800/80 text-xs">
         <div class="flex flex-wrap items-center gap-2">
-          <button onclick="pullFromCloud(true)" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-sky-300 rounded-lg font-medium border border-slate-700 transition flex items-center gap-1.5">
-            <span>⬇️</span> Puxar dados da Planilha agora
+          <button onclick="pullFromCloud(true)" class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg border border-zinc-800 transition">
+            Puxar dados da Planilha agora
           </button>
-          <button onclick="pushToCloud(true)" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-300 rounded-lg font-medium border border-slate-700 transition flex items-center gap-1.5">
-            <span>⬆️</span> Forçar envio para a Planilha agora
+          <button onclick="pushToCloud(true)" class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg border border-zinc-800 transition">
+            Forçar envio para a Planilha
           </button>
-          <button onclick="disconnectCloud()" class="px-3 py-1.5 bg-slate-900 hover:bg-rose-950/50 text-slate-400 hover:text-rose-300 rounded-lg font-medium border border-slate-800 transition">
-            Desconectar URL
+          <button onclick="disconnectCloud()" class="px-3 py-1.5 bg-zinc-950 hover:bg-zinc-900 text-zinc-500 hover:text-zinc-300 rounded-lg border border-zinc-800 transition">
+            Desconectar
           </button>
         </div>
-        <span id="lastSyncTimestamp" class="text-[11px] text-slate-400">Última sincronização: Nunca</span>
+        <span id="lastSyncTimestamp" class="text-[11px] text-zinc-500">Última sincronização: Nunca</span>
       </div>
     </section>
 
-    <!-- Cards de Resumo (5 KPIs) -->
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-      <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
-        <div>
-          <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Sequência Ativa</span>
-          <p class="text-2xl font-bold text-amber-400 mt-1" id="streakCount">0 dias</p>
-          <span class="text-[11px] text-slate-500" id="streakSubtext">Meta: 80% do dia</span>
-        </div>
-        <div class="text-2xl">🔥</div>
+    <!-- Cards de Resumo (5 KPIs Sóbrios) -->
+    <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div class="glass-card p-4 rounded-xl">
+        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Sequência Ativa</span>
+        <p class="text-xl md:text-2xl font-semibold text-zinc-100 mt-1" id="streakCount">0 dias</p>
+        <span class="text-[11px] text-zinc-500" id="streakSubtext">Meta: 80% do dia</span>
       </div>
 
-      <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
-        <div>
-          <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Horas Líquidas (Dia)</span>
-          <p class="text-2xl font-bold text-indigo-400 mt-1" id="dailyStudyTime">0h 00m</p>
-          <span class="text-[11px] text-slate-500" id="weeklyStudyTime">Semana: 0h 00m</span>
-        </div>
-        <div class="text-2xl">⏱️</div>
+      <div class="glass-card p-4 rounded-xl">
+        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Horas Líquidas (Dia)</span>
+        <p class="text-xl md:text-2xl font-semibold text-slate-300 mt-1" id="dailyStudyTime">0h 00m</p>
+        <span class="text-[11px] text-zinc-500" id="weeklyStudyTime">Semana: 0h 00m</span>
       </div>
 
-      <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
-        <div>
-          <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Questões & Acerto</span>
-          <p class="text-2xl font-bold text-cyan-400 mt-1" id="dailyQuestionsKPI">0 (0%)</p>
-          <span class="text-[11px] text-slate-500" id="weeklyQuestionsKPI">Semana: 0 feitas (0%)</span>
-        </div>
-        <div class="text-2xl">📝</div>
+      <div class="glass-card p-4 rounded-xl">
+        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Questões & Acerto</span>
+        <p class="text-xl md:text-2xl font-semibold text-zinc-200 mt-1" id="dailyQuestionsKPI">0 (0%)</p>
+        <span class="text-[11px] text-zinc-500" id="weeklyQuestionsKPI">Semana: 0 (0%)</span>
       </div>
 
-      <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
-        <div>
-          <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Taxa da Semana</span>
-          <p class="text-2xl font-bold text-emerald-400 mt-1" id="weeklyRate">0%</p>
-          <span class="text-[11px] text-slate-500">Sobre dias programados</span>
-        </div>
-        <div class="text-2xl">📈</div>
+      <div class="glass-card p-4 rounded-xl">
+        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Taxa da Semana</span>
+        <p class="text-xl md:text-2xl font-semibold text-zinc-100 mt-1" id="weeklyRate">0%</p>
+        <span class="text-[11px] text-zinc-500">Dias programados</span>
       </div>
 
-      <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
-        <div>
-          <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Check-ins Feitos</span>
-          <p class="text-2xl font-bold text-sky-400 mt-1" id="totalCompleted">0 / 0</p>
-          <span class="text-[11px] text-slate-500">Metas programadas</span>
-        </div>
-        <div class="text-2xl">✅</div>
+      <div class="glass-card p-4 rounded-xl col-span-2 sm:col-span-1">
+        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Check-ins</span>
+        <p class="text-xl md:text-2xl font-semibold text-zinc-300 mt-1" id="totalCompleted">0 / 0</p>
+        <span class="text-[11px] text-zinc-500">Total concluído</span>
       </div>
     </section>
 
-    <!-- Seletor Global de Dia da Semana + Botão Modo Dia Corrido -->
-    <div class="glass-card p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
-      <div class="flex flex-wrap items-center gap-3">
-        <span class="text-sm font-medium text-slate-300">Dia em edição:</span>
-        <span id="selectedDayLabel" class="text-xs font-semibold px-2.5 py-1 bg-emerald-500/20 text-emerald-300 rounded-full">Hoje</span>
+    <!-- Seletor Global de Dia da Semana + Modo Dia Corrido -->
+    <div class="glass-card p-3.5 rounded-xl flex flex-col md:flex-row items-center justify-between gap-3">
+      <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-medium text-zinc-400">Dia selecionado:</span>
+          <span id="selectedDayLabel" class="text-xs font-semibold px-2.5 py-0.5 bg-zinc-800 text-zinc-200 rounded-md">Hoje</span>
+        </div>
         
-        <button id="busyDayBtn" onclick="toggleBusyDay()" class="text-xs font-semibold px-3 py-1.5 rounded-xl border transition flex items-center gap-1.5 bg-slate-800/90 text-slate-300 border-slate-700 hover:border-amber-500/50">
-          <span>⚡</span> <span id="busyDayBtnText">Modo Dia Corrido: OFF</span>
+        <button id="busyDayBtn" onclick="toggleBusyDay()" class="text-xs font-medium px-3 py-1 rounded-lg border transition bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-700">
+          <span id="busyDayBtnText">Modo Dia Corrido: OFF</span>
         </button>
       </div>
 
@@ -187,110 +179,104 @@
     </div>
 
     <!-- Barras Duplas: Meta de Horas Líquidas + Rastreador de Questões -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
       
       <!-- Card 1: Barra de Meta de Horas Líquidas -->
-      <section class="glass-card p-5 rounded-2xl flex flex-col justify-between space-y-4">
+      <section class="glass-card p-5 rounded-xl flex flex-col justify-between space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div class="flex items-center gap-2.5">
-            <span class="text-xl">🎯</span>
-            <div>
-              <div class="flex items-center gap-2">
-                <h2 class="text-sm md:text-base font-semibold text-white">Meta de Horas Líquidas</h2>
-                <span id="goalStatusBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">Em andamento</span>
-              </div>
-              <p class="text-[11px] text-slate-400 mt-0.5" id="goalRemainingText">Marca o hábito de estudo automaticamente ao atingir 100%.</p>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-sm font-semibold text-zinc-200">Meta de Horas Líquidas</h2>
+              <span id="goalStatusBadge" class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">Em andamento</span>
             </div>
+            <p class="text-[11px] text-zinc-500 mt-0.5" id="goalRemainingText">Marca o hábito vinculado ao atingir 100%.</p>
           </div>
 
           <div class="flex flex-wrap items-center gap-2 text-xs">
-            <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-lg">
-              <span class="text-slate-400">Padrão:</span>
-              <select id="dailyGoalSelect" onchange="updateDailyGoal(this.value)" class="bg-transparent text-indigo-300 font-semibold focus:outline-none cursor-pointer">
-                <option value="1" class="bg-slate-900">1h/dia</option>
-                <option value="2" class="bg-slate-900">2h/dia</option>
-                <option value="3" class="bg-slate-900">3h/dia</option>
-                <option value="4" class="bg-slate-900">4h/dia</option>
-                <option value="5" class="bg-slate-900">5h/dia</option>
-                <option value="6" class="bg-slate-900">6h/dia</option>
-                <option value="8" class="bg-slate-900">8h/dia</option>
+            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg">
+              <span class="text-zinc-500">Meta:</span>
+              <select id="dailyGoalSelect" onchange="updateDailyGoal(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer">
+                <option value="1" class="bg-zinc-900">1h/dia</option>
+                <option value="2" class="bg-zinc-900">2h/dia</option>
+                <option value="3" class="bg-zinc-900">3h/dia</option>
+                <option value="4" class="bg-zinc-900">4h/dia</option>
+                <option value="5" class="bg-zinc-900">5h/dia</option>
+                <option value="6" class="bg-zinc-900">6h/dia</option>
+                <option value="8" class="bg-zinc-900">8h/dia</option>
               </select>
             </div>
-            <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-lg">
-              <span class="text-slate-400">Auto:</span>
-              <select id="linkedHabitSelect" onchange="updateLinkedHabit(this.value)" class="bg-transparent text-emerald-300 font-semibold focus:outline-none cursor-pointer max-w-[130px] truncate"></select>
+            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg">
+              <span class="text-zinc-500">Auto:</span>
+              <select id="linkedHabitSelect" onchange="updateLinkedHabit(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer max-w-[120px] truncate"></select>
             </div>
           </div>
         </div>
 
         <div class="space-y-1.5">
-          <div class="flex justify-between text-xs font-medium">
-            <span id="goalProgressFraction" class="text-slate-300">0h 00m de 4h 00m</span>
-            <span id="goalProgressPercent" class="text-indigo-400 font-bold">0%</span>
+          <div class="flex justify-between text-xs">
+            <span id="goalProgressFraction" class="text-zinc-400">0h 00m de 4h 00m</span>
+            <span id="goalProgressPercent" class="text-zinc-200 font-semibold">0%</span>
           </div>
-          <div class="w-full h-3.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
-            <div id="goalProgressBar" class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-indigo-500 to-indigo-400" style="width: 0%"></div>
+          <div class="w-full h-2.5 bg-zinc-950 rounded-full overflow-hidden border border-zinc-800">
+            <div id="goalProgressBar" class="h-full rounded-full transition-all duration-500 bg-slate-500" style="width: 0%"></div>
           </div>
         </div>
       </section>
 
       <!-- Card 2: Rastreador de Questões & Taxa de Acerto -->
-      <section class="glass-card p-5 rounded-2xl flex flex-col justify-between space-y-4">
+      <section class="glass-card p-5 rounded-xl flex flex-col justify-between space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div class="flex items-center gap-2.5">
-            <span class="text-xl">📝</span>
-            <div>
-              <div class="flex items-center gap-2">
-                <h2 class="text-sm md:text-base font-semibold text-white">Meta de Questões & Taxa de Acerto</h2>
-                <span id="qAccuracyBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">Acerto: 0%</span>
-              </div>
-              <p class="text-[11px] text-slate-400 mt-0.5">Registre suas baterias de questões e acompanhe sua precisão.</p>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-sm font-semibold text-zinc-200">Questões & Taxa de Acerto</h2>
+              <span id="qAccuracyBadge" class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-300">Acerto: 0%</span>
             </div>
+            <p class="text-[11px] text-zinc-500 mt-0.5">Registre os blocos resolvidos no dia.</p>
           </div>
 
           <div class="flex flex-wrap items-center gap-2 text-xs">
-            <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-lg">
-              <span class="text-slate-400">Meta:</span>
-              <select id="dailyQGoalSelect" onchange="updateDailyQuestionGoal(this.value)" class="bg-transparent text-cyan-300 font-semibold focus:outline-none cursor-pointer">
-                <option value="10" class="bg-slate-900">10/dia</option>
-                <option value="15" class="bg-slate-900">15/dia</option>
-                <option value="20" class="bg-slate-900">20/dia</option>
-                <option value="30" class="bg-slate-900">30/dia</option>
-                <option value="40" class="bg-slate-900">40/dia</option>
-                <option value="50" class="bg-slate-900">50/dia</option>
-                <option value="80" class="bg-slate-900">80/dia</option>
+            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg">
+              <span class="text-zinc-500">Meta:</span>
+              <select id="dailyQGoalSelect" onchange="updateDailyQuestionGoal(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer">
+                <option value="10" class="bg-zinc-900">10/dia</option>
+                <option value="15" class="bg-zinc-900">15/dia</option>
+                <option value="20" class="bg-zinc-900">20/dia</option>
+                <option value="30" class="bg-zinc-900">30/dia</option>
+                <option value="40" class="bg-zinc-900">40/dia</option>
+                <option value="50" class="bg-zinc-900">50/dia</option>
+                <option value="80" class="bg-zinc-900">80/dia</option>
               </select>
             </div>
-            <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-lg">
-              <span class="text-slate-400">Auto:</span>
-              <select id="linkedQHabitSelect" onchange="updateLinkedQuestionHabit(this.value)" class="bg-transparent text-emerald-300 font-semibold focus:outline-none cursor-pointer max-w-[130px] truncate"></select>
+            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg">
+              <span class="text-zinc-500">Auto:</span>
+              <select id="linkedQHabitSelect" onchange="updateLinkedQuestionHabit(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer max-w-[120px] truncate"></select>
             </div>
           </div>
         </div>
 
         <div class="space-y-1.5">
-          <div class="flex justify-between text-xs font-medium">
-            <span id="qProgressFraction" class="text-slate-300">0 de 30 questões</span>
-            <span id="qProgressPercent" class="text-cyan-400 font-bold">0%</span>
+          <div class="flex justify-between text-xs">
+            <span id="qProgressFraction" class="text-zinc-400">0 de 30 questões</span>
+            <span id="qProgressPercent" class="text-zinc-200 font-semibold">0%</span>
           </div>
-          <div class="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
-            <div id="qProgressBar" class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-cyan-500 to-sky-400" style="width: 0%"></div>
+          <div class="w-full h-2.5 bg-zinc-950 rounded-full overflow-hidden border border-zinc-800">
+            <div id="qProgressBar" class="h-full rounded-full transition-all duration-500 bg-zinc-400" style="width: 0%"></div>
           </div>
         </div>
 
         <form onsubmit="addQuestionBatch(event)" class="flex flex-wrap items-center gap-2 pt-1">
-          <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1.5 flex-1 min-w-[110px]">
-            <span class="text-[11px] text-slate-400">Feitas:</span>
-            <input type="number" id="qSolvedInput" min="1" max="500" placeholder="Ex: 20" required class="w-full bg-transparent text-xs text-white font-semibold focus:outline-none">
+          <div class="flex items-center gap-1.5 bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 flex-1 min-w-[100px]">
+            <span class="text-[11px] text-zinc-500">Feitas:</span>
+            <input type="number" id="qSolvedInput" min="1" max="500" placeholder="20" required class="w-full bg-transparent text-xs text-zinc-200 font-medium focus:outline-none">
           </div>
-          <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1.5 flex-1 min-w-[110px]">
-            <span class="text-[11px] text-slate-400">Acertos:</span>
-            <input type="number" id="qCorrectInput" min="0" max="500" placeholder="Ex: 16" required class="w-full bg-transparent text-xs text-emerald-300 font-semibold focus:outline-none">
+          <div class="flex items-center gap-1.5 bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 flex-1 min-w-[100px]">
+            <span class="text-[11px] text-zinc-500">Acertos:</span>
+            <input type="number" id="qCorrectInput" min="0" max="500" placeholder="16" required class="w-full bg-transparent text-xs text-zinc-200 font-medium focus:outline-none">
           </div>
-          <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold px-3.5 py-1.5 rounded-xl text-xs transition">
-            + Somar Bloco
+          <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-zinc-100 font-medium px-3 py-1.5 rounded-lg text-xs transition">
+            + Registrar
           </button>
-          <button type="button" onclick="clearTodayQuestions()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 rounded-xl text-xs transition border border-slate-700">
+          <button type="button" onclick="clearTodayQuestions()" class="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 rounded-lg text-xs transition border border-zinc-800">
             Zerar
           </button>
         </form>
@@ -299,79 +285,79 @@
     </div>
 
     <!-- Área Principal: Pomodoro + Checklist + Gráfico -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
       
       <!-- Coluna 1: Cronômetro Pomodoro -->
-      <div class="lg:col-span-4 glass-card p-6 rounded-2xl flex flex-col justify-between space-y-5">
+      <div class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between space-y-5">
         <div>
           <div class="flex items-center justify-between mb-3">
-            <h2 class="text-lg font-semibold text-white">Cronômetro Pomodoro</h2>
-            <span id="timerStatusBadge" class="text-xs font-semibold px-2.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full">Modo Foco</span>
+            <h2 class="text-sm font-semibold text-zinc-200">Cronômetro Pomodoro</h2>
+            <span id="timerStatusBadge" class="text-[11px] font-medium px-2 py-0.5 bg-zinc-800 text-zinc-300 rounded">Modo Foco</span>
           </div>
 
-          <div class="grid grid-cols-3 gap-1.5 bg-slate-900/80 p-1 rounded-xl border border-slate-800 mb-6">
-            <button onclick="setTimerMode('focus25')" id="btn-focus25" class="py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white transition">Foco 25m</button>
-            <button onclick="setTimerMode('focus50')" id="btn-focus50" class="py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Foco 50m</button>
-            <button onclick="setTimerMode('break')" id="btn-break" class="py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Pausa 5m</button>
+          <div class="grid grid-cols-3 gap-1 bg-zinc-950 p-1 rounded-lg border border-zinc-800 mb-5">
+            <button onclick="setTimerMode('focus25')" id="btn-focus25" class="py-1.5 text-xs font-medium rounded-md bg-slate-700 text-zinc-100 transition">Foco 25m</button>
+            <button onclick="setTimerMode('focus50')" id="btn-focus50" class="py-1.5 text-xs font-medium rounded-md text-zinc-500 hover:text-zinc-300 transition">Foco 50m</button>
+            <button onclick="setTimerMode('break')" id="btn-break" class="py-1.5 text-xs font-medium rounded-md text-zinc-500 hover:text-zinc-300 transition">Pausa 5m</button>
           </div>
 
-          <div class="text-center py-6 bg-slate-900/60 rounded-2xl border border-slate-800/80 mb-5">
-            <div id="timerDisplay" class="text-6xl font-extrabold tracking-tight text-white font-mono timer-glow">25:00</div>
-            <p class="text-xs text-slate-400 mt-2" id="timerSubtext">Cada segundo em Foco soma nas Horas Líquidas</p>
+          <div class="text-center py-7 bg-zinc-950 rounded-xl border border-zinc-800/80 mb-5">
+            <div id="timerDisplay" class="text-5xl md:text-6xl font-bold text-zinc-100 font-mono timer-sober">25:00</div>
+            <p class="text-[11px] text-zinc-500 mt-2" id="timerSubtext">Tempo em Foco contabilizado nas Horas Líquidas</p>
           </div>
 
           <div class="flex gap-2">
-            <button onclick="toggleTimer()" id="startPauseBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl text-sm transition shadow-lg shadow-emerald-900/30">
+            <button onclick="toggleTimer()" id="startPauseBtn" class="flex-1 bg-slate-700 hover:bg-slate-600 text-zinc-100 font-medium py-2.5 rounded-lg text-xs transition">
               ▶ Iniciar Foco
             </button>
-            <button onclick="resetTimer()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl text-sm transition border border-slate-700">
+            <button onclick="resetTimer()" class="px-3.5 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 rounded-lg text-xs transition border border-zinc-800">
               ↺
             </button>
           </div>
         </div>
 
-        <div class="pt-4 border-t border-slate-800">
-          <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
-            <span>Ajuste manual no dia selecionado:</span>
-            <span id="PomodoroCyclesToday" class="font-semibold text-indigo-400">0 blocos hoje</span>
+        <div class="pt-4 border-t border-zinc-800/80">
+          <div class="flex items-center justify-between text-[11px] text-zinc-500 mb-2">
+            <span>Ajuste manual de tempo:</span>
+            <span id="PomodoroCyclesToday" class="font-medium text-zinc-400">0 blocos hoje</span>
           </div>
           <div class="grid grid-cols-2 gap-2">
-            <button onclick="adjustStudyTime(-900)" class="py-1.5 px-3 bg-slate-800/80 hover:bg-rose-950/50 hover:text-rose-300 text-slate-300 rounded-lg text-xs font-medium border border-slate-700/70 transition">
+            <button onclick="adjustStudyTime(-900)" class="py-1.5 px-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 rounded-lg text-xs border border-zinc-800 transition">
               - 15 min
             </button>
-            <button onclick="adjustStudyTime(900)" class="py-1.5 px-3 bg-slate-800/80 hover:bg-indigo-950/60 hover:text-indigo-300 text-slate-300 rounded-lg text-xs font-medium border border-slate-700/70 transition">
-              + 15 min (Externo)
+            <button onclick="adjustStudyTime(900)" class="py-1.5 px-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg text-xs border border-zinc-800 transition">
+              + 15 min
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Coluna 2: Checklist Diário com Dias Programáveis -->
-      <div class="lg:col-span-4 glass-card p-6 rounded-2xl flex flex-col justify-between space-y-4">
+      <!-- Coluna 2: Checklist Diário -->
+      <div class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between space-y-4">
         <div>
           <div class="flex items-center justify-between mb-1">
-            <h2 class="text-lg font-semibold text-white">Metas do Dia</h2>
-            <span class="text-xs text-emerald-400 font-semibold" id="dailyProgressText">0/0 programadas</span>
+            <h2 class="text-sm font-semibold text-zinc-200">Metas do Dia</h2>
+            <span class="text-xs text-zinc-400 font-medium" id="dailyProgressText">0/0 programadas</span>
           </div>
-          <p class="text-[11px] text-slate-400 mb-4">Clique em <b>📅 Dias</b> para definir quais dias da semana cada hábito é obrigatório.</p>
+          <p class="text-[11px] text-zinc-500 mb-3">Toque em <b>Dias</b> para definir a frequência semanal de cada item.</p>
 
-          <div id="habitList" class="space-y-2.5 max-h-72 overflow-y-auto pr-1"></div>
+          <div id="habitList" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
         </div>
 
-        <form onsubmit="addHabit(event)" class="pt-3 border-t border-slate-800 space-y-2.5">
+        <form onsubmit="addHabit(event)" class="pt-3 border-t border-zinc-800/80 space-y-2.5">
           <div class="flex gap-2">
             <input 
               type="text" 
               id="newHabitInput" 
-              placeholder="Novo hábito (ex: Treino, Simulado)..." 
+              placeholder="Novo hábito..." 
               required
-              class="flex-1 bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              class="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-slate-500"
             >
-            <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3.5 py-2 rounded-xl text-xs transition">
+            <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-zinc-100 font-medium px-3.5 py-2 rounded-lg text-xs transition">
               + Criar
             </button>
           </div>
-          <div class="flex items-center justify-between gap-1 text-[11px] text-slate-400">
+          <div class="flex items-center justify-between gap-1 text-[11px] text-zinc-500">
             <span>Dias ativos:</span>
             <div class="flex gap-1" id="newHabitDaysPicker"></div>
           </div>
@@ -379,10 +365,10 @@
       </div>
 
       <!-- Coluna 3: Gráfico Combinado -->
-      <div class="lg:col-span-4 glass-card p-6 rounded-2xl flex flex-col justify-between">
+      <div class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between">
         <div>
-          <h2 class="text-lg font-semibold text-white">Curva Semanal Multidimensional</h2>
-          <p class="text-xs text-slate-400 mb-4">Verde: Hábitos (%) | Azul: Acerto Questões (%) | Barras: Estudo (h)</p>
+          <h2 class="text-sm font-semibold text-zinc-200"> Evolução Semanal</h2>
+          <p class="text-[11px] text-zinc-500 mb-4">Linha contínua: Hábitos (%) | Tracejada: Acerto (%) | Barras: Estudo (h)</p>
         </div>
         <div class="relative h-64 md:h-72 w-full">
           <canvas id="weeklyChart"></canvas>
@@ -392,28 +378,26 @@
     </div>
 
     <!-- Matriz Completa da Semana -->
-    <section class="glass-card p-6 rounded-2xl overflow-x-auto">
+    <section class="glass-card p-5 rounded-xl overflow-x-auto">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
         <div>
-          <h2 class="text-lg font-semibold text-white">Visão Panorâmica da Semana</h2>
-          <p class="text-xs text-slate-400">Legenda: <span class="text-emerald-400 font-bold">✓</span> Concluído | <span class="text-slate-400 font-bold">·</span> Pendente | <span class="text-slate-600 font-mono">—</span> Folga Programada</p>
+          <h2 class="text-sm font-semibold text-zinc-200">Quadro Semanal</h2>
+          <p class="text-[11px] text-zinc-500">Legenda: <span class="text-zinc-200 font-bold">✓</span> Concluído | <span class="text-zinc-500 font-bold">·</span> Pendente | <span class="text-zinc-600 font-mono">—</span> Folga Programada</p>
         </div>
       </div>
-      <table class="w-full text-left border-collapse min-w-[650px]">
+      <table class="w-full text-left border-collapse min-w-[620px]">
         <thead>
-          <tr class="border-b border-slate-800 text-xs uppercase text-slate-400" id="matrixHeaderRow"></tr>
+          <tr class="border-b border-zinc-800 text-[11px] uppercase text-zinc-500" id="matrixHeaderRow"></tr>
         </thead>
-        <tbody id="matrixBody" class="divide-y divide-slate-800/60 text-sm"></tbody>
+        <tbody id="matrixBody" class="divide-y divide-zinc-800/60 text-xs"></tbody>
       </table>
     </section>
 
     <!-- Histórico de Semanas Arquivadas -->
-    <section class="glass-card p-6 rounded-2xl overflow-x-auto">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <h2 class="text-lg font-semibold text-white">📦 Histórico de Semanas Arquivadas</h2>
-          <p class="text-xs text-slate-400">Histórico consolidado salvo localmente e sincronizado com sua Planilha do Google Drive.</p>
-        </div>
+    <section class="glass-card p-5 rounded-xl overflow-x-auto">
+      <div class="mb-3">
+        <h2 class="text-sm font-semibold text-zinc-200">Histórico de Semanas Arquivadas</h2>
+        <p class="text-[11px] text-zinc-500">Registros anteriores salvos localmente e na planilha.</p>
       </div>
       <div id="archiveContainer"></div>
     </section>
@@ -454,24 +438,21 @@
     let busyDays = JSON.parse(localStorage.getItem('habitBusyDays')) || [false, false, false, false, false, false, false];
     let archivedWeeks = JSON.parse(localStorage.getItem('habitArchivedWeeks')) || [];
 
-    // Configuração Google Apps Script (Nuvem)
     let gasWebAppUrl = localStorage.getItem('habitGasWebAppUrl') || '';
     let lastCloudSync = localStorage.getItem('habitLastCloudSync') || '';
     let cloudSyncTimeout = null;
 
-    // Estado UI
     let editingScheduleHabitId = null;
     let newHabitSchedule = [true, true, true, true, true, true, true];
     let chartInstance = null;
 
-    // Estado Pomodoro
     let timerMode = 'focus25';
     let timeLeft = 25 * 60;
     let timerInterval = null;
     let isRunning = false;
     let toastTimeout = null;
 
-    function showToast(message, icon = '✅') {
+    function showToast(message, icon = '✓') {
       const toast = document.getElementById('toastNotification');
       document.getElementById('toastMessage').textContent = message;
       document.getElementById('toastIcon').textContent = icon;
@@ -479,7 +460,7 @@
       clearTimeout(toastTimeout);
       toastTimeout = setTimeout(() => {
         toast.classList.add('hidden');
-      }, 3800);
+      }, 3500);
     }
 
     function buildFullPayload() {
@@ -541,10 +522,6 @@
       }
     }
 
-    // ==========================================
-    // SINCRONIZAÇÃO COM GOOGLE DRIVE (APPS SCRIPT)
-    // ==========================================
-
     function toggleCloudConfig() {
       const panel = document.getElementById('cloudConfigPanel');
       panel.classList.toggle('hidden');
@@ -562,20 +539,20 @@
       }
 
       if (!gasWebAppUrl) {
-        dot.className = 'w-2 h-2 rounded-full bg-slate-500';
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-zinc-600';
         text.textContent = 'Nuvem Off';
         return;
       }
 
       if (state === 'syncing') {
-        dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping';
         text.textContent = customText || 'Sincronizando...';
       } else if (state === 'ok') {
-        dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
-        text.textContent = customText || 'Drive Sincronizado';
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500';
+        text.textContent = customText || 'Sincronizado';
       } else if (state === 'error') {
-        dot.className = 'w-2 h-2 rounded-full bg-rose-500';
-        text.textContent = customText || 'Erro na Nuvem';
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-500';
+        text.textContent = customText || 'Erro Nuvem';
       }
     }
 
@@ -583,12 +560,12 @@
       const input = document.getElementById('gasUrlInput');
       const url = (input.value || '').trim();
       if (!url.startsWith('https://script.google.com/')) {
-        showToast('Insira uma URL válida do Google Apps Script (terminada em /exec).', '⚠️');
+        showToast('Insira uma URL válida do Google Apps Script.', '!');
         return;
       }
       gasWebAppUrl = url;
       localStorage.setItem('habitGasWebAppUrl', gasWebAppUrl);
-      showToast('URL conectada! Verificando dados na sua planilha...', '☁️');
+      showToast('Conectado! Buscando dados da planilha...');
       pullFromCloud(true);
     }
 
@@ -596,7 +573,7 @@
       gasWebAppUrl = '';
       localStorage.removeItem('habitGasWebAppUrl');
       updateCloudStatusUI('off');
-      showToast('Sincronização em nuvem desconectada.', '☁️');
+      showToast('Nuvem desconectada.');
     }
 
     function scheduleCloudPush() {
@@ -609,14 +586,10 @@
     }
 
     async function pushToCloud(showNotification = false) {
-      if (!gasWebAppUrl) {
-        if (showNotification) showToast('Configure a URL do Google Apps Script primeiro.', '⚠️');
-        return;
-      }
+      if (!gasWebAppUrl) return;
       updateCloudStatusUI('syncing', 'Enviando...');
       try {
         const payload = buildFullPayload();
-        // Usa text/plain para evitar bloqueio de preflight CORS no Google Apps Script
         const response = await fetch(gasWebAppUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -628,14 +601,13 @@
           lastCloudSync = `${new Date().toLocaleDateString('pt-BR')} às ${timeStr}`;
           localStorage.setItem('habitLastCloudSync', lastCloudSync);
           updateCloudStatusUI('ok', `Salvo (${timeStr})`);
-          if (showNotification) showToast('Dados enviados para a Planilha Google com sucesso!', '☁️');
+          if (showNotification) showToast('Dados salvos na planilha.');
         } else {
-          throw new Error(resData.message || 'Resposta inesperada');
+          throw new Error('Erro ao salvar');
         }
       } catch (err) {
-        console.error('Erro ao enviar para nuvem:', err);
-        updateCloudStatusUI('error', 'Falha ao enviar');
-        if (showNotification) showToast('Não foi possível enviar para a Planilha. Verifique a URL e permissão.', '❌');
+        updateCloudStatusUI('error', 'Falha no envio');
+        if (showNotification) showToast('Falha ao enviar para a planilha.', '!');
       }
     }
 
@@ -653,49 +625,31 @@
           lastCloudSync = `${new Date().toLocaleDateString('pt-BR')} às ${timeStr}`;
           localStorage.setItem('habitLastCloudSync', lastCloudSync);
           updateCloudStatusUI('ok', `Sincronizado (${timeStr})`);
-          if (showNotification) showToast('Dados carregados da Planilha Google!', '☁️');
+          if (showNotification) showToast('Dados atualizados a partir da planilha.');
         } else if (resData.status === 'ok' && !resData.hasData) {
-          // Planilha nova/vazia: envia os dados locais atuais para inicializar a planilha
           await pushToCloud(showNotification);
         }
       } catch (err) {
-        console.error('Erro ao puxar da nuvem:', err);
-        updateCloudStatusUI('error', 'Modo Offline');
-        if (showNotification) showToast('Erro ao carregar da Planilha. Usando dados locais.', '⚠️');
+        updateCloudStatusUI('error', 'Offline');
+        if (showNotification) showToast('Sem conexão com a planilha. Usando dados locais.', '!');
       }
     }
 
-    // ==========================================
-    // NOTIFICAÇÕES NATIVAS DA ÁREA DE TRABALHO
-    // ==========================================
-
     function updateNotificationButtonUI() {
       const btnText = document.getElementById('notifBtnText');
-      const btn = document.getElementById('notifBtn');
       if (!('Notification' in window)) {
         btnText.textContent = 'Sem Suporte';
         return;
       }
-      if (Notification.permission === 'granted') {
-        btnText.textContent = 'Alertas ON';
-        btn.className = 'px-3 py-2 text-xs font-medium text-emerald-300 bg-emerald-950/40 rounded-xl border border-emerald-700/50 flex items-center gap-1.5';
-      } else {
-        btnText.textContent = 'Alertas';
-      }
+      btnText.textContent = Notification.permission === 'granted' ? 'Alertas ON' : 'Alertas';
     }
 
     function requestDesktopNotifications() {
-      if (!('Notification' in window)) {
-        showToast('Seu navegador não suporta notificações nativas.', '⚠️');
-        return;
-      }
+      if (!('Notification' in window)) return;
       Notification.requestPermission().then(permission => {
         updateNotificationButtonUI();
         if (permission === 'granted') {
-          showToast('Notificações ativadas!', '🔔');
-          new Notification('Painel Sincronizado', {
-            body: 'Você será avisado quando seus ciclos Pomodoro terminarem!'
-          });
+          showToast('Notificações ativadas.');
         }
       });
     }
@@ -705,10 +659,6 @@
         try { new Notification(title, { body }); } catch (e) {}
       }
     }
-
-    // ==========================================
-    // METAS DINÂMICAS & MODO DIA CORRIDO
-    // ==========================================
 
     function getEffectiveStudyGoalSeconds(dayIdx) {
       const factor = busyDays[dayIdx] ? 0.5 : 1;
@@ -722,21 +672,11 @@
 
     function toggleBusyDay() {
       busyDays[selectedDayIndex] = !busyDays[selectedDayIndex];
-      const isBusy = busyDays[selectedDayIndex];
       checkAutoCompleteStudyHabit(selectedDayIndex);
       checkAutoCompleteQuestionHabit(selectedDayIndex);
       saveState();
-      showToast(
-        isBusy 
-          ? `Modo Dia Corrido ativado para ${DAYS[selectedDayIndex]}! Metas reduzidas pela metade.` 
-          : `Modo Dia Corrido desativado para ${DAYS[selectedDayIndex]}.`,
-        '⚡'
-      );
+      showToast(busyDays[selectedDayIndex] ? `Modo Dia Corrido ativado (${DAYS[selectedDayIndex]}).` : 'Modo Dia Corrido desativado.');
     }
-
-    // ==========================================
-    // RASTREADOR DE QUESTÕES E TAXA DE ACERTO
-    // ==========================================
 
     function checkAutoCompleteQuestionHabit(dayIdx) {
       const goalQ = getEffectiveQuestionGoal(dayIdx);
@@ -746,7 +686,7 @@
         if (targetHabit && !targetHabit.days[dayIdx]) {
           targetHabit.days[dayIdx] = true;
           playBeep(1046.5, 0.5);
-          showToast(`Meta de ${goalQ} questões batida! "${targetHabit.name}" marcado!`, '📝');
+          showToast(`Meta de questões atingida: "${targetHabit.name}" concluído.`);
           return true;
         }
       }
@@ -762,7 +702,7 @@
 
       if (solved === 0) return;
       if (correct > solved) {
-        showToast('O número de acertos não pode ser maior que as questões feitas.', '⚠️');
+        showToast('Acertos não podem superar o total de questões.', '!');
         return;
       }
 
@@ -774,17 +714,15 @@
 
       checkAutoCompleteQuestionHabit(selectedDayIndex);
       saveState();
-      const batchAcc = Math.round((correct / solved) * 100);
-      showToast(`+${solved} questões registradas (${batchAcc}% de acerto)!`, '📝');
+      showToast(`+${solved} questões registradas.`);
     }
 
     function clearTodayQuestions() {
       if (questionsSolved[selectedDayIndex] === 0) return;
-      if (confirm(`Zerar o registro de questões de ${DAYS[selectedDayIndex]}?`)) {
+      if (confirm(`Zerar questões de ${DAYS[selectedDayIndex]}?`)) {
         questionsSolved[selectedDayIndex] = 0;
         questionsCorrect[selectedDayIndex] = 0;
         saveState();
-        showToast('Questões do dia zeradas.', '↺');
       }
     }
 
@@ -807,10 +745,6 @@
         return s > 0 ? Math.round((c / s) * 100) : 0;
       });
     }
-
-    // ==========================================
-    // ARQUIVAMENTO DE SEMANAS (HISTÓRICO)
-    // ==========================================
 
     function getWeeklyStatsSummary() {
       let totalScheduled = 0;
@@ -835,7 +769,7 @@
     function archiveAndResetWeek() {
       const stats = getWeeklyStatsSummary();
       const defaultLabel = `Semana encerrada em ${new Date().toLocaleDateString('pt-BR')}`;
-      const weekLabel = prompt('Digite um nome ou período para arquivar esta semana no histórico:', defaultLabel);
+      const weekLabel = prompt('Identificação da semana para o histórico:', defaultLabel);
       if (weekLabel === null) return;
 
       archivedWeeks.unshift({
@@ -860,11 +794,11 @@
       busyDays = [false, false, false, false, false, false, false];
 
       saveState();
-      showToast('Semana arquivada e sincronizada!', '📦');
+      showToast('Semana arquivada com sucesso.');
     }
 
     function resetWeekOnly() {
-      if (confirm('Deseja zerar as marcações da semana atual SEM arquivar no histórico?')) {
+      if (confirm('Zerar a semana atual sem salvar no histórico?')) {
         habits.forEach(h => h.days = [false, false, false, false, false, false, false]);
         studySeconds = [0, 0, 0, 0, 0, 0, 0];
         pomodoroCycles = [0, 0, 0, 0, 0, 0, 0];
@@ -872,20 +806,15 @@
         questionsCorrect = [0, 0, 0, 0, 0, 0, 0];
         busyDays = [false, false, false, false, false, false, false];
         saveState();
-        showToast('Semana atual reiniciada!', '🔄');
       }
     }
 
     function deleteArchivedWeek(id) {
-      if (confirm('Remover este registro do histórico de semanas?')) {
+      if (confirm('Excluir este registro do histórico?')) {
         archivedWeeks = archivedWeeks.filter(w => w.id !== id);
         saveState();
       }
     }
-
-    // ==========================================
-    // EXPORTAÇÃO E IMPORTAÇÃO (JSON & CSV)
-    // ==========================================
 
     function getFormattedDate() {
       return new Date().toISOString().split('T')[0];
@@ -906,14 +835,11 @@
     function exportJSON() {
       const jsonString = JSON.stringify(buildFullPayload(), null, 2);
       triggerDownload(jsonString, `backup-painel-${getFormattedDate()}.json`, 'application/json;charset=utf-8;');
-      showToast('Backup JSON exportado!', '⬇️');
     }
 
     function exportCSV() {
       const escapeCSV = (str) => `"${String(str).replace(/"/g, '""')}"`;
-      const rows = [];
-
-      rows.push(['Tipo', 'ID', 'Item', ...DAYS, 'Acumulado_Semana', 'Dias_Programados']);
+      const rows = [['Tipo', 'ID', 'Item', ...DAYS, 'Acumulado_Semana', 'Dias_Programados']];
 
       habits.forEach(h => {
         const schedCount = h.scheduledDays.filter(Boolean).length;
@@ -925,90 +851,30 @@
 
       const totalSecs = studySeconds.reduce((a, b) => a + b, 0);
       rows.push(['ESTUDO_SEGUNDOS', '0', '"Horas Liquidas (Segundos)"', ...studySeconds, totalSecs, '']);
-      rows.push(['ESTUDO_FORMATADO', '0', '"Horas Liquidas (h m)"', ...studySeconds.map(s => escapeCSV(formatHoursMinutes(s))), escapeCSV(formatHoursMinutes(totalSecs)), '']);
-
       const totalQ = questionsSolved.reduce((a, b) => a + b, 0);
       const totalC = questionsCorrect.reduce((a, b) => a + b, 0);
       rows.push(['QUESTOES_FEITAS', '0', '"Questoes Resolvidas"', ...questionsSolved, totalQ, '']);
       rows.push(['QUESTOES_ACERTOS', '0', '"Questoes Certas"', ...questionsCorrect, totalC, '']);
-      rows.push(['DIA_CORRIDO', '0', '"Modo Dia Corrido"', ...busyDays.map(b => b ? '1' : '0'), '', '']);
 
       const csvContent = '\uFEFF' + rows.map(r => r.join(',')).join('\r\n');
       triggerDownload(csvContent, `relatorio-painel-${getFormattedDate()}.csv`, 'text/csv;charset=utf-8;');
-      showToast('Planilha CSV exportada!', '📊');
-    }
-
-    function parseCSVLine(line) {
-      const result = [];
-      let current = '';
-      let inQuotes = false;
-      for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-        if (char === '"') {
-          if (inQuotes && line[i + 1] === '"') {
-            current += '"';
-            i++;
-          } else {
-            inQuotes = !inQuotes;
-          }
-        } else if (char === ',' && !inQuotes) {
-          result.push(current);
-          current = '';
-        } else {
-          current += char;
-        }
-      }
-      result.push(current);
-      return result;
     }
 
     function handleFileImport(event) {
       const file = event.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = function(e) {
-        const content = e.target.result;
         try {
           if (file.name.toLowerCase().endsWith('.json')) {
-            const data = JSON.parse(content);
-            if (!applyPayloadToState(data)) throw new Error('JSON inválido.');
-            saveState();
-            showToast('Backup JSON restaurado e sincronizado!', '🎉');
-          } else if (file.name.toLowerCase().endsWith('.csv')) {
-            const cleanContent = content.replace(/^\uFEFF/, '');
-            const lines = cleanContent.split(/\r?\n/).filter(l => l.trim() !== '');
-            const importedHabits = [];
-
-            for (let i = 1; i < lines.length; i++) {
-              const cols = parseCSVLine(lines[i]);
-              const type = cols[0];
-              if (type === 'HABITO') {
-                const id = Number(cols[1]) || Date.now() + i;
-                const name = cols[2] || `Hábito ${i}`;
-                const rawSlice = cols.slice(3, 10);
-                const days = rawSlice.map(val => val === '1' || val.toLowerCase() === 'true');
-                const maskStr = cols[11] || '';
-                const scheduledDays = maskStr.length === 7 
-                  ? maskStr.split('').map(c => c === '1')
-                  : rawSlice.map(val => val !== '-');
-                importedHabits.push({ id, name, days, scheduledDays });
-              } else if (type === 'ESTUDO_SEGUNDOS') {
-                studySeconds = cols.slice(3, 10).map(v => Number(v) || 0);
-              } else if (type === 'QUESTOES_FEITAS') {
-                questionsSolved = cols.slice(3, 10).map(v => Number(v) || 0);
-              } else if (type === 'QUESTOES_ACERTOS') {
-                questionsCorrect = cols.slice(3, 10).map(v => Number(v) || 0);
-              } else if (type === 'DIA_CORRIDO') {
-                busyDays = cols.slice(3, 10).map(v => v === '1');
-              }
+            const data = JSON.parse(e.target.result);
+            if (applyPayloadToState(data)) {
+              saveState();
+              showToast('Backup restaurado.');
             }
-            if (importedHabits.length > 0) habits = importedHabits;
-            saveState();
-            showToast('Planilha CSV importada com sucesso!', '🎉');
           }
         } catch (err) {
-          showToast('Erro ao importar arquivo.', '❌');
+          showToast('Arquivo inválido.', '!');
         } finally {
           event.target.value = '';
         }
@@ -1016,18 +882,14 @@
       reader.readAsText(file);
     }
 
-    // ==========================================
-    // LÓGICA DO POMODORO E HORAS LÍQUIDAS
-    // ==========================================
-
-    function playBeep(freq = 880, duration = 0.4) {
+    function playBeep(freq = 660, duration = 0.35) {
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start();
@@ -1042,9 +904,9 @@
         const targetHabit = habits.find(h => h.id === Number(linkedHabitId));
         if (targetHabit && !targetHabit.days[dayIdx]) {
           targetHabit.days[dayIdx] = true;
-          playBeep(1046.5, 0.5);
-          showToast(`Meta de estudo atingida! "${targetHabit.name}" marcado!`, '🎯');
-          sendDesktopNotification('Meta Diária Atingida! 🎯', `Você completou sua meta de horas líquidas e o hábito "${targetHabit.name}" foi marcado.`);
+          playBeep(880, 0.4);
+          showToast(`Meta atingida: "${targetHabit.name}" concluído.`);
+          sendDesktopNotification('Meta de Estudo Concluída', `O hábito "${targetHabit.name}" foi marcado automaticamente.`);
           return true;
         }
       }
@@ -1070,28 +932,20 @@
       ['focus25', 'focus50', 'break'].forEach(m => {
         const btn = document.getElementById(`btn-${m}`);
         btn.className = m === mode 
-          ? 'py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white transition'
-          : 'py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition';
+          ? 'py-1.5 text-xs font-medium rounded-md bg-slate-700 text-zinc-100 transition'
+          : 'py-1.5 text-xs font-medium rounded-md text-zinc-500 hover:text-zinc-300 transition';
       });
 
       const badge = document.getElementById('timerStatusBadge');
-      const subtext = document.getElementById('timerSubtext');
-
       if (mode === 'focus25') {
         timeLeft = 25 * 60;
         badge.textContent = 'Modo Foco (25m)';
-        badge.className = 'text-xs font-semibold px-2.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full';
-        subtext.textContent = 'Cada segundo em Foco soma nas Horas Líquidas';
       } else if (mode === 'focus50') {
         timeLeft = 50 * 60;
         badge.textContent = 'Modo Foco (50m)';
-        badge.className = 'text-xs font-semibold px-2.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full';
-        subtext.textContent = 'Bloco intensivo — contabilizando tempo líquido';
       } else {
         timeLeft = 5 * 60;
-        badge.textContent = 'Pausa Recuperadora';
-        badge.className = 'text-xs font-semibold px-2.5 py-0.5 bg-amber-500/20 text-amber-300 rounded-full';
-        subtext.textContent = 'Pausas não somam no contador de horas líquidas';
+        badge.textContent = 'Intervalo (5m)';
       }
       updateTimerDisplay();
     }
@@ -1100,7 +954,7 @@
       const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
       const secs = (timeLeft % 60).toString().padStart(2, '0');
       document.getElementById('timerDisplay').textContent = `${mins}:${secs}`;
-      document.title = isRunning ? `(${mins}:${secs}) Painel de Hábitos` : 'Painel de Alta Performance';
+      document.title = isRunning ? `(${mins}:${secs}) Painel` : 'Painel de Performance';
     }
 
     function toggleTimer() {
@@ -1112,7 +966,7 @@
       isRunning = true;
       const btn = document.getElementById('startPauseBtn');
       btn.textContent = '⏸ Pausar';
-      btn.className = 'flex-1 bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2.5 rounded-xl text-sm transition';
+      btn.className = 'flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-medium py-2.5 rounded-lg text-xs transition border border-zinc-700';
 
       timerInterval = setInterval(() => {
         if (timeLeft > 0) {
@@ -1120,10 +974,7 @@
           if (timerMode === 'focus25' || timerMode === 'focus50') {
             studySeconds[selectedDayIndex]++;
             const autoChecked = checkAutoCompleteStudyHabit(selectedDayIndex);
-            if (autoChecked) {
-              saveState();
-            } else if (studySeconds[selectedDayIndex] % 60 === 0) {
-              // Salva na nuvem a cada 1 minuto de foco contínuo
+            if (autoChecked || studySeconds[selectedDayIndex] % 60 === 0) {
               saveState();
             } else if (studySeconds[selectedDayIndex] % 10 === 0) {
               saveLocalOnly();
@@ -1135,15 +986,15 @@
           }
           updateTimerDisplay();
         } else {
-          playBeep(880, 0.6);
+          playBeep(660, 0.5);
           if (timerMode === 'focus25' || timerMode === 'focus50') {
             pomodoroCycles[selectedDayIndex]++;
             checkAutoCompleteStudyHabit(selectedDayIndex);
             saveState();
-            sendDesktopNotification('Bloco de Foco Concluído! ✅', 'Excelente trabalho! Hora de fazer uma pausa de 5 minutos.');
+            sendDesktopNotification('Ciclo Finalizado', 'Bloco concluído. Inicie o intervalo.');
             setTimerMode('break');
           } else {
-            sendDesktopNotification('Fim da Pausa! 🚀', 'Hora de retomar o próximo bloco de estudo.');
+            sendDesktopNotification('Intervalo Finalizado', 'Pronto para retomar o foco.');
             setTimerMode('focus25');
           }
         }
@@ -1155,15 +1006,14 @@
       clearInterval(timerInterval);
       const btn = document.getElementById('startPauseBtn');
       btn.textContent = '▶ Retomar';
-      btn.className = 'flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl text-sm transition shadow-lg shadow-emerald-900/30';
+      btn.className = 'flex-1 bg-slate-700 hover:bg-slate-600 text-zinc-100 font-medium py-2.5 rounded-lg text-xs transition';
       saveState();
       updateTimerDisplay();
     }
 
     function resetTimer() {
       pauseTimer();
-      const btn = document.getElementById('startPauseBtn');
-      btn.textContent = '▶ Iniciar Foco';
+      document.getElementById('startPauseBtn').textContent = '▶ Iniciar Foco';
       setTimerMode(timerMode);
     }
 
@@ -1178,10 +1028,6 @@
       const minutes = Math.floor((totalSeconds % 3600) / 60);
       return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
     }
-
-    // ==========================================
-    // GESTÃO DE HÁBITOS & DIAS PROGRAMADOS
-    // ==========================================
 
     function selectDay(index) {
       selectedDayIndex = index;
@@ -1217,14 +1063,11 @@
     function renderNewHabitDaysPicker() {
       const container = document.getElementById('newHabitDaysPicker');
       if (!container) return;
-      container.innerHTML = DAYS.map((d, idx) => {
-        const active = newHabitSchedule[idx];
-        return `
-          <button type="button" onclick="toggleNewHabitDay(${idx})" class="px-1.5 py-0.5 rounded text-[10px] font-semibold transition ${
-            active ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-500'
-          }">${d[0]}</button>
-        `;
-      }).join('');
+      container.innerHTML = DAYS.map((d, idx) => `
+        <button type="button" onclick="toggleNewHabitDay(${idx})" class="px-1.5 py-0.5 rounded text-[10px] font-medium transition ${
+          newHabitSchedule[idx] ? 'bg-slate-700 text-zinc-100' : 'bg-zinc-900 text-zinc-600'
+        }">${d[0]}</button>
+      `).join('');
     }
 
     function addHabit(event) {
@@ -1233,20 +1076,16 @@
       const name = input.value.trim();
       if (!name) return;
 
-      const hasAtLeastOneDay = newHabitSchedule.some(Boolean);
-      const scheduleToUse = hasAtLeastOneDay ? [...newHabitSchedule] : [true, true, true, true, true, true, true];
-
-      const newHabit = {
+      const scheduleToUse = newHabitSchedule.some(Boolean) ? [...newHabitSchedule] : [true, true, true, true, true, true, true];
+      habits.push({
         id: Date.now(),
-        name: name,
+        name,
         days: [false, false, false, false, false, false, false],
         scheduledDays: scheduleToUse
-      };
-      habits.push(newHabit);
+      });
       input.value = '';
       newHabitSchedule = [true, true, true, true, true, true, true];
       saveState();
-      showToast(`Hábito "${name}" adicionado!`, '✅');
     }
 
     function deleteHabit(habitId) {
@@ -1273,11 +1112,8 @@
         const activeCount = habits.filter(h => h.scheduledDays[i] || h.days[i]).length;
         if (activeCount === 0) continue;
         const threshold = busyDays[i] ? 60 : 80;
-        if (dailyPcts[i] >= threshold) {
-          currentStreak++;
-        } else if (i < selectedDayIndex) {
-          currentStreak = 0;
-        }
+        if (dailyPcts[i] >= threshold) currentStreak++;
+        else if (i < selectedDayIndex) currentStreak = 0;
       }
       return currentStreak;
     }
@@ -1286,39 +1122,33 @@
       return studySeconds.map(sec => +(sec / 3600).toFixed(2));
     }
 
-    // ==========================================
-    // RENDERIZAÇÃO DA INTERFACE
-    // ==========================================
-
     function renderDaySelector() {
       const container = document.getElementById('daySelector');
       const isBusyToday = busyDays[selectedDayIndex];
-      document.getElementById('selectedDayLabel').textContent = `${DAYS[selectedDayIndex]}${isBusyToday ? ' (⚡ Dia Corrido)' : ''}`;
+      document.getElementById('selectedDayLabel').textContent = `${DAYS[selectedDayIndex]}${isBusyToday ? ' (Reduzido)' : ''}`;
       
       const busyBtn = document.getElementById('busyDayBtn');
       const busyBtnText = document.getElementById('busyDayBtnText');
       if (isBusyToday) {
-        busyBtn.className = 'text-xs font-semibold px-3 py-1.5 rounded-xl border transition flex items-center gap-1.5 bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-lg shadow-amber-950/30';
-        busyBtnText.textContent = 'Modo Dia Corrido: ON (Metas -50%)';
+        busyBtn.className = 'text-xs font-medium px-3 py-1 rounded-lg border transition bg-slate-800 text-zinc-200 border-slate-600';
+        busyBtnText.textContent = 'Modo Dia Corrido: ON (-50%)';
       } else {
-        busyBtn.className = 'text-xs font-semibold px-3 py-1.5 rounded-xl border transition flex items-center gap-1.5 bg-slate-800/90 text-slate-400 border-slate-700 hover:border-amber-500/50';
+        busyBtn.className = 'text-xs font-medium px-3 py-1 rounded-lg border transition bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-700';
         busyBtnText.textContent = 'Modo Dia Corrido: OFF';
       }
 
       container.innerHTML = DAYS.map((day, idx) => {
         const isSelected = idx === selectedDayIndex;
-        const isBusy = busyDays[idx];
         return `
           <button 
             onclick="selectDay(${idx})"
-            class="px-3 py-2 rounded-xl text-xs font-semibold transition border flex items-center justify-center gap-1 ${
+            class="px-3 py-1.5 rounded-lg text-xs font-medium transition border ${
               isSelected 
-                ? 'bg-emerald-600 text-white border-emerald-500 shadow-lg shadow-emerald-900/30' 
-                : 'bg-slate-800/70 text-slate-400 border-slate-700/60 hover:bg-slate-800'
+                ? 'bg-slate-700 text-zinc-100 border-slate-600' 
+                : 'bg-zinc-900 text-zinc-500 border-zinc-800 hover:bg-zinc-800/80'
             }"
           >
-            <span>${day}</span>
-            ${isBusy ? '<span title="Dia Corrido">⚡</span>' : ''}
+            ${day}${busyDays[idx] ? '*' : ''}
           </button>
         `;
       }).join('');
@@ -1331,43 +1161,28 @@
       const linkedSelect = document.getElementById('linkedHabitSelect');
       if (linkedSelect) {
         linkedSelect.innerHTML = habits.length === 0
-          ? '<option value="0" class="bg-slate-900">Nenhum</option>'
-          : habits.map(h => `<option value="${h.id}" class="bg-slate-900" ${h.id === Number(linkedHabitId) ? 'selected' : ''}>${h.name}</option>`).join('');
+          ? '<option value="0" class="bg-zinc-900">Nenhum</option>'
+          : habits.map(h => `<option value="${h.id}" class="bg-zinc-900" ${h.id === Number(linkedHabitId) ? 'selected' : ''}>${h.name}</option>`).join('');
       }
 
       const goalSecs = getEffectiveStudyGoalSeconds(selectedDayIndex);
       const todaySecs = studySeconds[selectedDayIndex] || 0;
       const rawPct = goalSecs > 0 ? Math.round((todaySecs / goalSecs) * 100) : 0;
-      const barWidth = Math.min(100, rawPct);
 
-      document.getElementById('goalProgressFraction').textContent = `${formatHoursMinutes(todaySecs)} de ${formatHoursMinutes(goalSecs)} (${DAYS[selectedDayIndex]})`;
-      
-      const pctEl = document.getElementById('goalProgressPercent');
-      pctEl.textContent = `${rawPct}%`;
-
-      const barEl = document.getElementById('goalProgressBar');
-      barEl.style.width = `${barWidth}%`;
+      document.getElementById('goalProgressFraction').textContent = `${formatHoursMinutes(todaySecs)} de ${formatHoursMinutes(goalSecs)}`;
+      document.getElementById('goalProgressPercent').textContent = `${rawPct}%`;
+      document.getElementById('goalProgressBar').style.width = `${Math.min(100, rawPct)}%`;
 
       const statusBadge = document.getElementById('goalStatusBadge');
       const remainingText = document.getElementById('goalRemainingText');
-      const linkedHabit = habits.find(h => h.id === Number(linkedHabitId));
-      const habitName = linkedHabit ? `"${linkedHabit.name}"` : 'o hábito vinculado';
-
       if (todaySecs >= goalSecs) {
-        barEl.className = 'h-full rounded-full transition-all duration-500 bg-gradient-to-r from-emerald-500 to-teal-400';
-        pctEl.className = 'text-emerald-400 font-bold';
-        statusBadge.textContent = '✅ Meta Batida';
-        statusBadge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300';
-        remainingText.textContent = `Meta concluída! ${habitName} foi marcado automaticamente neste dia.`;
+        statusBadge.textContent = 'Concluído';
+        statusBadge.className = 'text-[10px] font-medium px-2 py-0.5 rounded bg-slate-700 text-zinc-200';
+        remainingText.textContent = 'Meta de horas líquidas do dia atingida.';
       } else {
-        const remainingSecs = goalSecs - todaySecs;
-        barEl.className = 'h-full rounded-full transition-all duration-500 bg-gradient-to-r from-indigo-500 to-indigo-400';
-        pctEl.className = 'text-indigo-400 font-bold';
-        statusBadge.textContent = busyDays[selectedDayIndex] ? '⚡ Meta Reduzida (-50%)' : 'Em andamento';
-        statusBadge.className = busyDays[selectedDayIndex]
-          ? 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300'
-          : 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400';
-        remainingText.textContent = `Faltam ${formatHoursMinutes(remainingSecs)} para marcar ${habitName} automaticamente.`;
+        statusBadge.textContent = busyDays[selectedDayIndex] ? 'Meta Reduzida' : 'Em andamento';
+        statusBadge.className = 'text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400';
+        remainingText.textContent = `Restam ${formatHoursMinutes(goalSecs - todaySecs)} para completar a meta.`;
       }
     }
 
@@ -1378,8 +1193,8 @@
       const linkedQSelect = document.getElementById('linkedQHabitSelect');
       if (linkedQSelect) {
         linkedQSelect.innerHTML = habits.length === 0
-          ? '<option value="0" class="bg-slate-900">Nenhum</option>'
-          : habits.map(h => `<option value="${h.id}" class="bg-slate-900" ${h.id === Number(linkedQuestionHabitId) ? 'selected' : ''}>${h.name}</option>`).join('');
+          ? '<option value="0" class="bg-zinc-900">Nenhum</option>'
+          : habits.map(h => `<option value="${h.id}" class="bg-zinc-900" ${h.id === Number(linkedQuestionHabitId) ? 'selected' : ''}>${h.name}</option>`).join('');
       }
 
       const effectiveQGoal = getEffectiveQuestionGoal(selectedDayIndex);
@@ -1388,45 +1203,38 @@
       const accToday = solvedToday > 0 ? Math.round((correctToday / solvedToday) * 100) : 0;
       const rawPct = effectiveQGoal > 0 ? Math.round((solvedToday / effectiveQGoal) * 100) : 0;
 
-      document.getElementById('qProgressFraction').textContent = `${solvedToday} de ${effectiveQGoal} questões (${correctToday} acertos em ${DAYS[selectedDayIndex]})`;
+      document.getElementById('qProgressFraction').textContent = `${solvedToday} de ${effectiveQGoal} questões (${correctToday} acertos)`;
       document.getElementById('qProgressPercent').textContent = `${rawPct}%`;
       document.getElementById('qProgressBar').style.width = `${Math.min(100, rawPct)}%`;
-
-      const accBadge = document.getElementById('qAccuracyBadge');
-      accBadge.textContent = solvedToday > 0 ? `Acerto Hoje: ${accToday}%` : 'Sem questões hoje';
-      accBadge.className = accToday >= 80
-        ? 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300'
-        : (accToday >= 65 ? 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300' : 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300');
+      document.getElementById('qAccuracyBadge').textContent = solvedToday > 0 ? `Acerto: ${accToday}%` : 'Sem registros';
     }
 
     function renderHabitList() {
       const container = document.getElementById('habitList');
       const scheduledToday = habits.filter(h => h.scheduledDays[selectedDayIndex] || h.days[selectedDayIndex]);
       const doneToday = scheduledToday.filter(h => h.days[selectedDayIndex]).length;
-      document.getElementById('dailyProgressText').textContent = `${doneToday}/${scheduledToday.length} programadas hoje`;
+      document.getElementById('dailyProgressText').textContent = `${doneToday}/${scheduledToday.length} concluídas`;
 
       if (habits.length === 0) {
-        container.innerHTML = `<p class="text-sm text-slate-500 text-center py-6">Nenhum hábito cadastrado.</p>`;
+        container.innerHTML = `<p class="text-xs text-zinc-600 text-center py-6">Nenhum hábito cadastrado.</p>`;
         return;
       }
 
       container.innerHTML = habits.map(habit => {
         const isDone = habit.days[selectedDayIndex];
         const isScheduled = habit.scheduledDays[selectedDayIndex];
-        const isStudyLinked = habit.id === Number(linkedHabitId);
-        const isQLinked = habit.id === Number(linkedQuestionHabitId);
         const isEditingDays = editingScheduleHabitId === habit.id;
 
         const schedulePills = isEditingDays ? `
-          <div class="mt-2.5 pt-2 border-t border-slate-800 flex items-center justify-between gap-1">
-            <span class="text-[10px] text-slate-400">Dias obrigatórios:</span>
+          <div class="mt-2.5 pt-2 border-t border-zinc-800 flex items-center justify-between gap-1">
+            <span class="text-[10px] text-zinc-500">Dias:</span>
             <div class="flex gap-1">
               ${DAYS.map((d, dIdx) => `
                 <button 
                   type="button"
                   onclick="toggleHabitScheduledDay(${habit.id},${dIdx})"
-                  class="px-1.5 py-0.5 rounded text-[10px] font-semibold transition ${
-                    habit.scheduledDays[dIdx] ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-500'
+                  class="px-1.5 py-0.5 rounded text-[10px] font-medium transition ${
+                    habit.scheduledDays[dIdx] ? 'bg-slate-700 text-zinc-100' : 'bg-zinc-900 text-zinc-600'
                   }"
                 >${d}</button>
               `).join('')}
@@ -1435,30 +1243,28 @@
         ` : '';
 
         return `
-          <div class="p-3 rounded-xl bg-slate-900/60 border ${!isScheduled && !isDone ? 'border-slate-800/40 opacity-60' : 'border-slate-800'} hover:border-slate-700 transition">
+          <div class="p-2.5 rounded-lg bg-zinc-950 border ${!isScheduled && !isDone ? 'border-zinc-900 opacity-50' : 'border-zinc-800/90'} transition">
             <div class="flex items-center justify-between gap-2">
-              <label class="flex items-center gap-3 cursor-pointer flex-1 min-w-0">
+              <label class="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0">
                 <input 
                   type="checkbox" 
                   class="hidden custom-checkbox" 
                   ${isDone ? 'checked' : ''} 
                   onchange="toggleHabitDay(${habit.id}, ${selectedDayIndex})"
                 >
-                <div class="w-5 h-5 shrink-0 rounded-md border-2 border-slate-600 flex items-center justify-center transition">
-                  ${isDone ? '<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>' : ''}
+                <div class="w-4 h-4 shrink-0 rounded border border-zinc-600 flex items-center justify-center transition">
+                  ${isDone ? '<svg class="w-3 h-3 text-zinc-100" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>' : ''}
                 </div>
                 <div class="truncate">
-                  <span class="text-sm font-medium ${isDone ? 'line-through text-slate-500' : 'text-slate-200'}">${habit.name}</span>
-                  ${!isScheduled && !isDone ? '<span class="ml-1.5 text-[10px] font-medium px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">Folga hoje</span>' : ''}
-                  ${isStudyLinked ? '<span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded">⚡ Horas</span>' : ''}
-                  ${isQLinked ? '<span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 bg-cyan-500/20 text-cyan-300 rounded">⚡ Questões</span>' : ''}
+                  <span class="text-xs font-medium ${isDone ? 'line-through text-zinc-600' : 'text-zinc-200'}">${habit.name}</span>
+                  ${!isScheduled && !isDone ? '<span class="ml-1.5 text-[10px] text-zinc-500">(Folga)</span>' : ''}
                 </div>
               </label>
               <div class="flex items-center gap-1 shrink-0">
-                <button onclick="toggleScheduleEditor(${habit.id})" class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
-                  📅 Dias
+                <button onclick="toggleScheduleEditor(${habit.id})" class="px-2 py-0.5 rounded text-[10px] font-medium bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border border-zinc-800 transition">
+                  Dias
                 </button>
-                <button onclick="deleteHabit(${habit.id})" class="text-slate-600 hover:text-rose-400 p-1 text-xs transition">
+                <button onclick="deleteHabit(${habit.id})" class="text-zinc-600 hover:text-zinc-300 p-1 text-xs transition">
                   ✕
                 </button>
               </div>
@@ -1472,9 +1278,9 @@
     function renderMatrix() {
       const theadRow = document.getElementById('matrixHeaderRow');
       theadRow.innerHTML = `
-        <th class="py-3 pr-4">Hábito / Indicador</th>
-        ${DAYS.map((d, idx) => `<th class="py-3 text-center">${d}${busyDays[idx] ? '⚡' : ''}</th>`).join('')}
-        <th class="py-3 text-right">Desempenho</th>
+        <th class="py-2.5 pr-4">Indicador</th>
+        ${DAYS.map((d, idx) => `<th class="py-2.5 text-center">${d}${busyDays[idx] ? '*' : ''}</th>`).join('')}
+        <th class="py-2.5 text-right">Total</th>
       `;
 
       const tbody = document.getElementById('matrixBody');
@@ -1493,35 +1299,31 @@
         const dayCells = habit.days.map((done, dIdx) => {
           const isSched = habit.scheduledDays[dIdx];
           if (done) {
-            return `<td class="py-3 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-emerald-500 text-slate-950 font-bold transition">✓</button></td>`;
+            return `<td class="py-2.5 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-5 h-5 rounded mx-auto flex items-center justify-center bg-slate-600 text-zinc-100 font-bold text-[10px]">✓</button></td>`;
           } else if (isSched) {
-            return `<td class="py-3 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-slate-800 text-slate-500 hover:bg-slate-700 transition">·</button></td>`;
+            return `<td class="py-2.5 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-5 h-5 rounded mx-auto flex items-center justify-center bg-zinc-900 text-zinc-500 hover:bg-zinc-800">·</button></td>`;
           } else {
-            return `<td class="py-3 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-slate-900/50 text-slate-700 hover:bg-slate-800 font-mono text-xs transition">—</button></td>`;
+            return `<td class="py-2.5 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-5 h-5 rounded mx-auto flex items-center justify-center text-zinc-700 font-mono text-[10px]">—</button></td>`;
           }
         }).join('');
 
         return `
           <tr>
-            <td class="py-3 pr-4 font-medium text-slate-200">${habit.name}</td>
+            <td class="py-2.5 pr-4 font-medium text-zinc-300">${habit.name}</td>
             ${dayCells}
-            <td class="py-3 text-right font-semibold text-emerald-400">${doneCount}/${schedCount} (${pct}%)</td>
+            <td class="py-2.5 text-right font-medium text-zinc-300">${doneCount}/${schedCount} (${pct}%)</td>
           </tr>
         `;
       }).join('');
 
       const totalWeekSecs = studySeconds.reduce((a, b) => a + b, 0);
-      const studyCells = studySeconds.map((sec, idx) => {
-        const goalSecs = getEffectiveStudyGoalSeconds(idx);
-        const hitGoal = sec >= goalSecs && goalSecs > 0;
-        return `<td class="py-3 text-center text-xs font-semibold ${hitGoal ? 'text-emerald-400' : (sec > 0 ? 'text-indigo-400' : 'text-slate-600')}">${formatHoursMinutes(sec)}</td>`;
-      }).join('');
+      const studyCells = studySeconds.map(sec => `<td class="py-2.5 text-center text-[11px] ${sec > 0 ? 'text-zinc-300 font-medium' : 'text-zinc-600'}">${formatHoursMinutes(sec)}</td>`).join('');
 
       const studyRow = `
-        <tr class="bg-indigo-950/20">
-          <td class="py-3 pr-4 font-semibold text-indigo-300">⏱️ Horas Líquidas</td>
+        <tr class="bg-zinc-900/40">
+          <td class="py-2.5 pr-4 font-medium text-zinc-400">Horas Líquidas</td>
           ${studyCells}
-          <td class="py-3 text-right font-bold text-indigo-400">${formatHoursMinutes(totalWeekSecs)}</td>
+          <td class="py-2.5 text-right font-semibold text-zinc-200">${formatHoursMinutes(totalWeekSecs)}</td>
         </tr>
       `;
 
@@ -1533,15 +1335,15 @@
         const s = questionsSolved[idx] || 0;
         const c = questionsCorrect[idx] || 0;
         const acc = s > 0 ? Math.round((c / s) * 100) : 0;
-        if (s === 0) return `<td class="py-3 text-center text-xs text-slate-600">—</td>`;
-        return `<td class="py-3 text-center text-xs font-semibold ${acc >= 80 ? 'text-emerald-400' : 'text-cyan-400'}">${c}/${s} (${acc}%)</td>`;
+        if (s === 0) return `<td class="py-2.5 text-center text-[11px] text-zinc-600">—</td>`;
+        return `<td class="py-2.5 text-center text-[11px] text-zinc-300 font-medium">${c}/${s} (${acc}%)</td>`;
       }).join('');
 
       const questionRow = `
-        <tr class="bg-cyan-950/20">
-          <td class="py-3 pr-4 font-semibold text-cyan-300">📝 Questões (Acertos/Total)</td>
+        <tr class="bg-zinc-900/40">
+          <td class="py-2.5 pr-4 font-medium text-zinc-400">Questões (Acertos/Total)</td>
           ${questionCells}
-          <td class="py-3 text-right font-bold text-cyan-400">${totalC}/${totalQ} (${weekQAcc}%)</td>
+          <td class="py-2.5 text-right font-semibold text-zinc-200">${totalC}/${totalQ} (${weekQAcc}%)</td>
         </tr>
       `;
 
@@ -1558,11 +1360,11 @@
       const accToday = qToday > 0 ? Math.round((cToday / qToday) * 100) : 0;
 
       document.getElementById('streakCount').textContent = `${stats.streak} ${stats.streak === 1 ? 'dia' : 'dias'}`;
-      document.getElementById('streakSubtext').textContent = busyDays[selectedDayIndex] ? 'Hoje: Meta 60% (Dia Corrido)' : 'Meta: 80% dos programados';
+      document.getElementById('streakSubtext').textContent = busyDays[selectedDayIndex] ? 'Meta hoje: 60%' : 'Meta: 80% do dia';
       document.getElementById('dailyStudyTime').textContent = formatHoursMinutes(todaySecs);
       document.getElementById('weeklyStudyTime').textContent = `Semana: ${formatHoursMinutes(stats.totalSecs)}`;
       document.getElementById('dailyQuestionsKPI').textContent = `${qToday} (${accToday}%)`;
-      document.getElementById('weeklyQuestionsKPI').textContent = `Semana: ${stats.totalQ} (${stats.weeklyQAcc}% acerto)`;
+      document.getElementById('weeklyQuestionsKPI').textContent = `Semana: ${stats.totalQ} (${stats.weeklyQAcc}%)`;
       document.getElementById('PomodoroCyclesToday').textContent = `${cyclesToday} ${cyclesToday === 1 ? 'bloco' : 'blocos'}`;
       document.getElementById('weeklyRate').textContent = `${stats.weeklyRate}%`;
       document.getElementById('totalCompleted').textContent = `${stats.totalDone} / ${stats.totalScheduled}`;
@@ -1572,36 +1374,36 @@
       const container = document.getElementById('archiveContainer');
       if (archivedWeeks.length === 0) {
         container.innerHTML = `
-          <div class="text-center py-6 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">
-            Nenhuma semana arquivada ainda. Ao terminar seu domingo, clique em <b>📦 Arquivar Semana</b> no topo para salvar seu histórico.
+          <div class="text-center py-5 text-xs text-zinc-600 border border-dashed border-zinc-800 rounded-lg">
+            Nenhuma semana arquivada.
           </div>
         `;
         return;
       }
 
       const rows = archivedWeeks.map(w => `
-        <tr class="border-b border-slate-800/60 text-xs md:text-sm">
-          <td class="py-3 pr-4 font-semibold text-white">${w.label}</td>
-          <td class="py-3 text-center text-emerald-400 font-bold">${w.weeklyRate}% (${w.totalDone}/${w.totalScheduled})</td>
-          <td class="py-3 text-center text-indigo-400 font-semibold">${formatHoursMinutes(w.totalStudySeconds)}</td>
-          <td class="py-3 text-center text-cyan-400 font-semibold">${w.totalCorrect}/${w.totalQuestions} (${w.questionAccuracy}%)</td>
-          <td class="py-3 text-center text-amber-400 font-semibold">🔥 ${w.streak}d</td>
-          <td class="py-3 text-right">
-            <button onclick="deleteArchivedWeek(${w.id})" class="text-slate-500 hover:text-rose-400 text-xs px-2 py-1">✕</button>
+        <tr class="border-b border-zinc-800/60 text-xs">
+          <td class="py-2.5 pr-4 font-medium text-zinc-200">${w.label}</td>
+          <td class="py-2.5 text-center text-zinc-300">${w.weeklyRate}% (${w.totalDone}/${w.totalScheduled})</td>
+          <td class="py-2.5 text-center text-zinc-300">${formatHoursMinutes(w.totalStudySeconds)}</td>
+          <td class="py-2.5 text-center text-zinc-300">${w.totalCorrect}/${w.totalQuestions} (${w.questionAccuracy}%)</td>
+          <td class="py-2.5 text-center text-zinc-400">${w.streak}d</td>
+          <td class="py-2.5 text-right">
+            <button onclick="deleteArchivedWeek(${w.id})" class="text-zinc-600 hover:text-zinc-300 text-xs px-2">✕</button>
           </td>
         </tr>
       `).join('');
 
       container.innerHTML = `
-        <table class="w-full text-left border-collapse min-w-[550px]">
+        <table class="w-full text-left border-collapse min-w-[520px]">
           <thead>
-            <tr class="border-b border-slate-800 text-[11px] uppercase text-slate-400">
-              <th class="py-2 pr-4">Período / Semana</th>
-              <th class="py-2 text-center">Consistência Hábitos</th>
-              <th class="py-2 text-center">Horas Líquidas</th>
-              <th class="py-2 text-center">Questões & Acerto</th>
+            <tr class="border-b border-zinc-800 text-[10px] uppercase text-zinc-500">
+              <th class="py-2 pr-4">Período</th>
+              <th class="py-2 text-center">Hábitos</th>
+              <th class="py-2 text-center">Horas</th>
+              <th class="py-2 text-center">Questões</th>
               <th class="py-2 text-center">Sequência</th>
-              <th class="py-2 text-right">Ação</th>
+              <th class="py-2 text-right"></th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
@@ -1631,36 +1433,36 @@
               type: 'line',
               label: 'Hábitos (%)',
               data: dataPcts,
-              borderColor: '#10b981',
-              backgroundColor: 'rgba(16, 185, 129, 0.12)',
-              borderWidth: 3,
-              pointBackgroundColor: '#0f172a',
-              pointBorderColor: '#10b981',
-              pointRadius: 4,
-              tension: 0.35,
+              borderColor: '#e4e4e7',
+              backgroundColor: 'rgba(228, 228, 231, 0.06)',
+              borderWidth: 2,
+              pointBackgroundColor: '#18191d',
+              pointBorderColor: '#e4e4e7',
+              pointRadius: 3,
+              tension: 0.3,
               yAxisID: 'y'
             },
             {
               type: 'line',
-              label: 'Taxa de Acerto (%)',
+              label: 'Acerto (%)',
               data: dataQAcc,
-              borderColor: '#06b6d4',
-              borderDash: [5, 5],
-              borderWidth: 2,
-              pointBackgroundColor: '#0f172a',
-              pointBorderColor: '#06b6d4',
-              pointRadius: 3,
-              tension: 0.35,
+              borderColor: '#71717a',
+              borderDash: [4, 4],
+              borderWidth: 1.5,
+              pointBackgroundColor: '#18191d',
+              pointBorderColor: '#71717a',
+              pointRadius: 2.5,
+              tension: 0.3,
               yAxisID: 'y'
             },
             {
               type: 'bar',
-              label: 'Horas Líquidas (h)',
+              label: 'Horas (h)',
               data: dataHours,
-              backgroundColor: 'rgba(99, 102, 241, 0.5)',
-              borderColor: '#6366f1',
+              backgroundColor: 'rgba(100, 116, 139, 0.35)',
+              borderColor: '#64748b',
               borderWidth: 1,
-              borderRadius: 6,
+              borderRadius: 4,
               yAxisID: 'y1'
             }
           ]
@@ -1674,8 +1476,8 @@
               position: 'left',
               beginAtZero: true,
               max: 100,
-              grid: { color: 'rgba(255, 255, 255, 0.05)' },
-              ticks: { color: '#10b981', callback: v => v + '%' }
+              grid: { color: 'rgba(255, 255, 255, 0.04)' },
+              ticks: { color: '#a1a1aa', callback: v => v + '%' }
             },
             y1: {
               type: 'linear',
@@ -1683,11 +1485,11 @@
               beginAtZero: true,
               suggestedMax: 6,
               grid: { drawOnChartArea: false },
-              ticks: { color: '#818cf8', callback: v => v + 'h' }
+              ticks: { color: '#71717a', callback: v => v + 'h' }
             },
             x: {
               grid: { display: false },
-              ticks: { color: '#94a3b8' }
+              ticks: { color: '#71717a' }
             }
           },
           plugins: {
@@ -1711,7 +1513,6 @@
       renderChart();
     }
 
-    // Inicializa interface e busca dados mais recentes da Planilha Google
     renderAll();
     if (gasWebAppUrl) {
       pullFromCloud(false);
