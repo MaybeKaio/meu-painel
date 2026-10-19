@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel de Alta Performance — Hábitos, Horas & Questões</title>
+  <title>Painel de Alta Performance — Sincronizado na Nuvem</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -38,18 +38,28 @@
 
   <div class="max-w-7xl mx-auto space-y-6">
     
-    <!-- Cabeçalho com Ações de Notificação, Backup e Arquivamento -->
+    <!-- Cabeçalho com Status da Nuvem, Alertas e Backup -->
     <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
       <div>
-        <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-white">Painel de Hábitos, Horas & Questões</h1>
-        <p class="text-slate-400 text-sm mt-1">Gestão de consistência com dias programáveis, horas líquidas, taxa de acerto e histórico semanal.</p>
+        <div class="flex items-center gap-3">
+          <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-white">Painel de Hábitos, Horas & Questões</h1>
+          <span id="cloudStatusPill" onclick="toggleCloudConfig()" class="cursor-pointer text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700 hover:border-slate-500 transition flex items-center gap-1.5" title="Clique para configurar a sincronização com o Google Drive">
+            <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-slate-500"></span>
+            <span id="cloudStatusText">Nuvem Off</span>
+          </span>
+        </div>
+        <p class="text-slate-400 text-sm mt-1">Sincronização automática via Google Drive, dias programáveis, horas líquidas e histórico semanal.</p>
       </div>
       
       <div class="flex flex-wrap items-center gap-2">
         <input type="file" id="importFileInput" accept=".json,.csv" class="hidden" onchange="handleFileImport(event)">
         
+        <button onclick="toggleCloudConfig()" class="px-3 py-2 text-xs font-semibold text-teal-300 bg-teal-950/50 hover:bg-teal-900/60 rounded-xl transition border border-teal-700/50 flex items-center gap-1.5">
+          <span>☁️</span> Nuvem (Drive)
+        </button>
+
         <button id="notifBtn" onclick="requestDesktopNotifications()" class="px-3 py-2 text-xs font-medium text-amber-300 bg-amber-950/40 hover:bg-amber-900/50 rounded-xl transition border border-amber-700/50 flex items-center gap-1.5" title="Receber alertas do Pomodoro mesmo em outra aba">
-          <span>🔔</span> <span id="notifBtnText">Ativar Alertas</span>
+          <span>🔔</span> <span id="notifBtnText">Alertas</span>
         </button>
 
         <button onclick="exportJSON()" class="px-3 py-2 text-xs font-medium text-emerald-300 bg-emerald-950/50 hover:bg-emerald-900/60 rounded-xl transition border border-emerald-700/50 flex items-center gap-1.5">
@@ -64,7 +74,7 @@
           <span>⬆️</span> Importar
         </button>
 
-        <button onclick="archiveAndResetWeek()" class="px-3.5 py-2 text-xs font-semibold text-purple-200 bg-purple-900/60 hover:bg-purple-800/80 rounded-xl transition border border-purple-600/60 flex items-center gap-1.5" title="Salva o resumo desta semana no histórico e limpa para a próxima">
+        <button onclick="archiveAndResetWeek()" class="px-3.5 py-2 text-xs font-semibold text-purple-200 bg-purple-900/60 hover:bg-purple-800/80 rounded-xl transition border border-purple-600/60 flex items-center gap-1.5">
           <span>📦</span> Arquivar Semana
         </button>
 
@@ -73,6 +83,46 @@
         </button>
       </div>
     </header>
+
+    <!-- Gaveta de Configuração da Sincronização Google Drive -->
+    <section id="cloudConfigPanel" class="hidden glass-card p-5 rounded-2xl border border-teal-500/30 space-y-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+        <div>
+          <h2 class="text-sm md:text-base font-semibold text-white flex items-center gap-2">
+            <span>☁️</span> Sincronização Automática — Google Planilhas (Apps Script)
+          </h2>
+          <p class="text-xs text-slate-400">Cole abaixo a <b>URL do App da Web</b> gerada no seu Google Apps Script. O painel salvará automaticamente suas alterações na nuvem.</p>
+        </div>
+        <button onclick="toggleCloudConfig()" class="text-xs text-slate-400 hover:text-white self-end md:self-auto">Fechar ✕</button>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-2">
+        <input 
+          type="url" 
+          id="gasUrlInput" 
+          placeholder="https://script.google.com/macros/s/.../exec" 
+          class="flex-1 bg-slate-900/90 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500"
+        >
+        <button onclick="saveGasUrl()" class="bg-teal-600 hover:bg-teal-500 text-white font-semibold px-4 py-2 rounded-xl text-xs transition">
+          Salvar & Conectar
+        </button>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800 text-xs">
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="pullFromCloud(true)" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-sky-300 rounded-lg font-medium border border-slate-700 transition flex items-center gap-1.5">
+            <span>⬇️</span> Puxar dados da Planilha agora
+          </button>
+          <button onclick="pushToCloud(true)" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-300 rounded-lg font-medium border border-slate-700 transition flex items-center gap-1.5">
+            <span>⬆️</span> Forçar envio para a Planilha agora
+          </button>
+          <button onclick="disconnectCloud()" class="px-3 py-1.5 bg-slate-900 hover:bg-rose-950/50 text-slate-400 hover:text-rose-300 rounded-lg font-medium border border-slate-800 transition">
+            Desconectar URL
+          </button>
+        </div>
+        <span id="lastSyncTimestamp" class="text-[11px] text-slate-400">Última sincronização: Nunca</span>
+      </div>
+    </section>
 
     <!-- Cards de Resumo (5 KPIs) -->
     <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -128,8 +178,7 @@
         <span class="text-sm font-medium text-slate-300">Dia em edição:</span>
         <span id="selectedDayLabel" class="text-xs font-semibold px-2.5 py-1 bg-emerald-500/20 text-emerald-300 rounded-full">Hoje</span>
         
-        <!-- Toggle Modo Dia Corrido -->
-        <button id="busyDayBtn" onclick="toggleBusyDay()" class="text-xs font-semibold px-3 py-1.5 rounded-xl border transition flex items-center gap-1.5 bg-slate-800/90 text-slate-300 border-slate-700 hover:border-amber-500/50" title="Reduz metas do dia pela metade e protege sua sequência em dias de plantão ou rotina pesada">
+        <button id="busyDayBtn" onclick="toggleBusyDay()" class="text-xs font-semibold px-3 py-1.5 rounded-xl border transition flex items-center gap-1.5 bg-slate-800/90 text-slate-300 border-slate-700 hover:border-amber-500/50">
           <span>⚡</span> <span id="busyDayBtnText">Modo Dia Corrido: OFF</span>
         </button>
       </div>
@@ -195,7 +244,7 @@
                 <h2 class="text-sm md:text-base font-semibold text-white">Meta de Questões & Taxa de Acerto</h2>
                 <span id="qAccuracyBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">Acerto: 0%</span>
               </div>
-              <p class="text-[11px] text-slate-400 mt-0.5" id="qGoalSubtext">Registre suas baterias de questões e acompanhe sua precisão.</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">Registre suas baterias de questões e acompanhe sua precisão.</p>
             </div>
           </div>
 
@@ -219,7 +268,6 @@
           </div>
         </div>
 
-        <!-- Barra de Progresso de Questões -->
         <div class="space-y-1.5">
           <div class="flex justify-between text-xs font-medium">
             <span id="qProgressFraction" class="text-slate-300">0 de 30 questões</span>
@@ -230,7 +278,6 @@
           </div>
         </div>
 
-        <!-- Formulário Rápido de Registro de Questões -->
         <form onsubmit="addQuestionBatch(event)" class="flex flex-wrap items-center gap-2 pt-1">
           <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1.5 flex-1 min-w-[110px]">
             <span class="text-[11px] text-slate-400">Feitas:</span>
@@ -243,7 +290,7 @@
           <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold px-3.5 py-1.5 rounded-xl text-xs transition">
             + Somar Bloco
           </button>
-          <button type="button" onclick="clearTodayQuestions()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 rounded-xl text-xs transition border border-slate-700" title="Zerar questões do dia selecionado">
+          <button type="button" onclick="clearTodayQuestions()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 rounded-xl text-xs transition border border-slate-700">
             Zerar
           </button>
         </form>
@@ -251,10 +298,10 @@
 
     </div>
 
-    <!-- Área Principal: Pomodoro + Checklist com Dias Programáveis + Gráfico -->
+    <!-- Área Principal: Pomodoro + Checklist + Gráfico -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       
-      <!-- Coluna 1: Cronômetro Pomodoro (4 colunas) -->
+      <!-- Coluna 1: Cronômetro Pomodoro -->
       <div class="lg:col-span-4 glass-card p-6 rounded-2xl flex flex-col justify-between space-y-5">
         <div>
           <div class="flex items-center justify-between mb-3">
@@ -262,20 +309,17 @@
             <span id="timerStatusBadge" class="text-xs font-semibold px-2.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full">Modo Foco</span>
           </div>
 
-          <!-- Botões de Modo -->
           <div class="grid grid-cols-3 gap-1.5 bg-slate-900/80 p-1 rounded-xl border border-slate-800 mb-6">
             <button onclick="setTimerMode('focus25')" id="btn-focus25" class="py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white transition">Foco 25m</button>
             <button onclick="setTimerMode('focus50')" id="btn-focus50" class="py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Foco 50m</button>
             <button onclick="setTimerMode('break')" id="btn-break" class="py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Pausa 5m</button>
           </div>
 
-          <!-- Visor do Relógio -->
           <div class="text-center py-6 bg-slate-900/60 rounded-2xl border border-slate-800/80 mb-5">
             <div id="timerDisplay" class="text-6xl font-extrabold tracking-tight text-white font-mono timer-glow">25:00</div>
             <p class="text-xs text-slate-400 mt-2" id="timerSubtext">Cada segundo em Foco soma nas Horas Líquidas</p>
           </div>
 
-          <!-- Controles do Cronômetro -->
           <div class="flex gap-2">
             <button onclick="toggleTimer()" id="startPauseBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl text-sm transition shadow-lg shadow-emerald-900/30">
               ▶ Iniciar Foco
@@ -286,7 +330,6 @@
           </div>
         </div>
 
-        <!-- Ajuste Manual de Horas Líquidas -->
         <div class="pt-4 border-t border-slate-800">
           <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
             <span>Ajuste manual no dia selecionado:</span>
@@ -303,26 +346,24 @@
         </div>
       </div>
 
-      <!-- Coluna 2: Checklist Diário com Dias Programáveis (4 colunas) -->
+      <!-- Coluna 2: Checklist Diário com Dias Programáveis -->
       <div class="lg:col-span-4 glass-card p-6 rounded-2xl flex flex-col justify-between space-y-4">
         <div>
           <div class="flex items-center justify-between mb-1">
             <h2 class="text-lg font-semibold text-white">Metas do Dia</h2>
             <span class="text-xs text-emerald-400 font-semibold" id="dailyProgressText">0/0 programadas</span>
           </div>
-          <p class="text-[11px] text-slate-400 mb-4">Clique em <b>📅 Dias</b> em qualquer hábito para escolher os dias da semana em que ele acontece.</p>
+          <p class="text-[11px] text-slate-400 mb-4">Clique em <b>📅 Dias</b> para definir quais dias da semana cada hábito é obrigatório.</p>
 
-          <!-- Lista de Hábitos -->
           <div id="habitList" class="space-y-2.5 max-h-72 overflow-y-auto pr-1"></div>
         </div>
 
-        <!-- Adicionar Novo Hábito -->
         <form onsubmit="addHabit(event)" class="pt-3 border-t border-slate-800 space-y-2.5">
           <div class="flex gap-2">
             <input 
               type="text" 
               id="newHabitInput" 
-              placeholder="Novo hábito (ex: Natação, Treino)..." 
+              placeholder="Novo hábito (ex: Treino, Simulado)..." 
               required
               class="flex-1 bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
             >
@@ -330,7 +371,6 @@
               + Criar
             </button>
           </div>
-          <!-- Seletor de dias para o novo hábito -->
           <div class="flex items-center justify-between gap-1 text-[11px] text-slate-400">
             <span>Dias ativos:</span>
             <div class="flex gap-1" id="newHabitDaysPicker"></div>
@@ -338,7 +378,7 @@
         </form>
       </div>
 
-      <!-- Coluna 3: Gráfico Combinado (4 colunas) -->
+      <!-- Coluna 3: Gráfico Combinado -->
       <div class="lg:col-span-4 glass-card p-6 rounded-2xl flex flex-col justify-between">
         <div>
           <h2 class="text-lg font-semibold text-white">Curva Semanal Multidimensional</h2>
@@ -356,7 +396,7 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
         <div>
           <h2 class="text-lg font-semibold text-white">Visão Panorâmica da Semana</h2>
-          <p class="text-xs text-slate-400">Legenda: <span class="text-emerald-400 font-bold">✓</span> Concluído | <span class="text-slate-400 font-bold">·</span> Pendente | <span class="text-slate-600 font-mono">—</span> Folga Programada (não desconta da meta)</p>
+          <p class="text-xs text-slate-400">Legenda: <span class="text-emerald-400 font-bold">✓</span> Concluído | <span class="text-slate-400 font-bold">·</span> Pendente | <span class="text-slate-600 font-mono">—</span> Folga Programada</p>
         </div>
       </div>
       <table class="w-full text-left border-collapse min-w-[650px]">
@@ -367,12 +407,12 @@
       </table>
     </section>
 
-    <!-- Histórico de Semanas Anteriores (Memória de Longo Prazo) -->
+    <!-- Histórico de Semanas Arquivadas -->
     <section class="glass-card p-6 rounded-2xl overflow-x-auto">
       <div class="flex items-center justify-between mb-4">
         <div>
           <h2 class="text-lg font-semibold text-white">📦 Histórico de Semanas Arquivadas</h2>
-          <p class="text-xs text-slate-400">Compare sua evolução de horas líquidas, volume de questões, taxa de acerto e consistência ao longo do tempo.</p>
+          <p class="text-xs text-slate-400">Histórico consolidado salvo localmente e sincronizado com sua Planilha do Google Drive.</p>
         </div>
       </div>
       <div id="archiveContainer"></div>
@@ -386,17 +426,15 @@
     const jsDay = new Date().getDay();
     let selectedDayIndex = jsDay === 0 ? 6 : jsDay - 1;
 
-    // Hábitos iniciais com suporte a dias programados (Treino padrão 4x/semana)
     const defaultHabits = [
-      { id: 1, name: 'Treino Funcional / Força', days: [true, true, false, false, false, false, false], scheduledDays: [true, true, false, true, true, false, false] },
-      { id: 2, name: 'Bloco de Questões & Revisão Ativa', days: [true, true, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, false] },
-      { id: 3, name: 'Hidratação (3L) + Creatina', days: [true, true, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, true] },
-      { id: 4, name: 'Leitura / Estudo Dirigido', days: [true, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, false] },
-      { id: 5, name: 'Rotina de Autocuidado & Sono (7h+)', days: [true, true, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, true] }
+      { id: 1, name: 'Treino Funcional / Força', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, false, true, true, false, false] },
+      { id: 2, name: 'Bloco de Questões & Revisão Ativa', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, false] },
+      { id: 3, name: 'Hidratação (3L) + Creatina', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, true] },
+      { id: 4, name: 'Leitura / Estudo Dirigido', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, false] },
+      { id: 5, name: 'Rotina de Autocuidado & Sono (7h+)', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, true] }
     ];
 
     let habits = JSON.parse(localStorage.getItem('habitDashboardData')) || defaultHabits;
-    // Garante retrocompatibilidade de scheduledDays caso já existam dados salvos
     habits.forEach(h => {
       if (!Array.isArray(h.scheduledDays) || h.scheduledDays.length !== 7) {
         const isWorkout = h.name.toLowerCase().includes('treino');
@@ -404,25 +442,29 @@
       }
     });
 
-    let studySeconds = JSON.parse(localStorage.getItem('habitStudySeconds')) || [5400, 7200, 0, 0, 0, 0, 0];
-    let pomodoroCycles = JSON.parse(localStorage.getItem('habitPomodoroCycles')) || [2, 3, 0, 0, 0, 0, 0];
+    let studySeconds = JSON.parse(localStorage.getItem('habitStudySeconds')) || [0, 0, 0, 0, 0, 0, 0];
+    let pomodoroCycles = JSON.parse(localStorage.getItem('habitPomodoroCycles')) || [0, 0, 0, 0, 0, 0, 0];
     let dailyGoalHours = Number(localStorage.getItem('habitDailyGoalHours')) || 4;
     let linkedHabitId = Number(localStorage.getItem('habitLinkedId')) || (habits[3] ? habits[3].id : (habits[0] ? habits[0].id : 0));
 
-    // Novos estados: Questões, Modo Dia Corrido e Semanas Arquivadas
-    let questionsSolved = JSON.parse(localStorage.getItem('habitQuestionsSolved')) || [25, 30, 0, 0, 0, 0, 0];
-    let questionsCorrect = JSON.parse(localStorage.getItem('habitQuestionsCorrect')) || [20, 25, 0, 0, 0, 0, 0];
+    let questionsSolved = JSON.parse(localStorage.getItem('habitQuestionsSolved')) || [0, 0, 0, 0, 0, 0, 0];
+    let questionsCorrect = JSON.parse(localStorage.getItem('habitQuestionsCorrect')) || [0, 0, 0, 0, 0, 0, 0];
     let dailyQuestionsGoal = Number(localStorage.getItem('habitDailyQuestionsGoal')) || 30;
     let linkedQuestionHabitId = Number(localStorage.getItem('habitLinkedQuestionId')) || (habits[1] ? habits[1].id : 0);
     let busyDays = JSON.parse(localStorage.getItem('habitBusyDays')) || [false, false, false, false, false, false, false];
     let archivedWeeks = JSON.parse(localStorage.getItem('habitArchivedWeeks')) || [];
+
+    // Configuração Google Apps Script (Nuvem)
+    let gasWebAppUrl = localStorage.getItem('habitGasWebAppUrl') || '';
+    let lastCloudSync = localStorage.getItem('habitLastCloudSync') || '';
+    let cloudSyncTimeout = null;
 
     // Estado UI
     let editingScheduleHabitId = null;
     let newHabitSchedule = [true, true, true, true, true, true, true];
     let chartInstance = null;
 
-    // Estado do Cronômetro Pomodoro
+    // Estado Pomodoro
     let timerMode = 'focus25';
     let timeLeft = 25 * 60;
     let timerInterval = null;
@@ -440,7 +482,44 @@
       }, 3800);
     }
 
-    function saveState() {
+    function buildFullPayload() {
+      return {
+        version: 3,
+        updatedAt: new Date().toISOString(),
+        dailyGoalHours,
+        linkedHabitId,
+        dailyQuestionsGoal,
+        linkedQuestionHabitId,
+        studySeconds,
+        pomodoroCycles,
+        questionsSolved,
+        questionsCorrect,
+        busyDays,
+        habits,
+        archivedWeeks
+      };
+    }
+
+    function applyPayloadToState(data) {
+      if (!data || !Array.isArray(data.habits)) return false;
+      habits = data.habits.map(h => ({
+        ...h,
+        scheduledDays: Array.isArray(h.scheduledDays) && h.scheduledDays.length === 7 ? h.scheduledDays : [true,true,true,true,true,true,true]
+      }));
+      if (Array.isArray(data.studySeconds) && data.studySeconds.length === 7) studySeconds = data.studySeconds.map(Number);
+      if (Array.isArray(data.pomodoroCycles) && data.pomodoroCycles.length === 7) pomodoroCycles = data.pomodoroCycles.map(Number);
+      if (Array.isArray(data.questionsSolved) && data.questionsSolved.length === 7) questionsSolved = data.questionsSolved.map(Number);
+      if (Array.isArray(data.questionsCorrect) && data.questionsCorrect.length === 7) questionsCorrect = data.questionsCorrect.map(Number);
+      if (Array.isArray(data.busyDays) && data.busyDays.length === 7) busyDays = data.busyDays.map(Boolean);
+      if (Array.isArray(data.archivedWeeks)) archivedWeeks = data.archivedWeeks;
+      if (data.dailyGoalHours) dailyGoalHours = Number(data.dailyGoalHours);
+      if (data.linkedHabitId) linkedHabitId = Number(data.linkedHabitId);
+      if (data.dailyQuestionsGoal) dailyQuestionsGoal = Number(data.dailyQuestionsGoal);
+      if (data.linkedQuestionHabitId) linkedQuestionHabitId = Number(data.linkedQuestionHabitId);
+      return true;
+    }
+
+    function saveLocalOnly() {
       localStorage.setItem('habitDashboardData', JSON.stringify(habits));
       localStorage.setItem('habitStudySeconds', JSON.stringify(studySeconds));
       localStorage.setItem('habitPomodoroCycles', JSON.stringify(pomodoroCycles));
@@ -452,7 +531,138 @@
       localStorage.setItem('habitLinkedQuestionId', String(linkedQuestionHabitId));
       localStorage.setItem('habitBusyDays', JSON.stringify(busyDays));
       localStorage.setItem('habitArchivedWeeks', JSON.stringify(archivedWeeks));
+    }
+
+    function saveState(skipCloud = false) {
+      saveLocalOnly();
       renderAll();
+      if (!skipCloud && gasWebAppUrl) {
+        scheduleCloudPush();
+      }
+    }
+
+    // ==========================================
+    // SINCRONIZAÇÃO COM GOOGLE DRIVE (APPS SCRIPT)
+    // ==========================================
+
+    function toggleCloudConfig() {
+      const panel = document.getElementById('cloudConfigPanel');
+      panel.classList.toggle('hidden');
+      const input = document.getElementById('gasUrlInput');
+      if (input) input.value = gasWebAppUrl;
+    }
+
+    function updateCloudStatusUI(state, customText) {
+      const dot = document.getElementById('cloudStatusDot');
+      const text = document.getElementById('cloudStatusText');
+      const lastSyncEl = document.getElementById('lastSyncTimestamp');
+
+      if (lastSyncEl && lastCloudSync) {
+        lastSyncEl.textContent = `Última sincronização: ${lastCloudSync}`;
+      }
+
+      if (!gasWebAppUrl) {
+        dot.className = 'w-2 h-2 rounded-full bg-slate-500';
+        text.textContent = 'Nuvem Off';
+        return;
+      }
+
+      if (state === 'syncing') {
+        dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
+        text.textContent = customText || 'Sincronizando...';
+      } else if (state === 'ok') {
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+        text.textContent = customText || 'Drive Sincronizado';
+      } else if (state === 'error') {
+        dot.className = 'w-2 h-2 rounded-full bg-rose-500';
+        text.textContent = customText || 'Erro na Nuvem';
+      }
+    }
+
+    function saveGasUrl() {
+      const input = document.getElementById('gasUrlInput');
+      const url = (input.value || '').trim();
+      if (!url.startsWith('https://script.google.com/')) {
+        showToast('Insira uma URL válida do Google Apps Script (terminada em /exec).', '⚠️');
+        return;
+      }
+      gasWebAppUrl = url;
+      localStorage.setItem('habitGasWebAppUrl', gasWebAppUrl);
+      showToast('URL conectada! Verificando dados na sua planilha...', '☁️');
+      pullFromCloud(true);
+    }
+
+    function disconnectCloud() {
+      gasWebAppUrl = '';
+      localStorage.removeItem('habitGasWebAppUrl');
+      updateCloudStatusUI('off');
+      showToast('Sincronização em nuvem desconectada.', '☁️');
+    }
+
+    function scheduleCloudPush() {
+      if (!gasWebAppUrl) return;
+      updateCloudStatusUI('syncing', 'Salvando...');
+      clearTimeout(cloudSyncTimeout);
+      cloudSyncTimeout = setTimeout(() => {
+        pushToCloud(false);
+      }, 1200);
+    }
+
+    async function pushToCloud(showNotification = false) {
+      if (!gasWebAppUrl) {
+        if (showNotification) showToast('Configure a URL do Google Apps Script primeiro.', '⚠️');
+        return;
+      }
+      updateCloudStatusUI('syncing', 'Enviando...');
+      try {
+        const payload = buildFullPayload();
+        // Usa text/plain para evitar bloqueio de preflight CORS no Google Apps Script
+        const response = await fetch(gasWebAppUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        const resData = await response.json();
+        if (resData.status === 'saved') {
+          const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          lastCloudSync = `${new Date().toLocaleDateString('pt-BR')} às ${timeStr}`;
+          localStorage.setItem('habitLastCloudSync', lastCloudSync);
+          updateCloudStatusUI('ok', `Salvo (${timeStr})`);
+          if (showNotification) showToast('Dados enviados para a Planilha Google com sucesso!', '☁️');
+        } else {
+          throw new Error(resData.message || 'Resposta inesperada');
+        }
+      } catch (err) {
+        console.error('Erro ao enviar para nuvem:', err);
+        updateCloudStatusUI('error', 'Falha ao enviar');
+        if (showNotification) showToast('Não foi possível enviar para a Planilha. Verifique a URL e permissão.', '❌');
+      }
+    }
+
+    async function pullFromCloud(showNotification = false) {
+      if (!gasWebAppUrl) return;
+      updateCloudStatusUI('syncing', 'Carregando...');
+      try {
+        const response = await fetch(`${gasWebAppUrl}?t=${Date.now()}`);
+        const resData = await response.json();
+        if (resData.status === 'ok' && resData.hasData && resData.data) {
+          applyPayloadToState(resData.data);
+          saveLocalOnly();
+          renderAll();
+          const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          lastCloudSync = `${new Date().toLocaleDateString('pt-BR')} às ${timeStr}`;
+          localStorage.setItem('habitLastCloudSync', lastCloudSync);
+          updateCloudStatusUI('ok', `Sincronizado (${timeStr})`);
+          if (showNotification) showToast('Dados carregados da Planilha Google!', '☁️');
+        } else if (resData.status === 'ok' && !resData.hasData) {
+          // Planilha nova/vazia: envia os dados locais atuais para inicializar a planilha
+          await pushToCloud(showNotification);
+        }
+      } catch (err) {
+        console.error('Erro ao puxar da nuvem:', err);
+        updateCloudStatusUI('error', 'Modo Offline');
+        if (showNotification) showToast('Erro ao carregar da Planilha. Usando dados locais.', '⚠️');
+      }
     }
 
     // ==========================================
@@ -467,12 +677,10 @@
         return;
       }
       if (Notification.permission === 'granted') {
-        btnText.textContent = 'Alertas Ativos';
+        btnText.textContent = 'Alertas ON';
         btn.className = 'px-3 py-2 text-xs font-medium text-emerald-300 bg-emerald-950/40 rounded-xl border border-emerald-700/50 flex items-center gap-1.5';
-      } else if (Notification.permission === 'denied') {
-        btnText.textContent = 'Alertas Bloqueados';
       } else {
-        btnText.textContent = 'Ativar Alertas';
+        btnText.textContent = 'Alertas';
       }
     }
 
@@ -484,21 +692,17 @@
       Notification.requestPermission().then(permission => {
         updateNotificationButtonUI();
         if (permission === 'granted') {
-          showToast('Notificações na área de trabalho ativadas!', '🔔');
-          new Notification('Painel de Alta Performance', {
-            body: 'Você será avisado aqui quando seus ciclos Pomodoro terminarem!'
+          showToast('Notificações ativadas!', '🔔');
+          new Notification('Painel Sincronizado', {
+            body: 'Você será avisado quando seus ciclos Pomodoro terminarem!'
           });
-        } else {
-          showToast('Permissão de notificação não concedida.', '⚠️');
         }
       });
     }
 
     function sendDesktopNotification(title, body) {
       if ('Notification' in window && Notification.permission === 'granted') {
-        try {
-          new Notification(title, { body });
-        } catch (e) {}
+        try { new Notification(title, { body }); } catch (e) {}
       }
     }
 
@@ -571,7 +775,7 @@
       checkAutoCompleteQuestionHabit(selectedDayIndex);
       saveState();
       const batchAcc = Math.round((correct / solved) * 100);
-      showToast(`+${solved} questões registradas (${batchAcc}% de acerto no bloco)!`, '📝');
+      showToast(`+${solved} questões registradas (${batchAcc}% de acerto)!`, '📝');
     }
 
     function clearTodayQuestions() {
@@ -656,7 +860,7 @@
       busyDays = [false, false, false, false, false, false, false];
 
       saveState();
-      showToast('Semana arquivada no histórico e painel pronto para a nova semana!', '📦');
+      showToast('Semana arquivada e sincronizada!', '📦');
     }
 
     function resetWeekOnly() {
@@ -700,24 +904,9 @@
     }
 
     function exportJSON() {
-      const backupPayload = {
-        version: 2,
-        exportedAt: new Date().toISOString(),
-        dailyGoalHours,
-        linkedHabitId,
-        dailyQuestionsGoal,
-        linkedQuestionHabitId,
-        studySeconds,
-        pomodoroCycles,
-        questionsSolved,
-        questionsCorrect,
-        busyDays,
-        habits,
-        archivedWeeks
-      };
-      const jsonString = JSON.stringify(backupPayload, null, 2);
+      const jsonString = JSON.stringify(buildFullPayload(), null, 2);
       triggerDownload(jsonString, `backup-painel-${getFormattedDate()}.json`, 'application/json;charset=utf-8;');
-      showToast('Backup JSON completo exportado!', '⬇️');
+      showToast('Backup JSON exportado!', '⬇️');
     }
 
     function exportCSV() {
@@ -783,25 +972,9 @@
         try {
           if (file.name.toLowerCase().endsWith('.json')) {
             const data = JSON.parse(content);
-            if (!Array.isArray(data.habits)) throw new Error('JSON inválido.');
-            
-            habits = data.habits.map(h => ({
-              ...h,
-              scheduledDays: Array.isArray(h.scheduledDays) && h.scheduledDays.length === 7 ? h.scheduledDays : [true,true,true,true,true,true,true]
-            }));
-            if (Array.isArray(data.studySeconds)) studySeconds = data.studySeconds.map(Number);
-            if (Array.isArray(data.pomodoroCycles)) pomodoroCycles = data.pomodoroCycles.map(Number);
-            if (Array.isArray(data.questionsSolved)) questionsSolved = data.questionsSolved.map(Number);
-            if (Array.isArray(data.questionsCorrect)) questionsCorrect = data.questionsCorrect.map(Number);
-            if (Array.isArray(data.busyDays)) busyDays = data.busyDays.map(Boolean);
-            if (Array.isArray(data.archivedWeeks)) archivedWeeks = data.archivedWeeks;
-            if (data.dailyGoalHours) dailyGoalHours = Number(data.dailyGoalHours);
-            if (data.linkedHabitId) linkedHabitId = Number(data.linkedHabitId);
-            if (data.dailyQuestionsGoal) dailyQuestionsGoal = Number(data.dailyQuestionsGoal);
-            if (data.linkedQuestionHabitId) linkedQuestionHabitId = Number(data.linkedQuestionHabitId);
-
+            if (!applyPayloadToState(data)) throw new Error('JSON inválido.');
             saveState();
-            showToast('Backup JSON restaurado com sucesso!', '🎉');
+            showToast('Backup JSON restaurado e sincronizado!', '🎉');
           } else if (file.name.toLowerCase().endsWith('.csv')) {
             const cleanContent = content.replace(/^\uFEFF/, '');
             const lines = cleanContent.split(/\r?\n/).filter(l => l.trim() !== '');
@@ -947,8 +1120,14 @@
           if (timerMode === 'focus25' || timerMode === 'focus50') {
             studySeconds[selectedDayIndex]++;
             const autoChecked = checkAutoCompleteStudyHabit(selectedDayIndex);
-            if (autoChecked || studySeconds[selectedDayIndex] % 15 === 0) {
+            if (autoChecked) {
               saveState();
+            } else if (studySeconds[selectedDayIndex] % 60 === 0) {
+              // Salva na nuvem a cada 1 minuto de foco contínuo
+              saveState();
+            } else if (studySeconds[selectedDayIndex] % 10 === 0) {
+              saveLocalOnly();
+              renderAll();
             } else {
               renderKPIs();
               renderGoalBar();
@@ -1077,12 +1256,11 @@
       saveState();
     }
 
-    // Calcula % diária levando em conta apenas os hábitos programados para aquele dia
     function getDailyPercentages() {
       if (habits.length === 0) return [0, 0, 0, 0, 0, 0, 0];
       return DAYS.map((_, dayIdx) => {
         const activeHabits = habits.filter(h => h.scheduledDays[dayIdx] || h.days[dayIdx]);
-        if (activeHabits.length === 0) return 100; // Dia de folga total não derruba o gráfico
+        if (activeHabits.length === 0) return 100;
         const completed = activeHabits.filter(h => h.days[dayIdx]).length;
         return Math.round((completed / activeHabits.length) * 100);
       });
@@ -1093,7 +1271,7 @@
       let currentStreak = 0;
       for (let i = 0; i <= selectedDayIndex; i++) {
         const activeCount = habits.filter(h => h.scheduledDays[i] || h.days[i]).length;
-        if (activeCount === 0) continue; // Folga completa mantém a sequência intacta
+        if (activeCount === 0) continue;
         const threshold = busyDays[i] ? 60 : 80;
         if (dailyPcts[i] >= threshold) {
           currentStreak++;
@@ -1277,10 +1455,10 @@
                 </div>
               </label>
               <div class="flex items-center gap-1 shrink-0">
-                <button onclick="toggleScheduleEditor(${habit.id})" class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition" title="Configurar em quais dias da semana este hábito acontece">
+                <button onclick="toggleScheduleEditor(${habit.id})" class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
                   📅 Dias
                 </button>
-                <button onclick="deleteHabit(${habit.id})" class="text-slate-600 hover:text-rose-400 p-1 text-xs transition" title="Excluir hábito">
+                <button onclick="deleteHabit(${habit.id})" class="text-slate-600 hover:text-rose-400 p-1 text-xs transition">
                   ✕
                 </button>
               </div>
@@ -1315,23 +1493,11 @@
         const dayCells = habit.days.map((done, dIdx) => {
           const isSched = habit.scheduledDays[dIdx];
           if (done) {
-            return `
-              <td class="py-3 text-center">
-                <button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-emerald-500 text-slate-950 font-bold transition">✓</button>
-              </td>
-            `;
+            return `<td class="py-3 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-emerald-500 text-slate-950 font-bold transition">✓</button></td>`;
           } else if (isSched) {
-            return `
-              <td class="py-3 text-center">
-                <button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-slate-800 text-slate-500 hover:bg-slate-700 transition">·</button>
-              </td>
-            `;
+            return `<td class="py-3 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-slate-800 text-slate-500 hover:bg-slate-700 transition">·</button></td>`;
           } else {
-            return `
-              <td class="py-3 text-center">
-                <button onclick="toggleHabitDay(${habit.id}, ${dIdx})" title="Dia de folga programada (clique se quiser marcar como bônus)" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-slate-900/50 text-slate-700 hover:bg-slate-800 font-mono text-xs transition">—</button>
-              </td>
-            `;
+            return `<td class="py-3 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-slate-900/50 text-slate-700 hover:bg-slate-800 font-mono text-xs transition">—</button></td>`;
           }
         }).join('');
 
@@ -1348,11 +1514,7 @@
       const studyCells = studySeconds.map((sec, idx) => {
         const goalSecs = getEffectiveStudyGoalSeconds(idx);
         const hitGoal = sec >= goalSecs && goalSecs > 0;
-        return `
-          <td class="py-3 text-center text-xs font-semibold ${hitGoal ? 'text-emerald-400' : (sec > 0 ? 'text-indigo-400' : 'text-slate-600')}">
-            ${formatHoursMinutes(sec)}
-          </td>
-        `;
+        return `<td class="py-3 text-center text-xs font-semibold ${hitGoal ? 'text-emerald-400' : (sec > 0 ? 'text-indigo-400' : 'text-slate-600')}">${formatHoursMinutes(sec)}</td>`;
       }).join('');
 
       const studyRow = `
@@ -1372,11 +1534,7 @@
         const c = questionsCorrect[idx] || 0;
         const acc = s > 0 ? Math.round((c / s) * 100) : 0;
         if (s === 0) return `<td class="py-3 text-center text-xs text-slate-600">—</td>`;
-        return `
-          <td class="py-3 text-center text-xs font-semibold ${acc >= 80 ? 'text-emerald-400' : 'text-cyan-400'}">
-            ${c}/${s} (${acc}%)
-          </td>
-        `;
+        return `<td class="py-3 text-center text-xs font-semibold ${acc >= 80 ? 'text-emerald-400' : 'text-cyan-400'}">${c}/${s} (${acc}%)</td>`;
       }).join('');
 
       const questionRow = `
@@ -1415,7 +1573,7 @@
       if (archivedWeeks.length === 0) {
         container.innerHTML = `
           <div class="text-center py-6 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">
-            Nenhuma semana arquivada ainda. Ao terminar seu domingo, clique em <b>📦 Arquivar Semana</b> no topo para salvar seu histórico aqui.
+            Nenhuma semana arquivada ainda. Ao terminar seu domingo, clique em <b>📦 Arquivar Semana</b> no topo para salvar seu histórico.
           </div>
         `;
         return;
@@ -1541,6 +1699,7 @@
 
     function renderAll() {
       updateNotificationButtonUI();
+      updateCloudStatusUI(gasWebAppUrl ? 'ok' : 'off');
       renderDaySelector();
       renderGoalBar();
       renderQuestionBar();
@@ -1552,7 +1711,11 @@
       renderChart();
     }
 
+    // Inicializa interface e busca dados mais recentes da Planilha Google
     renderAll();
+    if (gasWebAppUrl) {
+      pullFromCloud(false);
+    }
   </script>
 </body>
 </html>
