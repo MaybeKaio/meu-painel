@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Alta Performance — Hábitos, Horas & Questões</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .custom-checkbox:checked + div {
+      background-color: #10b981;
+      border-color: #10b981;
+    }
+    .timer-glow {
+      text-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
+    }
+  </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+  <!-- Notificação Toast Interna -->
+  <div id="toastNotification" class="fixed bottom-5 right-5 z-50 hidden transform transition-all duration-300">
+    <div class="glass-card px-4 py-3 rounded-xl shadow-2xl border border-emerald-500/40 flex items-center gap-3">
+      <span id="toastIcon" class="text-lg">✅</span>
+      <span id="toastMessage" class="text-xs md:text-sm font-medium text-slate-100">Operação realizada!</span>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto space-y-6">
+    
+    <!-- Cabeçalho com Ações de Notificação, Backup e Arquivamento -->
+    <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-white">Painel de Hábitos, Horas & Questões</h1>
+        <p class="text-slate-400 text-sm mt-1">Gestão de consistência com dias programáveis, horas líquidas, taxa de acerto e histórico semanal.</p>
+      </div>
+      
+      <div class="flex flex-wrap items-center gap-2">
+        <input type="file" id="importFileInput" accept=".json,.csv" class="hidden" onchange="handleFileImport(event)">
+        
+        <button id="notifBtn" onclick="requestDesktopNotifications()" class="px-3 py-2 text-xs font-medium text-amber-300 bg-amber-950/40 hover:bg-amber-900/50 rounded-xl transition border border-amber-700/50 flex items-center gap-1.5" title="Receber alertas do Pomodoro mesmo em outra aba">
+          <span>🔔</span> <span id="notifBtnText">Ativar Alertas</span>
+        </button>
+
+        <button onclick="exportJSON()" class="px-3 py-2 text-xs font-medium text-emerald-300 bg-emerald-950/50 hover:bg-emerald-900/60 rounded-xl transition border border-emerald-700/50 flex items-center gap-1.5">
+          <span>⬇️</span> JSON
+        </button>
+
+        <button onclick="exportCSV()" class="px-3 py-2 text-xs font-medium text-sky-300 bg-sky-950/50 hover:bg-sky-900/60 rounded-xl transition border border-sky-700/50 flex items-center gap-1.5">
+          <span>📊</span> CSV
+        </button>
+
+        <button onclick="document.getElementById('importFileInput').click()" class="px-3 py-2 text-xs font-medium text-indigo-300 bg-indigo-950/50 hover:bg-indigo-900/60 rounded-xl transition border border-indigo-700/50 flex items-center gap-1.5">
+          <span>⬆️</span> Importar
+        </button>
+
+        <button onclick="archiveAndResetWeek()" class="px-3.5 py-2 text-xs font-semibold text-purple-200 bg-purple-900/60 hover:bg-purple-800/80 rounded-xl transition border border-purple-600/60 flex items-center gap-1.5" title="Salva o resumo desta semana no histórico e limpa para a próxima">
+          <span>📦</span> Arquivar Semana
+        </button>
+
+        <button onclick="resetWeekOnly()" class="px-2.5 py-2 text-xs font-medium text-slate-400 bg-slate-800/80 hover:bg-rose-950/60 hover:text-rose-300 rounded-xl transition border border-slate-700" title="Zerar semana atual sem arquivar">
+          ↺
+        </button>
+      </div>
+    </header>
+
+    <!-- Cards de Resumo (5 KPIs) -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+        <div>
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Sequência Ativa</span>
+          <p class="text-2xl font-bold text-amber-400 mt-1" id="streakCount">0 dias</p>
+          <span class="text-[11px] text-slate-500" id="streakSubtext">Meta: 80% do dia</span>
+        </div>
+        <div class="text-2xl">🔥</div>
+      </div>
+
+      <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+        <div>
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Horas Líquidas (Dia)</span>
+          <p class="text-2xl font-bold text-indigo-400 mt-1" id="dailyStudyTime">0h 00m</p>
+          <span class="text-[11px] text-slate-500" id="weeklyStudyTime">Semana: 0h 00m</span>
+        </div>
+        <div class="text-2xl">⏱️</div>
+      </div>
+
+      <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+        <div>
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Questões & Acerto</span>
+          <p class="text-2xl font-bold text-cyan-400 mt-1" id="dailyQuestionsKPI">0 (0%)</p>
+          <span class="text-[11px] text-slate-500" id="weeklyQuestionsKPI">Semana: 0 feitas (0%)</span>
+        </div>
+        <div class="text-2xl">📝</div>
+      </div>
+
+      <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+        <div>
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Taxa da Semana</span>
+          <p class="text-2xl font-bold text-emerald-400 mt-1" id="weeklyRate">0%</p>
+          <span class="text-[11px] text-slate-500">Sobre dias programados</span>
+        </div>
+        <div class="text-2xl">📈</div>
+      </div>
+
+      <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+        <div>
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Check-ins Feitos</span>
+          <p class="text-2xl font-bold text-sky-400 mt-1" id="totalCompleted">0 / 0</p>
+          <span class="text-[11px] text-slate-500">Metas programadas</span>
+        </div>
+        <div class="text-2xl">✅</div>
+      </div>
+    </section>
+
+    <!-- Seletor Global de Dia da Semana + Botão Modo Dia Corrido -->
+    <div class="glass-card p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex flex-wrap items-center gap-3">
+        <span class="text-sm font-medium text-slate-300">Dia em edição:</span>
+        <span id="selectedDayLabel" class="text-xs font-semibold px-2.5 py-1 bg-emerald-500/20 text-emerald-300 rounded-full">Hoje</span>
+        
+        <!-- Toggle Modo Dia Corrido -->
+        <button id="busyDayBtn" onclick="toggleBusyDay()" class="text-xs font-semibold px-3 py-1.5 rounded-xl border transition flex items-center gap-1.5 bg-slate-800/90 text-slate-300 border-slate-700 hover:border-amber-500/50" title="Reduz metas do dia pela metade e protege sua sequência em dias de plantão ou rotina pesada">
+          <span>⚡</span> <span id="busyDayBtnText">Modo Dia Corrido: OFF</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-7 gap-1.5 w-full md:w-auto" id="daySelector"></div>
+    </div>
+
+    <!-- Barras Duplas: Meta de Horas Líquidas + Rastreador de Questões -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <!-- Card 1: Barra de Meta de Horas Líquidas -->
+      <section class="glass-card p-5 rounded-2xl flex flex-col justify-between space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5">
+            <span class="text-xl">🎯</span>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-sm md:text-base font-semibold text-white">Meta de Horas Líquidas</h2>
+                <span id="goalStatusBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">Em andamento</span>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-0.5" id="goalRemainingText">Marca o hábito de estudo automaticamente ao atingir 100%.</p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-lg">
+              <span class="text-slate-400">Padrão:</span>
+              <select id="dailyGoalSelect" onchange="updateDailyGoal(this.value)" class="bg-transparent text-indigo-300 font-semibold focus:outline-none cursor-pointer">
+                <option value="1" class="bg-slate-900">1h/dia</option>
+                <option value="2" class="bg-slate-900">2h/dia</option>
+                <option value="3" class="bg-slate-900">3h/dia</option>
+                <option value="4" class="bg-slate-900">4h/dia</option>
+                <option value="5" class="bg-slate-900">5h/dia</option>
+                <option value="6" class="bg-slate-900">6h/dia</option>
+                <option value="8" class="bg-slate-900">8h/dia</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-lg">
+              <span class="text-slate-400">Auto:</span>
+              <select id="linkedHabitSelect" onchange="updateLinkedHabit(this.value)" class="bg-transparent text-emerald-300 font-semibold focus:outline-none cursor-pointer max-w-[130px] truncate"></select>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-1.5">
+          <div class="flex justify-between text-xs font-medium">
+            <span id="goalProgressFraction" class="text-slate-300">0h 00m de 4h 00m</span>
+            <span id="goalProgressPercent" class="text-indigo-400 font-bold">0%</span>
+          </div>
+          <div class="w-full h-3.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
+            <div id="goalProgressBar" class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-indigo-500 to-indigo-400" style="width: 0%"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Card 2: Rastreador de Questões & Taxa de Acerto -->
+      <section class="glass-card p-5 rounded-2xl flex flex-col justify-between space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5">
+            <span class="text-xl">📝</span>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-sm md:text-base font-semibold text-white">Meta de Questões & Taxa de Acerto</h2>
+                <span id="qAccuracyBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">Acerto: 0%</span>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-0.5" id="qGoalSubtext">Registre suas baterias de questões e acompanhe sua precisão.</p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-lg">
+              <span class="text-slate-400">Meta:</span>
+              <select id="dailyQGoalSelect" onchange="updateDailyQuestionGoal(this.value)" class="bg-transparent text-cyan-300 font-semibold focus:outline-none cursor-pointer">
+                <option value="10" class="bg-slate-900">10/dia</option>
+                <option value="15" class="bg-slate-900">15/dia</option>
+                <option value="20" class="bg-slate-900">20/dia</option>
+                <option value="30" class="bg-slate-900">30/dia</option>
+                <option value="40" class="bg-slate-900">40/dia</option>
+                <option value="50" class="bg-slate-900">50/dia</option>
+                <option value="80" class="bg-slate-900">80/dia</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-lg">
+              <span class="text-slate-400">Auto:</span>
+              <select id="linkedQHabitSelect" onchange="updateLinkedQuestionHabit(this.value)" class="bg-transparent text-emerald-300 font-semibold focus:outline-none cursor-pointer max-w-[130px] truncate"></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Barra de Progresso de Questões -->
+        <div class="space-y-1.5">
+          <div class="flex justify-between text-xs font-medium">
+            <span id="qProgressFraction" class="text-slate-300">0 de 30 questões</span>
+            <span id="qProgressPercent" class="text-cyan-400 font-bold">0%</span>
+          </div>
+          <div class="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
+            <div id="qProgressBar" class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-cyan-500 to-sky-400" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- Formulário Rápido de Registro de Questões -->
+        <form onsubmit="addQuestionBatch(event)" class="flex flex-wrap items-center gap-2 pt-1">
+          <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1.5 flex-1 min-w-[110px]">
+            <span class="text-[11px] text-slate-400">Feitas:</span>
+            <input type="number" id="qSolvedInput" min="1" max="500" placeholder="Ex: 20" required class="w-full bg-transparent text-xs text-white font-semibold focus:outline-none">
+          </div>
+          <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1.5 flex-1 min-w-[110px]">
+            <span class="text-[11px] text-slate-400">Acertos:</span>
+            <input type="number" id="qCorrectInput" min="0" max="500" placeholder="Ex: 16" required class="w-full bg-transparent text-xs text-emerald-300 font-semibold focus:outline-none">
+          </div>
+          <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold px-3.5 py-1.5 rounded-xl text-xs transition">
+            + Somar Bloco
+          </button>
+          <button type="button" onclick="clearTodayQuestions()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 rounded-xl text-xs transition border border-slate-700" title="Zerar questões do dia selecionado">
+            Zerar
+          </button>
+        </form>
+      </section>
+
+    </div>
+
+    <!-- Área Principal: Pomodoro + Checklist com Dias Programáveis + Gráfico -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Coluna 1: Cronômetro Pomodoro (4 colunas) -->
+      <div class="lg:col-span-4 glass-card p-6 rounded-2xl flex flex-col justify-between space-y-5">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-lg font-semibold text-white">Cronômetro Pomodoro</h2>
+            <span id="timerStatusBadge" class="text-xs font-semibold px-2.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full">Modo Foco</span>
+          </div>
+
+          <!-- Botões de Modo -->
+          <div class="grid grid-cols-3 gap-1.5 bg-slate-900/80 p-1 rounded-xl border border-slate-800 mb-6">
+            <button onclick="setTimerMode('focus25')" id="btn-focus25" class="py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white transition">Foco 25m</button>
+            <button onclick="setTimerMode('focus50')" id="btn-focus50" class="py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Foco 50m</button>
+            <button onclick="setTimerMode('break')" id="btn-break" class="py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Pausa 5m</button>
+          </div>
+
+          <!-- Visor do Relógio -->
+          <div class="text-center py-6 bg-slate-900/60 rounded-2xl border border-slate-800/80 mb-5">
+            <div id="timerDisplay" class="text-6xl font-extrabold tracking-tight text-white font-mono timer-glow">25:00</div>
+            <p class="text-xs text-slate-400 mt-2" id="timerSubtext">Cada segundo em Foco soma nas Horas Líquidas</p>
+          </div>
+
+          <!-- Controles do Cronômetro -->
+          <div class="flex gap-2">
+            <button onclick="toggleTimer()" id="startPauseBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl text-sm transition shadow-lg shadow-emerald-900/30">
+              ▶ Iniciar Foco
+            </button>
+            <button onclick="resetTimer()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl text-sm transition border border-slate-700">
+              ↺
+            </button>
+          </div>
+        </div>
+
+        <!-- Ajuste Manual de Horas Líquidas -->
+        <div class="pt-4 border-t border-slate-800">
+          <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+            <span>Ajuste manual no dia selecionado:</span>
+            <span id="PomodoroCyclesToday" class="font-semibold text-indigo-400">0 blocos hoje</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="adjustStudyTime(-900)" class="py-1.5 px-3 bg-slate-800/80 hover:bg-rose-950/50 hover:text-rose-300 text-slate-300 rounded-lg text-xs font-medium border border-slate-700/70 transition">
+              - 15 min
+            </button>
+            <button onclick="adjustStudyTime(900)" class="py-1.5 px-3 bg-slate-800/80 hover:bg-indigo-950/60 hover:text-indigo-300 text-slate-300 rounded-lg text-xs font-medium border border-slate-700/70 transition">
+              + 15 min (Externo)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coluna 2: Checklist Diário com Dias Programáveis (4 colunas) -->
+      <div class="lg:col-span-4 glass-card p-6 rounded-2xl flex flex-col justify-between space-y-4">
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <h2 class="text-lg font-semibold text-white">Metas do Dia</h2>
+            <span class="text-xs text-emerald-400 font-semibold" id="dailyProgressText">0/0 programadas</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mb-4">Clique em <b>📅 Dias</b> em qualquer hábito para escolher os dias da semana em que ele acontece.</p>
+
+          <!-- Lista de Hábitos -->
+          <div id="habitList" class="space-y-2.5 max-h-72 overflow-y-auto pr-1"></div>
+        </div>
+
+        <!-- Adicionar Novo Hábito -->
+        <form onsubmit="addHabit(event)" class="pt-3 border-t border-slate-800 space-y-2.5">
+          <div class="flex gap-2">
+            <input 
+              type="text" 
+              id="newHabitInput" 
+              placeholder="Novo hábito (ex: Natação, Treino)..." 
+              required
+              class="flex-1 bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+            >
+            <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3.5 py-2 rounded-xl text-xs transition">
+              + Criar
+            </button>
+          </div>
+          <!-- Seletor de dias para o novo hábito -->
+          <div class="flex items-center justify-between gap-1 text-[11px] text-slate-400">
+            <span>Dias ativos:</span>
+            <div class="flex gap-1" id="newHabitDaysPicker"></div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Coluna 3: Gráfico Combinado (4 colunas) -->
+      <div class="lg:col-span-4 glass-card p-6 rounded-2xl flex flex-col justify-between">
+        <div>
+          <h2 class="text-lg font-semibold text-white">Curva Semanal Multidimensional</h2>
+          <p class="text-xs text-slate-400 mb-4">Verde: Hábitos (%) | Azul: Acerto Questões (%) | Barras: Estudo (h)</p>
+        </div>
+        <div class="relative h-64 md:h-72 w-full">
+          <canvas id="weeklyChart"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Matriz Completa da Semana -->
+    <section class="glass-card p-6 rounded-2xl overflow-x-auto">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+        <div>
+          <h2 class="text-lg font-semibold text-white">Visão Panorâmica da Semana</h2>
+          <p class="text-xs text-slate-400">Legenda: <span class="text-emerald-400 font-bold">✓</span> Concluído | <span class="text-slate-400 font-bold">·</span> Pendente | <span class="text-slate-600 font-mono">—</span> Folga Programada (não desconta da meta)</p>
+        </div>
+      </div>
+      <table class="w-full text-left border-collapse min-w-[650px]">
+        <thead>
+          <tr class="border-b border-slate-800 text-xs uppercase text-slate-400" id="matrixHeaderRow"></tr>
+        </thead>
+        <tbody id="matrixBody" class="divide-y divide-slate-800/60 text-sm"></tbody>
+      </table>
+    </section>
+
+    <!-- Histórico de Semanas Anteriores (Memória de Longo Prazo) -->
+    <section class="glass-card p-6 rounded-2xl overflow-x-auto">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-lg font-semibold text-white">📦 Histórico de Semanas Arquivadas</h2>
+          <p class="text-xs text-slate-400">Compare sua evolução de horas líquidas, volume de questões, taxa de acerto e consistência ao longo do tempo.</p>
+        </div>
+      </div>
+      <div id="archiveContainer"></div>
+    </section>
+
+  </div>
+
+  <script>
+    const DAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+    
+    const jsDay = new Date().getDay();
+    let selectedDayIndex = jsDay === 0 ? 6 : jsDay - 1;
+
+    // Hábitos iniciais com suporte a dias programados (Treino padrão 4x/semana)
+    const defaultHabits = [
+      { id: 1, name: 'Treino Funcional / Força', days: [true, true, false, false, false, false, false], scheduledDays: [true, true, false, true, true, false, false] },
+      { id: 2, name: 'Bloco de Questões & Revisão Ativa', days: [true, true, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, false] },
+      { id: 3, name: 'Hidratação (3L) + Creatina', days: [true, true, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, true] },
+      { id: 4, name: 'Leitura / Estudo Dirigido', days: [true, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, false] },
+      { id: 5, name: 'Rotina de Autocuidado & Sono (7h+)', days: [true, true, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, true] }
+    ];
+
+    let habits = JSON.parse(localStorage.getItem('habitDashboardData')) || defaultHabits;
+    // Garante retrocompatibilidade de scheduledDays caso já existam dados salvos
+    habits.forEach(h => {
+      if (!Array.isArray(h.scheduledDays) || h.scheduledDays.length !== 7) {
+        const isWorkout = h.name.toLowerCase().includes('treino');
+        h.scheduledDays = isWorkout ? [true, true, false, true, true, false, false] : [true, true, true, true, true, true, true];
+      }
+    });
+
+    let studySeconds = JSON.parse(localStorage.getItem('habitStudySeconds')) || [5400, 7200, 0, 0, 0, 0, 0];
+    let pomodoroCycles = JSON.parse(localStorage.getItem('habitPomodoroCycles')) || [2, 3, 0, 0, 0, 0, 0];
+    let dailyGoalHours = Number(localStorage.getItem('habitDailyGoalHours')) || 4;
+    let linkedHabitId = Number(localStorage.getItem('habitLinkedId')) || (habits[3] ? habits[3].id : (habits[0] ? habits[0].id : 0));
+
+    // Novos estados: Questões, Modo Dia Corrido e Semanas Arquivadas
+    let questionsSolved = JSON.parse(localStorage.getItem('habitQuestionsSolved')) || [25, 30, 0, 0, 0, 0, 0];
+    let questionsCorrect = JSON.parse(localStorage.getItem('habitQuestionsCorrect')) || [20, 25, 0, 0, 0, 0, 0];
+    let dailyQuestionsGoal = Number(localStorage.getItem('habitDailyQuestionsGoal')) || 30;
+    let linkedQuestionHabitId = Number(localStorage.getItem('habitLinkedQuestionId')) || (habits[1] ? habits[1].id : 0);
+    let busyDays = JSON.parse(localStorage.getItem('habitBusyDays')) || [false, false, false, false, false, false, false];
+    let archivedWeeks = JSON.parse(localStorage.getItem('habitArchivedWeeks')) || [];
+
+    // Estado UI
+    let editingScheduleHabitId = null;
+    let newHabitSchedule = [true, true, true, true, true, true, true];
+    let chartInstance = null;
+
+    // Estado do Cronômetro Pomodoro
+    let timerMode = 'focus25';
+    let timeLeft = 25 * 60;
+    let timerInterval = null;
+    let isRunning = false;
+    let toastTimeout = null;
+
+    function showToast(message, icon = '✅') {
+      const toast = document.getElementById('toastNotification');
+      document.getElementById('toastMessage').textContent = message;
+      document.getElementById('toastIcon').textContent = icon;
+      toast.classList.remove('hidden');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 3800);
+    }
+
+    function saveState() {
+      localStorage.setItem('habitDashboardData', JSON.stringify(habits));
+      localStorage.setItem('habitStudySeconds', JSON.stringify(studySeconds));
+      localStorage.setItem('habitPomodoroCycles', JSON.stringify(pomodoroCycles));
+      localStorage.setItem('habitDailyGoalHours', String(dailyGoalHours));
+      localStorage.setItem('habitLinkedId', String(linkedHabitId));
+      localStorage.setItem('habitQuestionsSolved', JSON.stringify(questionsSolved));
+      localStorage.setItem('habitQuestionsCorrect', JSON.stringify(questionsCorrect));
+      localStorage.setItem('habitDailyQuestionsGoal', String(dailyQuestionsGoal));
+      localStorage.setItem('habitLinkedQuestionId', String(linkedQuestionHabitId));
+      localStorage.setItem('habitBusyDays', JSON.stringify(busyDays));
+      localStorage.setItem('habitArchivedWeeks', JSON.stringify(archivedWeeks));
+      renderAll();
+    }
+
+    // ==========================================
+    // NOTIFICAÇÕES NATIVAS DA ÁREA DE TRABALHO
+    // ==========================================
+
+    function updateNotificationButtonUI() {
+      const btnText = document.getElementById('notifBtnText');
+      const btn = document.getElementById('notifBtn');
+      if (!('Notification' in window)) {
+        btnText.textContent = 'Sem Suporte';
+        return;
+      }
+      if (Notification.permission === 'granted') {
+        btnText.textContent = 'Alertas Ativos';
+        btn.className = 'px-3 py-2 text-xs font-medium text-emerald-300 bg-emerald-950/40 rounded-xl border border-emerald-700/50 flex items-center gap-1.5';
+      } else if (Notification.permission === 'denied') {
+        btnText.textContent = 'Alertas Bloqueados';
+      } else {
+        btnText.textContent = 'Ativar Alertas';
+      }
+    }
+
+    function requestDesktopNotifications() {
+      if (!('Notification' in window)) {
+        showToast('Seu navegador não suporta notificações nativas.', '⚠️');
+        return;
+      }
+      Notification.requestPermission().then(permission => {
+        updateNotificationButtonUI();
+        if (permission === 'granted') {
+          showToast('Notificações na área de trabalho ativadas!', '🔔');
+          new Notification('Painel de Alta Performance', {
+            body: 'Você será avisado aqui quando seus ciclos Pomodoro terminarem!'
+          });
+        } else {
+          showToast('Permissão de notificação não concedida.', '⚠️');
+        }
+      });
+    }
+
+    function sendDesktopNotification(title, body) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+          new Notification(title, { body });
+        } catch (e) {}
+      }
+    }
+
+    // ==========================================
+    // METAS DINÂMICAS & MODO DIA CORRIDO
+    // ==========================================
+
+    function getEffectiveStudyGoalSeconds(dayIdx) {
+      const factor = busyDays[dayIdx] ? 0.5 : 1;
+      return dailyGoalHours * 3600 * factor;
+    }
+
+    function getEffectiveQuestionGoal(dayIdx) {
+      const factor = busyDays[dayIdx] ? 0.5 : 1;
+      return Math.max(1, Math.round(dailyQuestionsGoal * factor));
+    }
+
+    function toggleBusyDay() {
+      busyDays[selectedDayIndex] = !busyDays[selectedDayIndex];
+      const isBusy = busyDays[selectedDayIndex];
+      checkAutoCompleteStudyHabit(selectedDayIndex);
+      checkAutoCompleteQuestionHabit(selectedDayIndex);
+      saveState();
+      showToast(
+        isBusy 
+          ? `Modo Dia Corrido ativado para ${DAYS[selectedDayIndex]}! Metas reduzidas pela metade.` 
+          : `Modo Dia Corrido desativado para ${DAYS[selectedDayIndex]}.`,
+        '⚡'
+      );
+    }
+
+    // ==========================================
+    // RASTREADOR DE QUESTÕES E TAXA DE ACERTO
+    // ==========================================
+
+    function checkAutoCompleteQuestionHabit(dayIdx) {
+      const goalQ = getEffectiveQuestionGoal(dayIdx);
+      const currentQ = questionsSolved[dayIdx] || 0;
+      if (currentQ >= goalQ && linkedQuestionHabitId) {
+        const targetHabit = habits.find(h => h.id === Number(linkedQuestionHabitId));
+        if (targetHabit && !targetHabit.days[dayIdx]) {
+          targetHabit.days[dayIdx] = true;
+          playBeep(1046.5, 0.5);
+          showToast(`Meta de ${goalQ} questões batida! "${targetHabit.name}" marcado!`, '📝');
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function addQuestionBatch(event) {
+      event.preventDefault();
+      const solvedEl = document.getElementById('qSolvedInput');
+      const correctEl = document.getElementById('qCorrectInput');
+      const solved = Math.max(0, Number(solvedEl.value) || 0);
+      const correct = Math.max(0, Number(correctEl.value) || 0);
+
+      if (solved === 0) return;
+      if (correct > solved) {
+        showToast('O número de acertos não pode ser maior que as questões feitas.', '⚠️');
+        return;
+      }
+
+      questionsSolved[selectedDayIndex] = (questionsSolved[selectedDayIndex] || 0) + solved;
+      questionsCorrect[selectedDayIndex] = (questionsCorrect[selectedDayIndex] || 0) + correct;
+
+      solvedEl.value = '';
+      correctEl.value = '';
+
+      checkAutoCompleteQuestionHabit(selectedDayIndex);
+      saveState();
+      const batchAcc = Math.round((correct / solved) * 100);
+      showToast(`+${solved} questões registradas (${batchAcc}% de acerto no bloco)!`, '📝');
+    }
+
+    function clearTodayQuestions() {
+      if (questionsSolved[selectedDayIndex] === 0) return;
+      if (confirm(`Zerar o registro de questões de ${DAYS[selectedDayIndex]}?`)) {
+        questionsSolved[selectedDayIndex] = 0;
+        questionsCorrect[selectedDayIndex] = 0;
+        saveState();
+        showToast('Questões do dia zeradas.', '↺');
+      }
+    }
+
+    function updateDailyQuestionGoal(val) {
+      dailyQuestionsGoal = Number(val);
+      checkAutoCompleteQuestionHabit(selectedDayIndex);
+      saveState();
+    }
+
+    function updateLinkedQuestionHabit(val) {
+      linkedQuestionHabitId = Number(val);
+      checkAutoCompleteQuestionHabit(selectedDayIndex);
+      saveState();
+    }
+
+    function getDailyQuestionAccuracies() {
+      return DAYS.map((_, idx) => {
+        const s = questionsSolved[idx] || 0;
+        const c = questionsCorrect[idx] || 0;
+        return s > 0 ? Math.round((c / s) * 100) : 0;
+      });
+    }
+
+    // ==========================================
+    // ARQUIVAMENTO DE SEMANAS (HISTÓRICO)
+    // ==========================================
+
+    function getWeeklyStatsSummary() {
+      let totalScheduled = 0;
+      let totalDone = 0;
+      habits.forEach(h => {
+        DAYS.forEach((_, dIdx) => {
+          if (h.scheduledDays[dIdx] || h.days[dIdx]) {
+            totalScheduled++;
+            if (h.days[dIdx]) totalDone++;
+          }
+        });
+      });
+      const weeklyRate = totalScheduled > 0 ? Math.round((totalDone / totalScheduled) * 100) : 0;
+      const totalSecs = studySeconds.reduce((a, b) => a + b, 0);
+      const totalQ = questionsSolved.reduce((a, b) => a + b, 0);
+      const totalC = questionsCorrect.reduce((a, b) => a + b, 0);
+      const weeklyQAcc = totalQ > 0 ? Math.round((totalC / totalQ) * 100) : 0;
+      const streak = calculateCurrentStreak();
+      return { totalScheduled, totalDone, weeklyRate, totalSecs, totalQ, totalC, weeklyQAcc, streak };
+    }
+
+    function archiveAndResetWeek() {
+      const stats = getWeeklyStatsSummary();
+      const defaultLabel = `Semana encerrada em ${new Date().toLocaleDateString('pt-BR')}`;
+      const weekLabel = prompt('Digite um nome ou período para arquivar esta semana no histórico:', defaultLabel);
+      if (weekLabel === null) return;
+
+      archivedWeeks.unshift({
+        id: Date.now(),
+        label: weekLabel.trim() || defaultLabel,
+        archivedAt: new Date().toISOString(),
+        weeklyRate: stats.weeklyRate,
+        totalDone: stats.totalDone,
+        totalScheduled: stats.totalScheduled,
+        totalStudySeconds: stats.totalSecs,
+        totalQuestions: stats.totalQ,
+        totalCorrect: stats.totalC,
+        questionAccuracy: stats.weeklyQAcc,
+        streak: stats.streak
+      });
+
+      habits.forEach(h => h.days = [false, false, false, false, false, false, false]);
+      studySeconds = [0, 0, 0, 0, 0, 0, 0];
+      pomodoroCycles = [0, 0, 0, 0, 0, 0, 0];
+      questionsSolved = [0, 0, 0, 0, 0, 0, 0];
+      questionsCorrect = [0, 0, 0, 0, 0, 0, 0];
+      busyDays = [false, false, false, false, false, false, false];
+
+      saveState();
+      showToast('Semana arquivada no histórico e painel pronto para a nova semana!', '📦');
+    }
+
+    function resetWeekOnly() {
+      if (confirm('Deseja zerar as marcações da semana atual SEM arquivar no histórico?')) {
+        habits.forEach(h => h.days = [false, false, false, false, false, false, false]);
+        studySeconds = [0, 0, 0, 0, 0, 0, 0];
+        pomodoroCycles = [0, 0, 0, 0, 0, 0, 0];
+        questionsSolved = [0, 0, 0, 0, 0, 0, 0];
+        questionsCorrect = [0, 0, 0, 0, 0, 0, 0];
+        busyDays = [false, false, false, false, false, false, false];
+        saveState();
+        showToast('Semana atual reiniciada!', '🔄');
+      }
+    }
+
+    function deleteArchivedWeek(id) {
+      if (confirm('Remover este registro do histórico de semanas?')) {
+        archivedWeeks = archivedWeeks.filter(w => w.id !== id);
+        saveState();
+      }
+    }
+
+    // ==========================================
+    // EXPORTAÇÃO E IMPORTAÇÃO (JSON & CSV)
+    // ==========================================
+
+    function getFormattedDate() {
+      return new Date().toISOString().split('T')[0];
+    }
+
+    function triggerDownload(content, filename, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function exportJSON() {
+      const backupPayload = {
+        version: 2,
+        exportedAt: new Date().toISOString(),
+        dailyGoalHours,
+        linkedHabitId,
+        dailyQuestionsGoal,
+        linkedQuestionHabitId,
+        studySeconds,
+        pomodoroCycles,
+        questionsSolved,
+        questionsCorrect,
+        busyDays,
+        habits,
+        archivedWeeks
+      };
+      const jsonString = JSON.stringify(backupPayload, null, 2);
+      triggerDownload(jsonString, `backup-painel-${getFormattedDate()}.json`, 'application/json;charset=utf-8;');
+      showToast('Backup JSON completo exportado!', '⬇️');
+    }
+
+    function exportCSV() {
+      const escapeCSV = (str) => `"${String(str).replace(/"/g, '""')}"`;
+      const rows = [];
+
+      rows.push(['Tipo', 'ID', 'Item', ...DAYS, 'Acumulado_Semana', 'Dias_Programados']);
+
+      habits.forEach(h => {
+        const schedCount = h.scheduledDays.filter(Boolean).length;
+        const doneCount = h.days.filter(Boolean).length;
+        const dayValues = h.days.map((d, idx) => d ? '1' : (h.scheduledDays[idx] ? '0' : '-'));
+        const schedMask = h.scheduledDays.map(s => s ? '1' : '0').join('');
+        rows.push(['HABITO', h.id, escapeCSV(h.name), ...dayValues, `${doneCount}/${schedCount}`, `"${schedMask}"`]);
+      });
+
+      const totalSecs = studySeconds.reduce((a, b) => a + b, 0);
+      rows.push(['ESTUDO_SEGUNDOS', '0', '"Horas Liquidas (Segundos)"', ...studySeconds, totalSecs, '']);
+      rows.push(['ESTUDO_FORMATADO', '0', '"Horas Liquidas (h m)"', ...studySeconds.map(s => escapeCSV(formatHoursMinutes(s))), escapeCSV(formatHoursMinutes(totalSecs)), '']);
+
+      const totalQ = questionsSolved.reduce((a, b) => a + b, 0);
+      const totalC = questionsCorrect.reduce((a, b) => a + b, 0);
+      rows.push(['QUESTOES_FEITAS', '0', '"Questoes Resolvidas"', ...questionsSolved, totalQ, '']);
+      rows.push(['QUESTOES_ACERTOS', '0', '"Questoes Certas"', ...questionsCorrect, totalC, '']);
+      rows.push(['DIA_CORRIDO', '0', '"Modo Dia Corrido"', ...busyDays.map(b => b ? '1' : '0'), '', '']);
+
+      const csvContent = '\uFEFF' + rows.map(r => r.join(',')).join('\r\n');
+      triggerDownload(csvContent, `relatorio-painel-${getFormattedDate()}.csv`, 'text/csv;charset=utf-8;');
+      showToast('Planilha CSV exportada!', '📊');
+    }
+
+    function parseCSVLine(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          if (inQuotes && line[i + 1] === '"') {
+            current += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          result.push(current);
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current);
+      return result;
+    }
+
+    function handleFileImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const content = e.target.result;
+        try {
+          if (file.name.toLowerCase().endsWith('.json')) {
+            const data = JSON.parse(content);
+            if (!Array.isArray(data.habits)) throw new Error('JSON inválido.');
+            
+            habits = data.habits.map(h => ({
+              ...h,
+              scheduledDays: Array.isArray(h.scheduledDays) && h.scheduledDays.length === 7 ? h.scheduledDays : [true,true,true,true,true,true,true]
+            }));
+            if (Array.isArray(data.studySeconds)) studySeconds = data.studySeconds.map(Number);
+            if (Array.isArray(data.pomodoroCycles)) pomodoroCycles = data.pomodoroCycles.map(Number);
+            if (Array.isArray(data.questionsSolved)) questionsSolved = data.questionsSolved.map(Number);
+            if (Array.isArray(data.questionsCorrect)) questionsCorrect = data.questionsCorrect.map(Number);
+            if (Array.isArray(data.busyDays)) busyDays = data.busyDays.map(Boolean);
+            if (Array.isArray(data.archivedWeeks)) archivedWeeks = data.archivedWeeks;
+            if (data.dailyGoalHours) dailyGoalHours = Number(data.dailyGoalHours);
+            if (data.linkedHabitId) linkedHabitId = Number(data.linkedHabitId);
+            if (data.dailyQuestionsGoal) dailyQuestionsGoal = Number(data.dailyQuestionsGoal);
+            if (data.linkedQuestionHabitId) linkedQuestionHabitId = Number(data.linkedQuestionHabitId);
+
+            saveState();
+            showToast('Backup JSON restaurado com sucesso!', '🎉');
+          } else if (file.name.toLowerCase().endsWith('.csv')) {
+            const cleanContent = content.replace(/^\uFEFF/, '');
+            const lines = cleanContent.split(/\r?\n/).filter(l => l.trim() !== '');
+            const importedHabits = [];
+
+            for (let i = 1; i < lines.length; i++) {
+              const cols = parseCSVLine(lines[i]);
+              const type = cols[0];
+              if (type === 'HABITO') {
+                const id = Number(cols[1]) || Date.now() + i;
+                const name = cols[2] || `Hábito ${i}`;
+                const rawSlice = cols.slice(3, 10);
+                const days = rawSlice.map(val => val === '1' || val.toLowerCase() === 'true');
+                const maskStr = cols[11] || '';
+                const scheduledDays = maskStr.length === 7 
+                  ? maskStr.split('').map(c => c === '1')
+                  : rawSlice.map(val => val !== '-');
+                importedHabits.push({ id, name, days, scheduledDays });
+              } else if (type === 'ESTUDO_SEGUNDOS') {
+                studySeconds = cols.slice(3, 10).map(v => Number(v) || 0);
+              } else if (type === 'QUESTOES_FEITAS') {
+                questionsSolved = cols.slice(3, 10).map(v => Number(v) || 0);
+              } else if (type === 'QUESTOES_ACERTOS') {
+                questionsCorrect = cols.slice(3, 10).map(v => Number(v) || 0);
+              } else if (type === 'DIA_CORRIDO') {
+                busyDays = cols.slice(3, 10).map(v => v === '1');
+              }
+            }
+            if (importedHabits.length > 0) habits = importedHabits;
+            saveState();
+            showToast('Planilha CSV importada com sucesso!', '🎉');
+          }
+        } catch (err) {
+          showToast('Erro ao importar arquivo.', '❌');
+        } finally {
+          event.target.value = '';
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // ==========================================
+    // LÓGICA DO POMODORO E HORAS LÍQUIDAS
+    // ==========================================
+
+    function playBeep(freq = 880, duration = 0.4) {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function checkAutoCompleteStudyHabit(dayIdx) {
+      const goalSeconds = getEffectiveStudyGoalSeconds(dayIdx);
+      const currentSeconds = studySeconds[dayIdx] || 0;
+      if (currentSeconds >= goalSeconds && linkedHabitId) {
+        const targetHabit = habits.find(h => h.id === Number(linkedHabitId));
+        if (targetHabit && !targetHabit.days[dayIdx]) {
+          targetHabit.days[dayIdx] = true;
+          playBeep(1046.5, 0.5);
+          showToast(`Meta de estudo atingida! "${targetHabit.name}" marcado!`, '🎯');
+          sendDesktopNotification('Meta Diária Atingida! 🎯', `Você completou sua meta de horas líquidas e o hábito "${targetHabit.name}" foi marcado.`);
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function updateDailyGoal(hoursValue) {
+      dailyGoalHours = Number(hoursValue);
+      checkAutoCompleteStudyHabit(selectedDayIndex);
+      saveState();
+    }
+
+    function updateLinkedHabit(habitIdValue) {
+      linkedHabitId = Number(habitIdValue);
+      checkAutoCompleteStudyHabit(selectedDayIndex);
+      saveState();
+    }
+
+    function setTimerMode(mode) {
+      if (isRunning) pauseTimer();
+      timerMode = mode;
+      
+      ['focus25', 'focus50', 'break'].forEach(m => {
+        const btn = document.getElementById(`btn-${m}`);
+        btn.className = m === mode 
+          ? 'py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white transition'
+          : 'py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition';
+      });
+
+      const badge = document.getElementById('timerStatusBadge');
+      const subtext = document.getElementById('timerSubtext');
+
+      if (mode === 'focus25') {
+        timeLeft = 25 * 60;
+        badge.textContent = 'Modo Foco (25m)';
+        badge.className = 'text-xs font-semibold px-2.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full';
+        subtext.textContent = 'Cada segundo em Foco soma nas Horas Líquidas';
+      } else if (mode === 'focus50') {
+        timeLeft = 50 * 60;
+        badge.textContent = 'Modo Foco (50m)';
+        badge.className = 'text-xs font-semibold px-2.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full';
+        subtext.textContent = 'Bloco intensivo — contabilizando tempo líquido';
+      } else {
+        timeLeft = 5 * 60;
+        badge.textContent = 'Pausa Recuperadora';
+        badge.className = 'text-xs font-semibold px-2.5 py-0.5 bg-amber-500/20 text-amber-300 rounded-full';
+        subtext.textContent = 'Pausas não somam no contador de horas líquidas';
+      }
+      updateTimerDisplay();
+    }
+
+    function updateTimerDisplay() {
+      const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+      const secs = (timeLeft % 60).toString().padStart(2, '0');
+      document.getElementById('timerDisplay').textContent = `${mins}:${secs}`;
+      document.title = isRunning ? `(${mins}:${secs}) Painel de Hábitos` : 'Painel de Alta Performance';
+    }
+
+    function toggleTimer() {
+      if (isRunning) pauseTimer();
+      else startTimer();
+    }
+
+    function startTimer() {
+      isRunning = true;
+      const btn = document.getElementById('startPauseBtn');
+      btn.textContent = '⏸ Pausar';
+      btn.className = 'flex-1 bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2.5 rounded-xl text-sm transition';
+
+      timerInterval = setInterval(() => {
+        if (timeLeft > 0) {
+          timeLeft--;
+          if (timerMode === 'focus25' || timerMode === 'focus50') {
+            studySeconds[selectedDayIndex]++;
+            const autoChecked = checkAutoCompleteStudyHabit(selectedDayIndex);
+            if (autoChecked || studySeconds[selectedDayIndex] % 15 === 0) {
+              saveState();
+            } else {
+              renderKPIs();
+              renderGoalBar();
+            }
+          }
+          updateTimerDisplay();
+        } else {
+          playBeep(880, 0.6);
+          if (timerMode === 'focus25' || timerMode === 'focus50') {
+            pomodoroCycles[selectedDayIndex]++;
+            checkAutoCompleteStudyHabit(selectedDayIndex);
+            saveState();
+            sendDesktopNotification('Bloco de Foco Concluído! ✅', 'Excelente trabalho! Hora de fazer uma pausa de 5 minutos.');
+            setTimerMode('break');
+          } else {
+            sendDesktopNotification('Fim da Pausa! 🚀', 'Hora de retomar o próximo bloco de estudo.');
+            setTimerMode('focus25');
+          }
+        }
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      isRunning = false;
+      clearInterval(timerInterval);
+      const btn = document.getElementById('startPauseBtn');
+      btn.textContent = '▶ Retomar';
+      btn.className = 'flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl text-sm transition shadow-lg shadow-emerald-900/30';
+      saveState();
+      updateTimerDisplay();
+    }
+
+    function resetTimer() {
+      pauseTimer();
+      const btn = document.getElementById('startPauseBtn');
+      btn.textContent = '▶ Iniciar Foco';
+      setTimerMode(timerMode);
+    }
+
+    function adjustStudyTime(secondsDelta) {
+      studySeconds[selectedDayIndex] = Math.max(0, studySeconds[selectedDayIndex] + secondsDelta);
+      checkAutoCompleteStudyHabit(selectedDayIndex);
+      saveState();
+    }
+
+    function formatHoursMinutes(totalSeconds) {
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
+    }
+
+    // ==========================================
+    // GESTÃO DE HÁBITOS & DIAS PROGRAMADOS
+    // ==========================================
+
+    function selectDay(index) {
+      selectedDayIndex = index;
+      renderAll();
+    }
+
+    function toggleHabitDay(habitId, dayIdx) {
+      const habit = habits.find(h => h.id === habitId);
+      if (habit) {
+        habit.days[dayIdx] = !habit.days[dayIdx];
+        saveState();
+      }
+    }
+
+    function toggleScheduleEditor(habitId) {
+      editingScheduleHabitId = editingScheduleHabitId === habitId ? null : habitId;
+      renderHabitList();
+    }
+
+    function toggleHabitScheduledDay(habitId, dayIdx) {
+      const habit = habits.find(h => h.id === habitId);
+      if (habit) {
+        habit.scheduledDays[dayIdx] = !habit.scheduledDays[dayIdx];
+        saveState();
+      }
+    }
+
+    function toggleNewHabitDay(dayIdx) {
+      newHabitSchedule[dayIdx] = !newHabitSchedule[dayIdx];
+      renderNewHabitDaysPicker();
+    }
+
+    function renderNewHabitDaysPicker() {
+      const container = document.getElementById('newHabitDaysPicker');
+      if (!container) return;
+      container.innerHTML = DAYS.map((d, idx) => {
+        const active = newHabitSchedule[idx];
+        return `
+          <button type="button" onclick="toggleNewHabitDay(${idx})" class="px-1.5 py-0.5 rounded text-[10px] font-semibold transition ${
+            active ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-500'
+          }">${d[0]}</button>
+        `;
+      }).join('');
+    }
+
+    function addHabit(event) {
+      event.preventDefault();
+      const input = document.getElementById('newHabitInput');
+      const name = input.value.trim();
+      if (!name) return;
+
+      const hasAtLeastOneDay = newHabitSchedule.some(Boolean);
+      const scheduleToUse = hasAtLeastOneDay ? [...newHabitSchedule] : [true, true, true, true, true, true, true];
+
+      const newHabit = {
+        id: Date.now(),
+        name: name,
+        days: [false, false, false, false, false, false, false],
+        scheduledDays: scheduleToUse
+      };
+      habits.push(newHabit);
+      input.value = '';
+      newHabitSchedule = [true, true, true, true, true, true, true];
+      saveState();
+      showToast(`Hábito "${name}" adicionado!`, '✅');
+    }
+
+    function deleteHabit(habitId) {
+      habits = habits.filter(h => h.id !== habitId);
+      if (linkedHabitId === habitId) linkedHabitId = habits[0] ? habits[0].id : 0;
+      if (linkedQuestionHabitId === habitId) linkedQuestionHabitId = habits[0] ? habits[0].id : 0;
+      saveState();
+    }
+
+    // Calcula % diária levando em conta apenas os hábitos programados para aquele dia
+    function getDailyPercentages() {
+      if (habits.length === 0) return [0, 0, 0, 0, 0, 0, 0];
+      return DAYS.map((_, dayIdx) => {
+        const activeHabits = habits.filter(h => h.scheduledDays[dayIdx] || h.days[dayIdx]);
+        if (activeHabits.length === 0) return 100; // Dia de folga total não derruba o gráfico
+        const completed = activeHabits.filter(h => h.days[dayIdx]).length;
+        return Math.round((completed / activeHabits.length) * 100);
+      });
+    }
+
+    function calculateCurrentStreak() {
+      const dailyPcts = getDailyPercentages();
+      let currentStreak = 0;
+      for (let i = 0; i <= selectedDayIndex; i++) {
+        const activeCount = habits.filter(h => h.scheduledDays[i] || h.days[i]).length;
+        if (activeCount === 0) continue; // Folga completa mantém a sequência intacta
+        const threshold = busyDays[i] ? 60 : 80;
+        if (dailyPcts[i] >= threshold) {
+          currentStreak++;
+        } else if (i < selectedDayIndex) {
+          currentStreak = 0;
+        }
+      }
+      return currentStreak;
+    }
+
+    function getDailyStudyHours() {
+      return studySeconds.map(sec => +(sec / 3600).toFixed(2));
+    }
+
+    // ==========================================
+    // RENDERIZAÇÃO DA INTERFACE
+    // ==========================================
+
+    function renderDaySelector() {
+      const container = document.getElementById('daySelector');
+      const isBusyToday = busyDays[selectedDayIndex];
+      document.getElementById('selectedDayLabel').textContent = `${DAYS[selectedDayIndex]}${isBusyToday ? ' (⚡ Dia Corrido)' : ''}`;
+      
+      const busyBtn = document.getElementById('busyDayBtn');
+      const busyBtnText = document.getElementById('busyDayBtnText');
+      if (isBusyToday) {
+        busyBtn.className = 'text-xs font-semibold px-3 py-1.5 rounded-xl border transition flex items-center gap-1.5 bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-lg shadow-amber-950/30';
+        busyBtnText.textContent = 'Modo Dia Corrido: ON (Metas -50%)';
+      } else {
+        busyBtn.className = 'text-xs font-semibold px-3 py-1.5 rounded-xl border transition flex items-center gap-1.5 bg-slate-800/90 text-slate-400 border-slate-700 hover:border-amber-500/50';
+        busyBtnText.textContent = 'Modo Dia Corrido: OFF';
+      }
+
+      container.innerHTML = DAYS.map((day, idx) => {
+        const isSelected = idx === selectedDayIndex;
+        const isBusy = busyDays[idx];
+        return `
+          <button 
+            onclick="selectDay(${idx})"
+            class="px-3 py-2 rounded-xl text-xs font-semibold transition border flex items-center justify-center gap-1 ${
+              isSelected 
+                ? 'bg-emerald-600 text-white border-emerald-500 shadow-lg shadow-emerald-900/30' 
+                : 'bg-slate-800/70 text-slate-400 border-slate-700/60 hover:bg-slate-800'
+            }"
+          >
+            <span>${day}</span>
+            ${isBusy ? '<span title="Dia Corrido">⚡</span>' : ''}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function renderGoalBar() {
+      const goalSelect = document.getElementById('dailyGoalSelect');
+      if (goalSelect) goalSelect.value = String(dailyGoalHours);
+
+      const linkedSelect = document.getElementById('linkedHabitSelect');
+      if (linkedSelect) {
+        linkedSelect.innerHTML = habits.length === 0
+          ? '<option value="0" class="bg-slate-900">Nenhum</option>'
+          : habits.map(h => `<option value="${h.id}" class="bg-slate-900" ${h.id === Number(linkedHabitId) ? 'selected' : ''}>${h.name}</option>`).join('');
+      }
+
+      const goalSecs = getEffectiveStudyGoalSeconds(selectedDayIndex);
+      const todaySecs = studySeconds[selectedDayIndex] || 0;
+      const rawPct = goalSecs > 0 ? Math.round((todaySecs / goalSecs) * 100) : 0;
+      const barWidth = Math.min(100, rawPct);
+
+      document.getElementById('goalProgressFraction').textContent = `${formatHoursMinutes(todaySecs)} de ${formatHoursMinutes(goalSecs)} (${DAYS[selectedDayIndex]})`;
+      
+      const pctEl = document.getElementById('goalProgressPercent');
+      pctEl.textContent = `${rawPct}%`;
+
+      const barEl = document.getElementById('goalProgressBar');
+      barEl.style.width = `${barWidth}%`;
+
+      const statusBadge = document.getElementById('goalStatusBadge');
+      const remainingText = document.getElementById('goalRemainingText');
+      const linkedHabit = habits.find(h => h.id === Number(linkedHabitId));
+      const habitName = linkedHabit ? `"${linkedHabit.name}"` : 'o hábito vinculado';
+
+      if (todaySecs >= goalSecs) {
+        barEl.className = 'h-full rounded-full transition-all duration-500 bg-gradient-to-r from-emerald-500 to-teal-400';
+        pctEl.className = 'text-emerald-400 font-bold';
+        statusBadge.textContent = '✅ Meta Batida';
+        statusBadge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300';
+        remainingText.textContent = `Meta concluída! ${habitName} foi marcado automaticamente neste dia.`;
+      } else {
+        const remainingSecs = goalSecs - todaySecs;
+        barEl.className = 'h-full rounded-full transition-all duration-500 bg-gradient-to-r from-indigo-500 to-indigo-400';
+        pctEl.className = 'text-indigo-400 font-bold';
+        statusBadge.textContent = busyDays[selectedDayIndex] ? '⚡ Meta Reduzida (-50%)' : 'Em andamento';
+        statusBadge.className = busyDays[selectedDayIndex]
+          ? 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300'
+          : 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400';
+        remainingText.textContent = `Faltam ${formatHoursMinutes(remainingSecs)} para marcar ${habitName} automaticamente.`;
+      }
+    }
+
+    function renderQuestionBar() {
+      const qGoalSelect = document.getElementById('dailyQGoalSelect');
+      if (qGoalSelect) qGoalSelect.value = String(dailyQuestionsGoal);
+
+      const linkedQSelect = document.getElementById('linkedQHabitSelect');
+      if (linkedQSelect) {
+        linkedQSelect.innerHTML = habits.length === 0
+          ? '<option value="0" class="bg-slate-900">Nenhum</option>'
+          : habits.map(h => `<option value="${h.id}" class="bg-slate-900" ${h.id === Number(linkedQuestionHabitId) ? 'selected' : ''}>${h.name}</option>`).join('');
+      }
+
+      const effectiveQGoal = getEffectiveQuestionGoal(selectedDayIndex);
+      const solvedToday = questionsSolved[selectedDayIndex] || 0;
+      const correctToday = questionsCorrect[selectedDayIndex] || 0;
+      const accToday = solvedToday > 0 ? Math.round((correctToday / solvedToday) * 100) : 0;
+      const rawPct = effectiveQGoal > 0 ? Math.round((solvedToday / effectiveQGoal) * 100) : 0;
+
+      document.getElementById('qProgressFraction').textContent = `${solvedToday} de ${effectiveQGoal} questões (${correctToday} acertos em ${DAYS[selectedDayIndex]})`;
+      document.getElementById('qProgressPercent').textContent = `${rawPct}%`;
+      document.getElementById('qProgressBar').style.width = `${Math.min(100, rawPct)}%`;
+
+      const accBadge = document.getElementById('qAccuracyBadge');
+      accBadge.textContent = solvedToday > 0 ? `Acerto Hoje: ${accToday}%` : 'Sem questões hoje';
+      accBadge.className = accToday >= 80
+        ? 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300'
+        : (accToday >= 65 ? 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300' : 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300');
+    }
+
+    function renderHabitList() {
+      const container = document.getElementById('habitList');
+      const scheduledToday = habits.filter(h => h.scheduledDays[selectedDayIndex] || h.days[selectedDayIndex]);
+      const doneToday = scheduledToday.filter(h => h.days[selectedDayIndex]).length;
+      document.getElementById('dailyProgressText').textContent = `${doneToday}/${scheduledToday.length} programadas hoje`;
+
+      if (habits.length === 0) {
+        container.innerHTML = `<p class="text-sm text-slate-500 text-center py-6">Nenhum hábito cadastrado.</p>`;
+        return;
+      }
+
+      container.innerHTML = habits.map(habit => {
+        const isDone = habit.days[selectedDayIndex];
+        const isScheduled = habit.scheduledDays[selectedDayIndex];
+        const isStudyLinked = habit.id === Number(linkedHabitId);
+        const isQLinked = habit.id === Number(linkedQuestionHabitId);
+        const isEditingDays = editingScheduleHabitId === habit.id;
+
+        const schedulePills = isEditingDays ? `
+          <div class="mt-2.5 pt-2 border-t border-slate-800 flex items-center justify-between gap-1">
+            <span class="text-[10px] text-slate-400">Dias obrigatórios:</span>
+            <div class="flex gap-1">
+              ${DAYS.map((d, dIdx) => `
+                <button 
+                  type="button"
+                  onclick="toggleHabitScheduledDay(${habit.id},${dIdx})"
+                  class="px-1.5 py-0.5 rounded text-[10px] font-semibold transition ${
+                    habit.scheduledDays[dIdx] ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-500'
+                  }"
+                >${d}</button>
+              `).join('')}
+            </div>
+          </div>
+        ` : '';
+
+        return `
+          <div class="p-3 rounded-xl bg-slate-900/60 border ${!isScheduled && !isDone ? 'border-slate-800/40 opacity-60' : 'border-slate-800'} hover:border-slate-700 transition">
+            <div class="flex items-center justify-between gap-2">
+              <label class="flex items-center gap-3 cursor-pointer flex-1 min-w-0">
+                <input 
+                  type="checkbox" 
+                  class="hidden custom-checkbox" 
+                  ${isDone ? 'checked' : ''} 
+                  onchange="toggleHabitDay(${habit.id}, ${selectedDayIndex})"
+                >
+                <div class="w-5 h-5 shrink-0 rounded-md border-2 border-slate-600 flex items-center justify-center transition">
+                  ${isDone ? '<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>' : ''}
+                </div>
+                <div class="truncate">
+                  <span class="text-sm font-medium ${isDone ? 'line-through text-slate-500' : 'text-slate-200'}">${habit.name}</span>
+                  ${!isScheduled && !isDone ? '<span class="ml-1.5 text-[10px] font-medium px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">Folga hoje</span>' : ''}
+                  ${isStudyLinked ? '<span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded">⚡ Horas</span>' : ''}
+                  ${isQLinked ? '<span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 bg-cyan-500/20 text-cyan-300 rounded">⚡ Questões</span>' : ''}
+                </div>
+              </label>
+              <div class="flex items-center gap-1 shrink-0">
+                <button onclick="toggleScheduleEditor(${habit.id})" class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition" title="Configurar em quais dias da semana este hábito acontece">
+                  📅 Dias
+                </button>
+                <button onclick="deleteHabit(${habit.id})" class="text-slate-600 hover:text-rose-400 p-1 text-xs transition" title="Excluir hábito">
+                  ✕
+                </button>
+              </div>
+            </div>
+            ${schedulePills}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderMatrix() {
+      const theadRow = document.getElementById('matrixHeaderRow');
+      theadRow.innerHTML = `
+        <th class="py-3 pr-4">Hábito / Indicador</th>
+        ${DAYS.map((d, idx) => `<th class="py-3 text-center">${d}${busyDays[idx] ? '⚡' : ''}</th>`).join('')}
+        <th class="py-3 text-right">Desempenho</th>
+      `;
+
+      const tbody = document.getElementById('matrixBody');
+      
+      const habitRows = habits.map(habit => {
+        let schedCount = 0;
+        let doneCount = 0;
+        habit.days.forEach((done, idx) => {
+          if (habit.scheduledDays[idx] || done) {
+            schedCount++;
+            if (done) doneCount++;
+          }
+        });
+        const pct = schedCount > 0 ? Math.round((doneCount / schedCount) * 100) : 100;
+        
+        const dayCells = habit.days.map((done, dIdx) => {
+          const isSched = habit.scheduledDays[dIdx];
+          if (done) {
+            return `
+              <td class="py-3 text-center">
+                <button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-emerald-500 text-slate-950 font-bold transition">✓</button>
+              </td>
+            `;
+          } else if (isSched) {
+            return `
+              <td class="py-3 text-center">
+                <button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-slate-800 text-slate-500 hover:bg-slate-700 transition">·</button>
+              </td>
+            `;
+          } else {
+            return `
+              <td class="py-3 text-center">
+                <button onclick="toggleHabitDay(${habit.id}, ${dIdx})" title="Dia de folga programada (clique se quiser marcar como bônus)" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-slate-900/50 text-slate-700 hover:bg-slate-800 font-mono text-xs transition">—</button>
+              </td>
+            `;
+          }
+        }).join('');
+
+        return `
+          <tr>
+            <td class="py-3 pr-4 font-medium text-slate-200">${habit.name}</td>
+            ${dayCells}
+            <td class="py-3 text-right font-semibold text-emerald-400">${doneCount}/${schedCount} (${pct}%)</td>
+          </tr>
+        `;
+      }).join('');
+
+      const totalWeekSecs = studySeconds.reduce((a, b) => a + b, 0);
+      const studyCells = studySeconds.map((sec, idx) => {
+        const goalSecs = getEffectiveStudyGoalSeconds(idx);
+        const hitGoal = sec >= goalSecs && goalSecs > 0;
+        return `
+          <td class="py-3 text-center text-xs font-semibold ${hitGoal ? 'text-emerald-400' : (sec > 0 ? 'text-indigo-400' : 'text-slate-600')}">
+            ${formatHoursMinutes(sec)}
+          </td>
+        `;
+      }).join('');
+
+      const studyRow = `
+        <tr class="bg-indigo-950/20">
+          <td class="py-3 pr-4 font-semibold text-indigo-300">⏱️ Horas Líquidas</td>
+          ${studyCells}
+          <td class="py-3 text-right font-bold text-indigo-400">${formatHoursMinutes(totalWeekSecs)}</td>
+        </tr>
+      `;
+
+      const totalQ = questionsSolved.reduce((a, b) => a + b, 0);
+      const totalC = questionsCorrect.reduce((a, b) => a + b, 0);
+      const weekQAcc = totalQ > 0 ? Math.round((totalC / totalQ) * 100) : 0;
+
+      const questionCells = DAYS.map((_, idx) => {
+        const s = questionsSolved[idx] || 0;
+        const c = questionsCorrect[idx] || 0;
+        const acc = s > 0 ? Math.round((c / s) * 100) : 0;
+        if (s === 0) return `<td class="py-3 text-center text-xs text-slate-600">—</td>`;
+        return `
+          <td class="py-3 text-center text-xs font-semibold ${acc >= 80 ? 'text-emerald-400' : 'text-cyan-400'}">
+            ${c}/${s} (${acc}%)
+          </td>
+        `;
+      }).join('');
+
+      const questionRow = `
+        <tr class="bg-cyan-950/20">
+          <td class="py-3 pr-4 font-semibold text-cyan-300">📝 Questões (Acertos/Total)</td>
+          ${questionCells}
+          <td class="py-3 text-right font-bold text-cyan-400">${totalC}/${totalQ} (${weekQAcc}%)</td>
+        </tr>
+      `;
+
+      tbody.innerHTML = habitRows + studyRow + questionRow;
+    }
+
+    function renderKPIs() {
+      const stats = getWeeklyStatsSummary();
+      const todaySecs = studySeconds[selectedDayIndex] || 0;
+      const cyclesToday = pomodoroCycles[selectedDayIndex] || 0;
+
+      const qToday = questionsSolved[selectedDayIndex] || 0;
+      const cToday = questionsCorrect[selectedDayIndex] || 0;
+      const accToday = qToday > 0 ? Math.round((cToday / qToday) * 100) : 0;
+
+      document.getElementById('streakCount').textContent = `${stats.streak} ${stats.streak === 1 ? 'dia' : 'dias'}`;
+      document.getElementById('streakSubtext').textContent = busyDays[selectedDayIndex] ? 'Hoje: Meta 60% (Dia Corrido)' : 'Meta: 80% dos programados';
+      document.getElementById('dailyStudyTime').textContent = formatHoursMinutes(todaySecs);
+      document.getElementById('weeklyStudyTime').textContent = `Semana: ${formatHoursMinutes(stats.totalSecs)}`;
+      document.getElementById('dailyQuestionsKPI').textContent = `${qToday} (${accToday}%)`;
+      document.getElementById('weeklyQuestionsKPI').textContent = `Semana: ${stats.totalQ} (${stats.weeklyQAcc}% acerto)`;
+      document.getElementById('PomodoroCyclesToday').textContent = `${cyclesToday} ${cyclesToday === 1 ? 'bloco' : 'blocos'}`;
+      document.getElementById('weeklyRate').textContent = `${stats.weeklyRate}%`;
+      document.getElementById('totalCompleted').textContent = `${stats.totalDone} / ${stats.totalScheduled}`;
+    }
+
+    function renderArchives() {
+      const container = document.getElementById('archiveContainer');
+      if (archivedWeeks.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-6 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">
+            Nenhuma semana arquivada ainda. Ao terminar seu domingo, clique em <b>📦 Arquivar Semana</b> no topo para salvar seu histórico aqui.
+          </div>
+        `;
+        return;
+      }
+
+      const rows = archivedWeeks.map(w => `
+        <tr class="border-b border-slate-800/60 text-xs md:text-sm">
+          <td class="py-3 pr-4 font-semibold text-white">${w.label}</td>
+          <td class="py-3 text-center text-emerald-400 font-bold">${w.weeklyRate}% (${w.totalDone}/${w.totalScheduled})</td>
+          <td class="py-3 text-center text-indigo-400 font-semibold">${formatHoursMinutes(w.totalStudySeconds)}</td>
+          <td class="py-3 text-center text-cyan-400 font-semibold">${w.totalCorrect}/${w.totalQuestions} (${w.questionAccuracy}%)</td>
+          <td class="py-3 text-center text-amber-400 font-semibold">🔥 ${w.streak}d</td>
+          <td class="py-3 text-right">
+            <button onclick="deleteArchivedWeek(${w.id})" class="text-slate-500 hover:text-rose-400 text-xs px-2 py-1">✕</button>
+          </td>
+        </tr>
+      `).join('');
+
+      container.innerHTML = `
+        <table class="w-full text-left border-collapse min-w-[550px]">
+          <thead>
+            <tr class="border-b border-slate-800 text-[11px] uppercase text-slate-400">
+              <th class="py-2 pr-4">Período / Semana</th>
+              <th class="py-2 text-center">Consistência Hábitos</th>
+              <th class="py-2 text-center">Horas Líquidas</th>
+              <th class="py-2 text-center">Questões & Acerto</th>
+              <th class="py-2 text-center">Sequência</th>
+              <th class="py-2 text-right">Ação</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    function renderChart() {
+      const ctx = document.getElementById('weeklyChart').getContext('2d');
+      const dataPcts = getDailyPercentages();
+      const dataQAcc = getDailyQuestionAccuracies();
+      const dataHours = getDailyStudyHours();
+
+      if (chartInstance) {
+        chartInstance.data.datasets[0].data = dataPcts;
+        chartInstance.data.datasets[1].data = dataQAcc;
+        chartInstance.data.datasets[2].data = dataHours;
+        chartInstance.update();
+        return;
+      }
+
+      chartInstance = new Chart(ctx, {
+        data: {
+          labels: DAYS,
+          datasets: [
+            {
+              type: 'line',
+              label: 'Hábitos (%)',
+              data: dataPcts,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.12)',
+              borderWidth: 3,
+              pointBackgroundColor: '#0f172a',
+              pointBorderColor: '#10b981',
+              pointRadius: 4,
+              tension: 0.35,
+              yAxisID: 'y'
+            },
+            {
+              type: 'line',
+              label: 'Taxa de Acerto (%)',
+              data: dataQAcc,
+              borderColor: '#06b6d4',
+              borderDash: [5, 5],
+              borderWidth: 2,
+              pointBackgroundColor: '#0f172a',
+              pointBorderColor: '#06b6d4',
+              pointRadius: 3,
+              tension: 0.35,
+              yAxisID: 'y'
+            },
+            {
+              type: 'bar',
+              label: 'Horas Líquidas (h)',
+              data: dataHours,
+              backgroundColor: 'rgba(99, 102, 241, 0.5)',
+              borderColor: '#6366f1',
+              borderWidth: 1,
+              borderRadius: 6,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              type: 'linear',
+              position: 'left',
+              beginAtZero: true,
+              max: 100,
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#10b981', callback: v => v + '%' }
+            },
+            y1: {
+              type: 'linear',
+              position: 'right',
+              beginAtZero: true,
+              suggestedMax: 6,
+              grid: { drawOnChartArea: false },
+              ticks: { color: '#818cf8', callback: v => v + 'h' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#94a3b8' }
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    function renderAll() {
+      updateNotificationButtonUI();
+      renderDaySelector();
+      renderGoalBar();
+      renderQuestionBar();
+      renderHabitList();
+      renderNewHabitDaysPicker();
+      renderMatrix();
+      renderKPIs();
+      renderArchives();
+      renderChart();
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>
