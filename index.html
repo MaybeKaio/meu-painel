@@ -43,24 +43,28 @@
     </div>
   </div>
 
-  <div class="max-w-7xl mx-auto space-y-6">
+  <div class="max-w-7xl mx-auto space-y-5">
     
     <!-- Cabeçalho Sóbrio -->
     <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-zinc-800">
       <div>
         <div class="flex items-center gap-3">
           <h1 class="text-xl md:text-2xl font-semibold tracking-tight text-zinc-100">Painel de Hábitos & Estudo</h1>
-          <span id="cloudStatusPill" onclick="toggleCloudConfig()" class="cursor-pointer text-[11px] font-medium px-2.5 py-0.5 rounded-md bg-zinc-900 text-zinc-400 border border-zinc-800 hover:border-zinc-600 transition flex items-center gap-1.5" title="Configurar sincronização com o Google Drive">
+          <span id="cloudStatusPill" onclick="toggleCloudConfig()" class="cursor-pointer text-[11px] font-medium px-2.5 py-0.5 rounded-md bg-zinc-900 text-zinc-400 border border-zinc-800 hover:border-zinc-600 transition flex items-center gap-1.5" title="Configurar sincronização com o Google Drive e Google Calendar">
             <span id="cloudStatusDot" class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
             <span id="cloudStatusText">Nuvem Off</span>
           </span>
         </div>
-        <p class="text-zinc-500 text-xs mt-1">Registro de consistência, tempo líquido de estudo e desempenho em questões.</p>
+        <p class="text-zinc-500 text-xs mt-1">Sincronizado com Google Drive e Google Calendar para ajuste inteligente de rotina.</p>
       </div>
       
       <div class="flex flex-wrap items-center gap-2">
         <input type="file" id="importFileInput" accept=".json,.csv" class="hidden" onchange="handleFileImport(event)">
         
+        <button onclick="pullFromCloud(true)" class="px-3 py-1.5 text-xs font-medium text-zinc-200 bg-slate-800 hover:bg-slate-700 rounded-lg transition border border-slate-700" title="Sincronizar Planilha e Agenda agora">
+          ↻ Sincronizar Agenda
+        </button>
+
         <button onclick="toggleCloudConfig()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-800">
           Nuvem (Drive)
         </button>
@@ -70,18 +74,18 @@
         </button>
 
         <button onclick="exportJSON()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-800">
-          Exportar JSON
+          JSON
         </button>
 
         <button onclick="exportCSV()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-800">
-          Exportar CSV
+          CSV
         </button>
 
         <button onclick="document.getElementById('importFileInput').click()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-800">
           Importar
         </button>
 
-        <button onclick="archiveAndResetWeek()" class="px-3 py-1.5 text-xs font-medium text-zinc-200 bg-slate-800 hover:bg-slate-700 rounded-lg transition border border-slate-700">
+        <button onclick="archiveAndResetWeek()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-700">
           Arquivar Semana
         </button>
 
@@ -95,7 +99,7 @@
     <section id="cloudConfigPanel" class="hidden glass-card p-5 rounded-xl border border-zinc-700 space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
         <div>
-          <h2 class="text-sm font-semibold text-zinc-200">Sincronização — Google Planilhas (Apps Script)</h2>
+          <h2 class="text-sm font-semibold text-zinc-200">Sincronização — Google Planilhas + Google Calendar</h2>
           <p class="text-xs text-zinc-500">Insira a URL do seu App da Web terminada em /exec.</p>
         </div>
         <button onclick="toggleCloudConfig()" class="text-xs text-zinc-400 hover:text-white self-end md:self-auto">Fechar ✕</button>
@@ -116,7 +120,7 @@
       <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-zinc-800/80 text-xs">
         <div class="flex flex-wrap items-center gap-2">
           <button onclick="pullFromCloud(true)" class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg border border-zinc-800 transition">
-            Puxar dados da Planilha agora
+            Puxar Planilha e Agenda agora
           </button>
           <button onclick="pushToCloud(true)" class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg border border-zinc-800 transition">
             Forçar envio para a Planilha
@@ -178,21 +182,40 @@
       <div class="grid grid-cols-7 gap-1.5 w-full md:w-auto" id="daySelector"></div>
     </div>
 
-    <!-- Barras Duplas: Meta de Horas Líquidas + Rastreador de Questões -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-      
-      <!-- Card 1: Barra de Meta de Horas Líquidas -->
-      <section class="glass-card p-5 rounded-xl flex flex-col justify-between space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <div class="flex items-center gap-2">
-              <h2 class="text-sm font-semibold text-zinc-200">Meta de Horas Líquidas</h2>
-              <span id="goalStatusBadge" class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">Em andamento</span>
-            </div>
-            <p class="text-[11px] text-zinc-500 mt-0.5" id="goalRemainingText">Marca o hábito vinculado ao atingir 100%.</p>
-          </div>
+    <!-- Linha Tripla: Agenda do Dia (Google Calendar) + Meta de Horas + Meta de Questões -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
-          <div class="flex flex-wrap items-center gap-2 text-xs">
+      <!-- Card 1: Agenda do Dia (Google Calendar) - 4 colunas -->
+      <section class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between space-y-3">
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <h2 class="text-sm font-semibold text-zinc-200">Agenda do Dia (Google Calendar)</h2>
+            <span id="calHoursBadge" class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">0h na agenda</span>
+          </div>
+          <p class="text-[11px] text-zinc-500 mb-3" id="calAutoRuleText">Ativa Dia Corrido se ≥ 6h de eventos ou plantão/internato.</p>
+
+          <!-- Lista de Compromissos do Dia -->
+          <div id="calendarEventsList" class="space-y-1.5 max-h-40 overflow-y-auto pr-1"></div>
+        </div>
+
+        <div class="pt-2 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-zinc-500">
+          <span>Regra automática da agenda:</span>
+          <button onclick="toggleAutoCalendarBusy()" id="autoCalToggleBtn" class="text-zinc-300 font-medium hover:underline">
+            Automático: ON
+          </button>
+        </div>
+      </section>
+
+      <!-- Card 2: Barra de Meta de Horas Líquidas - 4 colunas -->
+      <section class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between space-y-4">
+        <div class="flex flex-col justify-between gap-2">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-zinc-200">Meta de Horas Líquidas</h2>
+            <span id="goalStatusBadge" class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">Em andamento</span>
+          </div>
+          <p class="text-[11px] text-zinc-500" id="goalRemainingText">Marca o hábito vinculado ao atingir 100%.</p>
+
+          <div class="flex flex-wrap items-center gap-2 text-xs pt-1">
             <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg">
               <span class="text-zinc-500">Meta:</span>
               <select id="dailyGoalSelect" onchange="updateDailyGoal(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer">
@@ -205,9 +228,9 @@
                 <option value="8" class="bg-zinc-900">8h/dia</option>
               </select>
             </div>
-            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg">
+            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg flex-1 min-w-[120px]">
               <span class="text-zinc-500">Auto:</span>
-              <select id="linkedHabitSelect" onchange="updateLinkedHabit(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer max-w-[120px] truncate"></select>
+              <select id="linkedHabitSelect" onchange="updateLinkedHabit(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer w-full truncate"></select>
             </div>
           </div>
         </div>
@@ -223,18 +246,15 @@
         </div>
       </section>
 
-      <!-- Card 2: Rastreador de Questões & Taxa de Acerto -->
-      <section class="glass-card p-5 rounded-xl flex flex-col justify-between space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <div class="flex items-center gap-2">
-              <h2 class="text-sm font-semibold text-zinc-200">Questões & Taxa de Acerto</h2>
-              <span id="qAccuracyBadge" class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-300">Acerto: 0%</span>
-            </div>
-            <p class="text-[11px] text-zinc-500 mt-0.5">Registre os blocos resolvidos no dia.</p>
+      <!-- Card 3: Rastreador de Questões & Taxa de Acerto - 4 colunas -->
+      <section class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between space-y-3">
+        <div>
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-zinc-200">Questões & Taxa de Acerto</h2>
+            <span id="qAccuracyBadge" class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-300">Acerto: 0%</span>
           </div>
 
-          <div class="flex flex-wrap items-center gap-2 text-xs">
+          <div class="flex flex-wrap items-center gap-2 text-xs mt-2">
             <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg">
               <span class="text-zinc-500">Meta:</span>
               <select id="dailyQGoalSelect" onchange="updateDailyQuestionGoal(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer">
@@ -247,9 +267,9 @@
                 <option value="80" class="bg-zinc-900">80/dia</option>
               </select>
             </div>
-            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg">
+            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg flex-1 min-w-[120px]">
               <span class="text-zinc-500">Auto:</span>
-              <select id="linkedQHabitSelect" onchange="updateLinkedQuestionHabit(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer max-w-[120px] truncate"></select>
+              <select id="linkedQHabitSelect" onchange="updateLinkedQuestionHabit(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer w-full truncate"></select>
             </div>
           </div>
         </div>
@@ -264,20 +284,20 @@
           </div>
         </div>
 
-        <form onsubmit="addQuestionBatch(event)" class="flex flex-wrap items-center gap-2 pt-1">
-          <div class="flex items-center gap-1.5 bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 flex-1 min-w-[100px]">
-            <span class="text-[11px] text-zinc-500">Feitas:</span>
+        <form onsubmit="addQuestionBatch(event)" class="flex flex-wrap items-center gap-1.5 pt-1">
+          <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 rounded-lg px-2 py-1 flex-1 min-w-[75px]">
+            <span class="text-[10px] text-zinc-500">Feitas:</span>
             <input type="number" id="qSolvedInput" min="1" max="500" placeholder="20" required class="w-full bg-transparent text-xs text-zinc-200 font-medium focus:outline-none">
           </div>
-          <div class="flex items-center gap-1.5 bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 flex-1 min-w-[100px]">
-            <span class="text-[11px] text-zinc-500">Acertos:</span>
+          <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 rounded-lg px-2 py-1 flex-1 min-w-[75px]">
+            <span class="text-[10px] text-zinc-500">Certas:</span>
             <input type="number" id="qCorrectInput" min="0" max="500" placeholder="16" required class="w-full bg-transparent text-xs text-zinc-200 font-medium focus:outline-none">
           </div>
-          <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-zinc-100 font-medium px-3 py-1.5 rounded-lg text-xs transition">
-            + Registrar
+          <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-zinc-100 font-medium px-2.5 py-1 rounded-lg text-xs transition">
+            + Somar
           </button>
-          <button type="button" onclick="clearTodayQuestions()" class="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 rounded-lg text-xs transition border border-zinc-800">
-            Zerar
+          <button type="button" onclick="clearTodayQuestions()" class="px-2 py-1 bg-zinc-900 hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 rounded-lg text-xs transition border border-zinc-800">
+            ↺
           </button>
         </form>
       </section>
@@ -367,7 +387,7 @@
       <!-- Coluna 3: Gráfico Combinado -->
       <div class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between">
         <div>
-          <h2 class="text-sm font-semibold text-zinc-200"> Evolução Semanal</h2>
+          <h2 class="text-sm font-semibold text-zinc-200">Evolução Semanal</h2>
           <p class="text-[11px] text-zinc-500 mb-4">Linha contínua: Hábitos (%) | Tracejada: Acerto (%) | Barras: Estudo (h)</p>
         </div>
         <div class="relative h-64 md:h-72 w-full">
@@ -382,7 +402,7 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
         <div>
           <h2 class="text-sm font-semibold text-zinc-200">Quadro Semanal</h2>
-          <p class="text-[11px] text-zinc-500">Legenda: <span class="text-zinc-200 font-bold">✓</span> Concluído | <span class="text-zinc-500 font-bold">·</span> Pendente | <span class="text-zinc-600 font-mono">—</span> Folga Programada</p>
+          <p class="text-[11px] text-zinc-500">Legenda: <span class="text-zinc-200 font-bold">✓</span> Concluído | <span class="text-zinc-500 font-bold">·</span> Pendente | <span class="text-zinc-600 font-mono">—</span> Folga Programada | <span class="text-zinc-400">*</span> Dia Corrido</p>
         </div>
       </div>
       <table class="w-full text-left border-collapse min-w-[620px]">
@@ -438,6 +458,10 @@
     let busyDays = JSON.parse(localStorage.getItem('habitBusyDays')) || [false, false, false, false, false, false, false];
     let archivedWeeks = JSON.parse(localStorage.getItem('habitArchivedWeeks')) || [];
 
+    // Dados do Google Calendar vindos do Apps Script
+    let calendarWeekData = JSON.parse(localStorage.getItem('habitCalendarWeekData')) || null;
+    let autoCalendarBusy = localStorage.getItem('habitAutoCalendarBusy') !== 'false';
+
     let gasWebAppUrl = localStorage.getItem('habitGasWebAppUrl') || '';
     let lastCloudSync = localStorage.getItem('habitLastCloudSync') || '';
     let cloudSyncTimeout = null;
@@ -465,7 +489,7 @@
 
     function buildFullPayload() {
       return {
-        version: 3,
+        version: 4,
         updatedAt: new Date().toISOString(),
         dailyGoalHours,
         linkedHabitId,
@@ -500,6 +524,31 @@
       return true;
     }
 
+    function applyCalendarRulesToBusyDays() {
+      if (!autoCalendarBusy || !Array.isArray(calendarWeekData) || calendarWeekData.length !== 7) return;
+      let changed = false;
+      calendarWeekData.forEach((dayCal, idx) => {
+        if (dayCal && dayCal.autoBusy && !busyDays[idx]) {
+          busyDays[idx] = true;
+          changed = true;
+        }
+      });
+      if (changed) {
+        checkAutoCompleteStudyHabit(selectedDayIndex);
+        checkAutoCompleteQuestionHabit(selectedDayIndex);
+      }
+    }
+
+    function toggleAutoCalendarBusy() {
+      autoCalendarBusy = !autoCalendarBusy;
+      localStorage.setItem('habitAutoCalendarBusy', String(autoCalendarBusy));
+      if (autoCalendarBusy) {
+        applyCalendarRulesToBusyDays();
+      }
+      saveState();
+      showToast(autoCalendarBusy ? 'Detecção automática pela agenda ativada.' : 'Detecção automática pela agenda desativada.');
+    }
+
     function saveLocalOnly() {
       localStorage.setItem('habitDashboardData', JSON.stringify(habits));
       localStorage.setItem('habitStudySeconds', JSON.stringify(studySeconds));
@@ -512,6 +561,9 @@
       localStorage.setItem('habitLinkedQuestionId', String(linkedQuestionHabitId));
       localStorage.setItem('habitBusyDays', JSON.stringify(busyDays));
       localStorage.setItem('habitArchivedWeeks', JSON.stringify(archivedWeeks));
+      if (calendarWeekData) {
+        localStorage.setItem('habitCalendarWeekData', JSON.stringify(calendarWeekData));
+      }
     }
 
     function saveState(skipCloud = false) {
@@ -565,7 +617,7 @@
       }
       gasWebAppUrl = url;
       localStorage.setItem('habitGasWebAppUrl', gasWebAppUrl);
-      showToast('Conectado! Buscando dados da planilha...');
+      showToast('Conectado! Buscando dados da planilha e agenda...');
       pullFromCloud(true);
     }
 
@@ -612,26 +664,36 @@
     }
 
     async function pullFromCloud(showNotification = false) {
-      if (!gasWebAppUrl) return;
-      updateCloudStatusUI('syncing', 'Carregando...');
+      if (!gasWebAppUrl) {
+        if (showNotification) toggleCloudConfig();
+        return;
+      }
+      updateCloudStatusUI('syncing', 'Lendo Agenda...');
       try {
         const response = await fetch(`${gasWebAppUrl}?t=${Date.now()}`);
         const resData = await response.json();
-        if (resData.status === 'ok' && resData.hasData && resData.data) {
-          applyPayloadToState(resData.data);
+        if (resData.status === 'ok') {
+          if (resData.hasData && resData.data) {
+            applyPayloadToState(resData.data);
+          }
+          if (Array.isArray(resData.calendar) && resData.calendar.length === 7) {
+            calendarWeekData = resData.calendar;
+            applyCalendarRulesToBusyDays();
+          }
           saveLocalOnly();
           renderAll();
           const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
           lastCloudSync = `${new Date().toLocaleDateString('pt-BR')} às ${timeStr}`;
           localStorage.setItem('habitLastCloudSync', lastCloudSync);
           updateCloudStatusUI('ok', `Sincronizado (${timeStr})`);
-          if (showNotification) showToast('Dados atualizados a partir da planilha.');
-        } else if (resData.status === 'ok' && !resData.hasData) {
-          await pushToCloud(showNotification);
+          if (showNotification) showToast('Planilha e Google Calendar sincronizados.');
+          if (!resData.hasData) {
+            await pushToCloud(false);
+          }
         }
       } catch (err) {
         updateCloudStatusUI('error', 'Offline');
-        if (showNotification) showToast('Sem conexão com a planilha. Usando dados locais.', '!');
+        if (showNotification) showToast('Sem conexão com a planilha/agenda.', '!');
       }
     }
 
@@ -1122,16 +1184,64 @@
       return studySeconds.map(sec => +(sec / 3600).toFixed(2));
     }
 
+    function renderCalendarCard() {
+      const listEl = document.getElementById('calendarEventsList');
+      const badgeEl = document.getElementById('calHoursBadge');
+      const toggleBtn = document.getElementById('autoCalToggleBtn');
+
+      if (toggleBtn) {
+        toggleBtn.textContent = autoCalendarBusy ? 'Automático: ON' : 'Automático: OFF';
+        toggleBtn.className = autoCalendarBusy ? 'text-zinc-200 font-semibold hover:underline' : 'text-zinc-500 font-medium hover:underline';
+      }
+
+      if (!Array.isArray(calendarWeekData) || !calendarWeekData[selectedDayIndex]) {
+        badgeEl.textContent = 'Sem sincronização';
+        listEl.innerHTML = `
+          <div class="text-xs text-zinc-500 py-4 text-center border border-dashed border-zinc-800 rounded-lg">
+            Clique em <b>↻ Sincronizar Agenda</b> no topo para carregar os eventos do Google Calendar.
+          </div>
+        `;
+        return;
+      }
+
+      const dayCal = calendarWeekData[selectedDayIndex];
+      badgeEl.textContent = `${dayCal.totalHours}h ocupadas`;
+      badgeEl.className = dayCal.autoBusy
+        ? 'text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-700 text-zinc-100'
+        : 'text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400';
+
+      if (!dayCal.events || dayCal.events.length === 0) {
+        listEl.innerHTML = `
+          <div class="text-xs text-zinc-500 py-4 text-center border border-dashed border-zinc-800/80 rounded-lg">
+            Agenda livre em ${DAYS[selectedDayIndex]}.
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = dayCal.events.map(ev => `
+        <div class="flex items-center justify-between p-2 rounded-lg bg-zinc-950 border border-zinc-800/90 text-xs">
+          <span class="font-medium text-zinc-300 truncate pr-2">${ev.title}</span>
+          <span class="text-[11px] text-zinc-500 font-mono shrink-0">
+            ${ev.isAllDay ? 'Dia todo' : `${ev.start} - ${ev.end}`}
+          </span>
+        </div>
+      `).join('');
+    }
+
     function renderDaySelector() {
       const container = document.getElementById('daySelector');
       const isBusyToday = busyDays[selectedDayIndex];
+      const calToday = Array.isArray(calendarWeekData) ? calendarWeekData[selectedDayIndex] : null;
+      const isAutoCalBusy = calToday && calToday.autoBusy && autoCalendarBusy;
+
       document.getElementById('selectedDayLabel').textContent = `${DAYS[selectedDayIndex]}${isBusyToday ? ' (Reduzido)' : ''}`;
       
       const busyBtn = document.getElementById('busyDayBtn');
       const busyBtnText = document.getElementById('busyDayBtnText');
       if (isBusyToday) {
         busyBtn.className = 'text-xs font-medium px-3 py-1 rounded-lg border transition bg-slate-800 text-zinc-200 border-slate-600';
-        busyBtnText.textContent = 'Modo Dia Corrido: ON (-50%)';
+        busyBtnText.textContent = isAutoCalBusy ? 'Modo Dia Corrido: ON (Via Agenda)' : 'Modo Dia Corrido: ON (-50%)';
       } else {
         busyBtn.className = 'text-xs font-medium px-3 py-1 rounded-lg border transition bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-700';
         busyBtnText.textContent = 'Modo Dia Corrido: OFF';
@@ -1139,16 +1249,18 @@
 
       container.innerHTML = DAYS.map((day, idx) => {
         const isSelected = idx === selectedDayIndex;
+        const hasEvents = Array.isArray(calendarWeekData) && calendarWeekData[idx] && calendarWeekData[idx].events && calendarWeekData[idx].events.length > 0;
         return `
           <button 
             onclick="selectDay(${idx})"
-            class="px-3 py-1.5 rounded-lg text-xs font-medium transition border ${
+            class="px-3 py-1.5 rounded-lg text-xs font-medium transition border flex items-center justify-center gap-1 ${
               isSelected 
                 ? 'bg-slate-700 text-zinc-100 border-slate-600' 
                 : 'bg-zinc-900 text-zinc-500 border-zinc-800 hover:bg-zinc-800/80'
             }"
           >
-            ${day}${busyDays[idx] ? '*' : ''}
+            <span>${day}${busyDays[idx] ? '*' : ''}</span>
+            ${hasEvents ? '<span class="w-1 h-1 rounded-full bg-zinc-400" title="Eventos na agenda"></span>' : ''}
           </button>
         `;
       }).join('');
@@ -1180,7 +1292,7 @@
         statusBadge.className = 'text-[10px] font-medium px-2 py-0.5 rounded bg-slate-700 text-zinc-200';
         remainingText.textContent = 'Meta de horas líquidas do dia atingida.';
       } else {
-        statusBadge.textContent = busyDays[selectedDayIndex] ? 'Meta Reduzida' : 'Em andamento';
+        statusBadge.textContent = busyDays[selectedDayIndex] ? 'Meta Reduzida (-50%)' : 'Em andamento';
         statusBadge.className = 'text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400';
         remainingText.textContent = `Restam ${formatHoursMinutes(goalSecs - todaySecs)} para completar a meta.`;
       }
@@ -1232,7 +1344,7 @@
               ${DAYS.map((d, dIdx) => `
                 <button 
                   type="button"
-                  onclick="toggleHabitScheduledDay(${habit.id},${dIdx})"
+                  onclick="toggleHabitScheduledDay(${habit.id}, ${dIdx})"
                   class="px-1.5 py-0.5 rounded text-[10px] font-medium transition ${
                     habit.scheduledDays[dIdx] ? 'bg-slate-700 text-zinc-100' : 'bg-zinc-900 text-zinc-600'
                   }"
@@ -1347,7 +1459,24 @@
         </tr>
       `;
 
-      tbody.innerHTML = habitRows + studyRow + questionRow;
+      // Linha de carga horária da agenda
+      let calRow = '';
+      if (Array.isArray(calendarWeekData) && calendarWeekData.length === 7) {
+        const totalCalH = calendarWeekData.reduce((acc, d) => acc + (d ? d.totalHours : 0), 0).toFixed(1);
+        const calCells = calendarWeekData.map(d => {
+          if (!d || d.totalHours === 0) return `<td class="py-2.5 text-center text-[11px] text-zinc-600">—</td>`;
+          return `<td class="py-2.5 text-center text-[11px] ${d.autoBusy ? 'text-zinc-200 font-semibold' : 'text-zinc-400'}">${d.totalHours}h</td>`;
+        }).join('');
+        calRow = `
+          <tr class="bg-zinc-900/20">
+            <td class="py-2.5 pr-4 font-medium text-zinc-500">Agenda Google (Ocupação)</td>
+            ${calCells}
+            <td class="py-2.5 text-right font-medium text-zinc-400">${totalCalH}h</td>
+          </tr>
+        `;
+      }
+
+      tbody.innerHTML = habitRows + studyRow + questionRow + calRow;
     }
 
     function renderKPIs() {
@@ -1503,6 +1632,7 @@
       updateNotificationButtonUI();
       updateCloudStatusUI(gasWebAppUrl ? 'ok' : 'off');
       renderDaySelector();
+      renderCalendarCard();
       renderGoalBar();
       renderQuestionBar();
       renderHabitList();
