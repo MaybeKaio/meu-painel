@@ -50,18 +50,18 @@
       <div>
         <div class="flex items-center gap-3">
           <h1 class="text-xl md:text-2xl font-semibold tracking-tight text-zinc-100">Painel de Hábitos & Estudo</h1>
-          <span id="cloudStatusPill" onclick="toggleCloudConfig()" class="cursor-pointer text-[11px] font-medium px-2.5 py-0.5 rounded-md bg-zinc-900 text-zinc-400 border border-zinc-800 hover:border-zinc-600 transition flex items-center gap-1.5" title="Configurar sincronização com o Google Drive e Google Calendar">
+          <span id="cloudStatusPill" onclick="toggleCloudConfig()" class="cursor-pointer text-[11px] font-medium px-2.5 py-0.5 rounded-md bg-zinc-900 text-zinc-400 border border-zinc-800 hover:border-zinc-600 transition flex items-center gap-1.5" title="Configurar sincronização com Google Drive e Google Calendar">
             <span id="cloudStatusDot" class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
             <span id="cloudStatusText">Nuvem Off</span>
           </span>
         </div>
-        <p class="text-zinc-500 text-xs mt-1">Sincronizado com Google Drive e Google Calendar para ajuste inteligente de rotina.</p>
+        <p class="text-zinc-500 text-xs mt-1">Guiado pelos eventos <b>"study"</b> e <b>"training"</b> do seu Google Calendar.</p>
       </div>
       
       <div class="flex flex-wrap items-center gap-2">
         <input type="file" id="importFileInput" accept=".json,.csv" class="hidden" onchange="handleFileImport(event)">
         
-        <button onclick="pullFromCloud(true)" class="px-3 py-1.5 text-xs font-medium text-zinc-200 bg-slate-800 hover:bg-slate-700 rounded-lg transition border border-slate-700" title="Sincronizar Planilha e Agenda agora">
+        <button onclick="pullFromCloud(true)" class="px-3 py-1.5 text-xs font-medium text-zinc-200 bg-slate-800 hover:bg-slate-700 rounded-lg transition border border-slate-700" title="Sincronizar eventos study e training do Google Calendar">
           ↻ Sincronizar Agenda
         </button>
 
@@ -156,7 +156,7 @@
       <div class="glass-card p-4 rounded-xl">
         <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Taxa da Semana</span>
         <p class="text-xl md:text-2xl font-semibold text-zinc-100 mt-1" id="weeklyRate">0%</p>
-        <span class="text-[11px] text-zinc-500">Dias programados</span>
+        <span class="text-[11px] text-zinc-500">Sobre dias planejados</span>
       </div>
 
       <div class="glass-card p-4 rounded-xl col-span-2 sm:col-span-1">
@@ -166,66 +166,62 @@
       </div>
     </section>
 
-    <!-- Seletor Global de Dia da Semana + Modo Dia Corrido -->
+    <!-- Seletor Global de Dia da Semana -->
     <div class="glass-card p-3.5 rounded-xl flex flex-col md:flex-row items-center justify-between gap-3">
       <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-between md:justify-start">
         <div class="flex items-center gap-2">
-          <span class="text-xs font-medium text-zinc-400">Dia selecionado:</span>
+          <span class="text-xs font-medium text-zinc-400">Dia em visualização:</span>
           <span id="selectedDayLabel" class="text-xs font-semibold px-2.5 py-0.5 bg-zinc-800 text-zinc-200 rounded-md">Hoje</span>
         </div>
-        
-        <button id="busyDayBtn" onclick="toggleBusyDay()" class="text-xs font-medium px-3 py-1 rounded-lg border transition bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-700">
-          <span id="busyDayBtnText">Modo Dia Corrido: OFF</span>
-        </button>
+        <span id="dayScheduleBadges" class="flex items-center gap-1.5 text-[11px]"></span>
       </div>
 
       <div class="grid grid-cols-7 gap-1.5 w-full md:w-auto" id="daySelector"></div>
     </div>
 
-    <!-- Linha Tripla: Agenda do Dia (Google Calendar) + Meta de Horas + Meta de Questões -->
+    <!-- Linha Tripla: Blocos da Agenda ("study" & "training") + Meta de Horas + Meta de Questões -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
-      <!-- Card 1: Agenda do Dia (Google Calendar) - 4 colunas -->
+      <!-- Card 1: Blocos "study" e "training" no Google Calendar - 4 colunas -->
       <section class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between space-y-3">
         <div>
           <div class="flex items-center justify-between mb-1">
-            <h2 class="text-sm font-semibold text-zinc-200">Agenda do Dia (Google Calendar)</h2>
-            <span id="calHoursBadge" class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">0h na agenda</span>
+            <h2 class="text-sm font-semibold text-zinc-200">Blocos na Agenda Hoje</h2>
+            <span id="calSyncBadge" class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">Google Calendar</span>
           </div>
-          <p class="text-[11px] text-zinc-500 mb-3" id="calAutoRuleText">Ativa Dia Corrido se ≥ 6h de eventos ou plantão/internato.</p>
+          <p class="text-[11px] text-zinc-500 mb-3">Detecta seus eventos <b>"study"</b> (define a meta de horas) e <b>"training"</b> (ativa o treino do dia).</p>
 
-          <!-- Lista de Compromissos do Dia -->
+          <!-- Lista de Eventos do Dia -->
           <div id="calendarEventsList" class="space-y-1.5 max-h-40 overflow-y-auto pr-1"></div>
         </div>
 
         <div class="pt-2 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-zinc-500">
-          <span>Regra automática da agenda:</span>
-          <button onclick="toggleAutoCalendarBusy()" id="autoCalToggleBtn" class="text-zinc-300 font-medium hover:underline">
-            Automático: ON
+          <span>Sincronizar metas com a agenda:</span>
+          <button onclick="toggleAutoCalendarSync()" id="autoCalToggleBtn" class="text-zinc-200 font-semibold hover:underline">
+            Ativo (Automático)
           </button>
         </div>
       </section>
 
-      <!-- Card 2: Barra de Meta de Horas Líquidas - 4 colunas -->
+      <!-- Card 2: Barra de Meta de Horas Líquidas (Guiada pelo evento "study") - 4 colunas -->
       <section class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between space-y-4">
         <div class="flex flex-col justify-between gap-2">
           <div class="flex items-center justify-between">
-            <h2 class="text-sm font-semibold text-zinc-200">Meta de Horas Líquidas</h2>
+            <h2 class="text-sm font-semibold text-zinc-200">Meta de Estudo ("study")</h2>
             <span id="goalStatusBadge" class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">Em andamento</span>
           </div>
-          <p class="text-[11px] text-zinc-500" id="goalRemainingText">Marca o hábito vinculado ao atingir 100%.</p>
+          <p class="text-[11px] text-zinc-500" id="goalRemainingText">A meta do dia acompanha a duração do seu evento "study".</p>
 
           <div class="flex flex-wrap items-center gap-2 text-xs pt-1">
-            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg">
-              <span class="text-zinc-500">Meta:</span>
+            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg" title="Meta usada apenas se a sincronização da agenda estiver desligada">
+              <span class="text-zinc-500">Padrão s/ agenda:</span>
               <select id="dailyGoalSelect" onchange="updateDailyGoal(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer">
-                <option value="1" class="bg-zinc-900">1h/dia</option>
-                <option value="2" class="bg-zinc-900">2h/dia</option>
-                <option value="3" class="bg-zinc-900">3h/dia</option>
-                <option value="4" class="bg-zinc-900">4h/dia</option>
-                <option value="5" class="bg-zinc-900">5h/dia</option>
-                <option value="6" class="bg-zinc-900">6h/dia</option>
-                <option value="8" class="bg-zinc-900">8h/dia</option>
+                <option value="1" class="bg-zinc-900">1h</option>
+                <option value="2" class="bg-zinc-900">2h</option>
+                <option value="3" class="bg-zinc-900">3h</option>
+                <option value="4" class="bg-zinc-900">4h</option>
+                <option value="5" class="bg-zinc-900">5h</option>
+                <option value="6" class="bg-zinc-900">6h</option>
               </select>
             </div>
             <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg flex-1 min-w-[120px]">
@@ -237,7 +233,7 @@
 
         <div class="space-y-1.5">
           <div class="flex justify-between text-xs">
-            <span id="goalProgressFraction" class="text-zinc-400">0h 00m de 4h 00m</span>
+            <span id="goalProgressFraction" class="text-zinc-400">0h 00m de 0h 00m</span>
             <span id="goalProgressPercent" class="text-zinc-200 font-semibold">0%</span>
           </div>
           <div class="w-full h-2.5 bg-zinc-950 rounded-full overflow-hidden border border-zinc-800">
@@ -256,18 +252,17 @@
 
           <div class="flex flex-wrap items-center gap-2 text-xs mt-2">
             <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg">
-              <span class="text-zinc-500">Meta:</span>
+              <span class="text-zinc-500">Meta (dias c/ study):</span>
               <select id="dailyQGoalSelect" onchange="updateDailyQuestionGoal(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer">
-                <option value="10" class="bg-zinc-900">10/dia</option>
-                <option value="15" class="bg-zinc-900">15/dia</option>
-                <option value="20" class="bg-zinc-900">20/dia</option>
-                <option value="30" class="bg-zinc-900">30/dia</option>
-                <option value="40" class="bg-zinc-900">40/dia</option>
-                <option value="50" class="bg-zinc-900">50/dia</option>
-                <option value="80" class="bg-zinc-900">80/dia</option>
+                <option value="10" class="bg-zinc-900">10</option>
+                <option value="15" class="bg-zinc-900">15</option>
+                <option value="20" class="bg-zinc-900">20</option>
+                <option value="30" class="bg-zinc-900">30</option>
+                <option value="40" class="bg-zinc-900">40</option>
+                <option value="50" class="bg-zinc-900">50</option>
               </select>
             </div>
-            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg flex-1 min-w-[120px]">
+            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg flex-1 min-w-[110px]">
               <span class="text-zinc-500">Auto:</span>
               <select id="linkedQHabitSelect" onchange="updateLinkedQuestionHabit(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer w-full truncate"></select>
             </div>
@@ -359,7 +354,7 @@
             <h2 class="text-sm font-semibold text-zinc-200">Metas do Dia</h2>
             <span class="text-xs text-zinc-400 font-medium" id="dailyProgressText">0/0 programadas</span>
           </div>
-          <p class="text-[11px] text-zinc-500 mb-3">Toque em <b>Dias</b> para definir a frequência semanal de cada item.</p>
+          <p class="text-[11px] text-zinc-500 mb-3">Treino e Estudo ajustam seus dias automaticamente conforme os eventos <b>training</b> e <b>study</b>.</p>
 
           <div id="habitList" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
         </div>
@@ -388,7 +383,7 @@
       <div class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between">
         <div>
           <h2 class="text-sm font-semibold text-zinc-200">Evolução Semanal</h2>
-          <p class="text-[11px] text-zinc-500 mb-4">Linha contínua: Hábitos (%) | Tracejada: Acerto (%) | Barras: Estudo (h)</p>
+          <p class="text-[11px] text-zinc-500 mb-4">Linha clara: Hábitos (%) | Tracejada: Acerto (%) | Barras: Estudo Feito vs Planejado (h)</p>
         </div>
         <div class="relative h-64 md:h-72 w-full">
           <canvas id="weeklyChart"></canvas>
@@ -402,7 +397,7 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
         <div>
           <h2 class="text-sm font-semibold text-zinc-200">Quadro Semanal</h2>
-          <p class="text-[11px] text-zinc-500">Legenda: <span class="text-zinc-200 font-bold">✓</span> Concluído | <span class="text-zinc-500 font-bold">·</span> Pendente | <span class="text-zinc-600 font-mono">—</span> Folga Programada | <span class="text-zinc-400">*</span> Dia Corrido</p>
+          <p class="text-[11px] text-zinc-500">Legenda: <span class="text-zinc-200 font-bold">✓</span> Concluído | <span class="text-zinc-500 font-bold">·</span> Planejado | <span class="text-zinc-600 font-mono">—</span> Folga (Sem evento na agenda)</p>
         </div>
       </div>
       <table class="w-full text-left border-collapse min-w-[620px]">
@@ -431,7 +426,7 @@
     let selectedDayIndex = jsDay === 0 ? 6 : jsDay - 1;
 
     const defaultHabits = [
-      { id: 1, name: 'Treino Funcional / Força', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, false, true, true, false, false] },
+      { id: 1, name: 'Treino Funcional / Academia', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, false, true, true, false, false] },
       { id: 2, name: 'Bloco de Questões & Revisão Ativa', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, false] },
       { id: 3, name: 'Hidratação (3L) + Creatina', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, true] },
       { id: 4, name: 'Leitura / Estudo Dirigido', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, false] },
@@ -441,26 +436,24 @@
     let habits = JSON.parse(localStorage.getItem('habitDashboardData')) || defaultHabits;
     habits.forEach(h => {
       if (!Array.isArray(h.scheduledDays) || h.scheduledDays.length !== 7) {
-        const isWorkout = h.name.toLowerCase().includes('treino');
-        h.scheduledDays = isWorkout ? [true, true, false, true, true, false, false] : [true, true, true, true, true, true, true];
+        h.scheduledDays = [true, true, true, true, true, true, true];
       }
     });
 
     let studySeconds = JSON.parse(localStorage.getItem('habitStudySeconds')) || [0, 0, 0, 0, 0, 0, 0];
     let pomodoroCycles = JSON.parse(localStorage.getItem('habitPomodoroCycles')) || [0, 0, 0, 0, 0, 0, 0];
-    let dailyGoalHours = Number(localStorage.getItem('habitDailyGoalHours')) || 4;
+    let dailyGoalHours = Number(localStorage.getItem('habitDailyGoalHours')) || 3;
     let linkedHabitId = Number(localStorage.getItem('habitLinkedId')) || (habits[3] ? habits[3].id : (habits[0] ? habits[0].id : 0));
 
     let questionsSolved = JSON.parse(localStorage.getItem('habitQuestionsSolved')) || [0, 0, 0, 0, 0, 0, 0];
     let questionsCorrect = JSON.parse(localStorage.getItem('habitQuestionsCorrect')) || [0, 0, 0, 0, 0, 0, 0];
-    let dailyQuestionsGoal = Number(localStorage.getItem('habitDailyQuestionsGoal')) || 30;
+    let dailyQuestionsGoal = Number(localStorage.getItem('habitDailyQuestionsGoal')) || 20;
     let linkedQuestionHabitId = Number(localStorage.getItem('habitLinkedQuestionId')) || (habits[1] ? habits[1].id : 0);
-    let busyDays = JSON.parse(localStorage.getItem('habitBusyDays')) || [false, false, false, false, false, false, false];
     let archivedWeeks = JSON.parse(localStorage.getItem('habitArchivedWeeks')) || [];
 
-    // Dados do Google Calendar vindos do Apps Script
+    // Dados do Google Calendar (eventos "study" e "training")
     let calendarWeekData = JSON.parse(localStorage.getItem('habitCalendarWeekData')) || null;
-    let autoCalendarBusy = localStorage.getItem('habitAutoCalendarBusy') !== 'false';
+    let autoCalendarSync = localStorage.getItem('habitAutoCalendarSync') !== 'false';
 
     let gasWebAppUrl = localStorage.getItem('habitGasWebAppUrl') || '';
     let lastCloudSync = localStorage.getItem('habitLastCloudSync') || '';
@@ -487,9 +480,59 @@
       }, 3500);
     }
 
+    // Identifica se um hábito é de Treino/Academia
+    function isTrainingHabit(habit) {
+      const n = habit.name.toLowerCase();
+      return n.includes('treino') || n.includes('training') || n.includes('academia') || n.includes('força');
+    }
+
+    // Identifica se um hábito é vinculado ao Estudo ("study")
+    function isStudyHabit(habit) {
+      const n = habit.name.toLowerCase();
+      return habit.id === Number(linkedHabitId) || habit.id === Number(linkedQuestionHabitId) || n.includes('estudo') || n.includes('questões') || n.includes('questoes') || n.includes('revisão') || n.includes('study');
+    }
+
+    // Sincroniza os dias ativos de Treino e Estudo conforme os eventos "training" e "study" da agenda
+    function applyCalendarScheduleToHabits() {
+      if (!autoCalendarSync || !Array.isArray(calendarWeekData) || calendarWeekData.length !== 7) return;
+      habits.forEach(h => {
+        if (isTrainingHabit(h)) {
+          h.scheduledDays = calendarWeekData.map(d => Boolean(d && d.hasTraining));
+        } else if (isStudyHabit(h)) {
+          h.scheduledDays = calendarWeekData.map(d => Boolean(d && d.hasStudy));
+        }
+      });
+    }
+
+    // Meta de segundos líquidos do dia baseada na duração do evento "study"
+    function getEffectiveStudyGoalSeconds(dayIdx) {
+      if (autoCalendarSync && Array.isArray(calendarWeekData) && calendarWeekData[dayIdx]) {
+        return calendarWeekData[dayIdx].studyPlannedSeconds || 0;
+      }
+      return dailyGoalHours * 3600;
+    }
+
+    // Meta de questões do dia (0 se não houver evento "study" no dia)
+    function getEffectiveQuestionGoal(dayIdx) {
+      if (autoCalendarSync && Array.isArray(calendarWeekData) && calendarWeekData[dayIdx]) {
+        if (!calendarWeekData[dayIdx].hasStudy) return 0;
+      }
+      return dailyQuestionsGoal;
+    }
+
+    function toggleAutoCalendarSync() {
+      autoCalendarSync = !autoCalendarSync;
+      localStorage.setItem('habitAutoCalendarSync', String(autoCalendarSync));
+      if (autoCalendarSync) {
+        applyCalendarScheduleToHabits();
+      }
+      saveState();
+      showToast(autoCalendarSync ? 'Agenda "study" e "training" comandando as metas.' : 'Sincronização automática de metas pausada.');
+    }
+
     function buildFullPayload() {
       return {
-        version: 4,
+        version: 5,
         updatedAt: new Date().toISOString(),
         dailyGoalHours,
         linkedHabitId,
@@ -499,7 +542,6 @@
         pomodoroCycles,
         questionsSolved,
         questionsCorrect,
-        busyDays,
         habits,
         archivedWeeks
       };
@@ -515,38 +557,12 @@
       if (Array.isArray(data.pomodoroCycles) && data.pomodoroCycles.length === 7) pomodoroCycles = data.pomodoroCycles.map(Number);
       if (Array.isArray(data.questionsSolved) && data.questionsSolved.length === 7) questionsSolved = data.questionsSolved.map(Number);
       if (Array.isArray(data.questionsCorrect) && data.questionsCorrect.length === 7) questionsCorrect = data.questionsCorrect.map(Number);
-      if (Array.isArray(data.busyDays) && data.busyDays.length === 7) busyDays = data.busyDays.map(Boolean);
       if (Array.isArray(data.archivedWeeks)) archivedWeeks = data.archivedWeeks;
       if (data.dailyGoalHours) dailyGoalHours = Number(data.dailyGoalHours);
       if (data.linkedHabitId) linkedHabitId = Number(data.linkedHabitId);
       if (data.dailyQuestionsGoal) dailyQuestionsGoal = Number(data.dailyQuestionsGoal);
       if (data.linkedQuestionHabitId) linkedQuestionHabitId = Number(data.linkedQuestionHabitId);
       return true;
-    }
-
-    function applyCalendarRulesToBusyDays() {
-      if (!autoCalendarBusy || !Array.isArray(calendarWeekData) || calendarWeekData.length !== 7) return;
-      let changed = false;
-      calendarWeekData.forEach((dayCal, idx) => {
-        if (dayCal && dayCal.autoBusy && !busyDays[idx]) {
-          busyDays[idx] = true;
-          changed = true;
-        }
-      });
-      if (changed) {
-        checkAutoCompleteStudyHabit(selectedDayIndex);
-        checkAutoCompleteQuestionHabit(selectedDayIndex);
-      }
-    }
-
-    function toggleAutoCalendarBusy() {
-      autoCalendarBusy = !autoCalendarBusy;
-      localStorage.setItem('habitAutoCalendarBusy', String(autoCalendarBusy));
-      if (autoCalendarBusy) {
-        applyCalendarRulesToBusyDays();
-      }
-      saveState();
-      showToast(autoCalendarBusy ? 'Detecção automática pela agenda ativada.' : 'Detecção automática pela agenda desativada.');
     }
 
     function saveLocalOnly() {
@@ -559,7 +575,6 @@
       localStorage.setItem('habitQuestionsCorrect', JSON.stringify(questionsCorrect));
       localStorage.setItem('habitDailyQuestionsGoal', String(dailyQuestionsGoal));
       localStorage.setItem('habitLinkedQuestionId', String(linkedQuestionHabitId));
-      localStorage.setItem('habitBusyDays', JSON.stringify(busyDays));
       localStorage.setItem('habitArchivedWeeks', JSON.stringify(archivedWeeks));
       if (calendarWeekData) {
         localStorage.setItem('habitCalendarWeekData', JSON.stringify(calendarWeekData));
@@ -617,7 +632,7 @@
       }
       gasWebAppUrl = url;
       localStorage.setItem('habitGasWebAppUrl', gasWebAppUrl);
-      showToast('Conectado! Buscando dados da planilha e agenda...');
+      showToast('Conectado! Buscando eventos study e training...');
       pullFromCloud(true);
     }
 
@@ -678,7 +693,9 @@
           }
           if (Array.isArray(resData.calendar) && resData.calendar.length === 7) {
             calendarWeekData = resData.calendar;
-            applyCalendarRulesToBusyDays();
+            applyCalendarScheduleToHabits();
+            checkAutoCompleteStudyHabit(selectedDayIndex);
+            checkAutoCompleteQuestionHabit(selectedDayIndex);
           }
           saveLocalOnly();
           renderAll();
@@ -686,7 +703,7 @@
           lastCloudSync = `${new Date().toLocaleDateString('pt-BR')} às ${timeStr}`;
           localStorage.setItem('habitLastCloudSync', lastCloudSync);
           updateCloudStatusUI('ok', `Sincronizado (${timeStr})`);
-          if (showNotification) showToast('Planilha e Google Calendar sincronizados.');
+          if (showNotification) showToast('Eventos "study" e "training" sincronizados!');
           if (!resData.hasData) {
             await pushToCloud(false);
           }
@@ -722,28 +739,10 @@
       }
     }
 
-    function getEffectiveStudyGoalSeconds(dayIdx) {
-      const factor = busyDays[dayIdx] ? 0.5 : 1;
-      return dailyGoalHours * 3600 * factor;
-    }
-
-    function getEffectiveQuestionGoal(dayIdx) {
-      const factor = busyDays[dayIdx] ? 0.5 : 1;
-      return Math.max(1, Math.round(dailyQuestionsGoal * factor));
-    }
-
-    function toggleBusyDay() {
-      busyDays[selectedDayIndex] = !busyDays[selectedDayIndex];
-      checkAutoCompleteStudyHabit(selectedDayIndex);
-      checkAutoCompleteQuestionHabit(selectedDayIndex);
-      saveState();
-      showToast(busyDays[selectedDayIndex] ? `Modo Dia Corrido ativado (${DAYS[selectedDayIndex]}).` : 'Modo Dia Corrido desativado.');
-    }
-
     function checkAutoCompleteQuestionHabit(dayIdx) {
       const goalQ = getEffectiveQuestionGoal(dayIdx);
       const currentQ = questionsSolved[dayIdx] || 0;
-      if (currentQ >= goalQ && linkedQuestionHabitId) {
+      if (goalQ > 0 && currentQ >= goalQ && linkedQuestionHabitId) {
         const targetHabit = habits.find(h => h.id === Number(linkedQuestionHabitId));
         if (targetHabit && !targetHabit.days[dayIdx]) {
           targetHabit.days[dayIdx] = true;
@@ -853,7 +852,6 @@
       pomodoroCycles = [0, 0, 0, 0, 0, 0, 0];
       questionsSolved = [0, 0, 0, 0, 0, 0, 0];
       questionsCorrect = [0, 0, 0, 0, 0, 0, 0];
-      busyDays = [false, false, false, false, false, false, false];
 
       saveState();
       showToast('Semana arquivada com sucesso.');
@@ -866,7 +864,6 @@
         pomodoroCycles = [0, 0, 0, 0, 0, 0, 0];
         questionsSolved = [0, 0, 0, 0, 0, 0, 0];
         questionsCorrect = [0, 0, 0, 0, 0, 0, 0];
-        busyDays = [false, false, false, false, false, false, false];
         saveState();
       }
     }
@@ -962,12 +959,12 @@
     function checkAutoCompleteStudyHabit(dayIdx) {
       const goalSeconds = getEffectiveStudyGoalSeconds(dayIdx);
       const currentSeconds = studySeconds[dayIdx] || 0;
-      if (currentSeconds >= goalSeconds && linkedHabitId) {
+      if (goalSeconds > 0 && currentSeconds >= goalSeconds && linkedHabitId) {
         const targetHabit = habits.find(h => h.id === Number(linkedHabitId));
         if (targetHabit && !targetHabit.days[dayIdx]) {
           targetHabit.days[dayIdx] = true;
           playBeep(880, 0.4);
-          showToast(`Meta atingida: "${targetHabit.name}" concluído.`);
+          showToast(`Bloco "study" concluído: "${targetHabit.name}" marcado.`);
           sendDesktopNotification('Meta de Estudo Concluída', `O hábito "${targetHabit.name}" foi marcado automaticamente.`);
           return true;
         }
@@ -983,6 +980,7 @@
 
     function updateLinkedHabit(habitIdValue) {
       linkedHabitId = Number(habitIdValue);
+      applyCalendarScheduleToHabits();
       checkAutoCompleteStudyHabit(selectedDayIndex);
       saveState();
     }
@@ -1147,6 +1145,7 @@
       });
       input.value = '';
       newHabitSchedule = [true, true, true, true, true, true, true];
+      applyCalendarScheduleToHabits();
       saveState();
     }
 
@@ -1173,8 +1172,7 @@
       for (let i = 0; i <= selectedDayIndex; i++) {
         const activeCount = habits.filter(h => h.scheduledDays[i] || h.days[i]).length;
         if (activeCount === 0) continue;
-        const threshold = busyDays[i] ? 60 : 80;
-        if (dailyPcts[i] >= threshold) currentStreak++;
+        if (dailyPcts[i] >= 80) currentStreak++;
         else if (i < selectedDayIndex) currentStreak = 0;
       }
       return currentStreak;
@@ -1184,83 +1182,104 @@
       return studySeconds.map(sec => +(sec / 3600).toFixed(2));
     }
 
+    function getDailyPlannedStudyHours() {
+      return DAYS.map((_, idx) => +(getEffectiveStudyGoalSeconds(idx) / 3600).toFixed(2));
+    }
+
     function renderCalendarCard() {
       const listEl = document.getElementById('calendarEventsList');
-      const badgeEl = document.getElementById('calHoursBadge');
+      const badgeEl = document.getElementById('calSyncBadge');
       const toggleBtn = document.getElementById('autoCalToggleBtn');
 
       if (toggleBtn) {
-        toggleBtn.textContent = autoCalendarBusy ? 'Automático: ON' : 'Automático: OFF';
-        toggleBtn.className = autoCalendarBusy ? 'text-zinc-200 font-semibold hover:underline' : 'text-zinc-500 font-medium hover:underline';
+        toggleBtn.textContent = autoCalendarSync ? 'Ativo (Automático)' : 'Pausado (Manual)';
+        toggleBtn.className = autoCalendarSync ? 'text-zinc-200 font-semibold hover:underline' : 'text-zinc-500 font-medium hover:underline';
       }
 
       if (!Array.isArray(calendarWeekData) || !calendarWeekData[selectedDayIndex]) {
-        badgeEl.textContent = 'Sem sincronização';
+        badgeEl.textContent = 'Aguardando Sync';
         listEl.innerHTML = `
           <div class="text-xs text-zinc-500 py-4 text-center border border-dashed border-zinc-800 rounded-lg">
-            Clique em <b>↻ Sincronizar Agenda</b> no topo para carregar os eventos do Google Calendar.
+            Clique em <b>↻ Sincronizar Agenda</b> no topo para buscar seus eventos <b>"study"</b> e <b>"training"</b>.
           </div>
         `;
         return;
       }
 
       const dayCal = calendarWeekData[selectedDayIndex];
-      badgeEl.textContent = `${dayCal.totalHours}h ocupadas`;
-      badgeEl.className = dayCal.autoBusy
-        ? 'text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-700 text-zinc-100'
-        : 'text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400';
+      const studyPlanStr = dayCal.hasStudy ? formatHoursMinutes(dayCal.studyPlannedSeconds) : 'Sem study';
+      const trainPlanStr = dayCal.hasTraining ? 'Com training' : 'Sem training';
+      badgeEl.textContent = `${studyPlanStr} • ${trainPlanStr}`;
 
-      if (!dayCal.events || dayCal.events.length === 0) {
+      const relevantEvents = (dayCal.events || []).filter(e => e.type === 'study' || e.type === 'training');
+      const otherEvents = (dayCal.events || []).filter(e => e.type === 'other');
+
+      if (relevantEvents.length === 0 && otherEvents.length === 0) {
         listEl.innerHTML = `
           <div class="text-xs text-zinc-500 py-4 text-center border border-dashed border-zinc-800/80 rounded-lg">
-            Agenda livre em ${DAYS[selectedDayIndex]}.
+            Nenhum evento em ${DAYS[selectedDayIndex]} (Folga de estudo e treino).
           </div>
         `;
         return;
       }
 
-      listEl.innerHTML = dayCal.events.map(ev => `
-        <div class="flex items-center justify-between p-2 rounded-lg bg-zinc-950 border border-zinc-800/90 text-xs">
-          <span class="font-medium text-zinc-300 truncate pr-2">${ev.title}</span>
-          <span class="text-[11px] text-zinc-500 font-mono shrink-0">
-            ${ev.isAllDay ? 'Dia todo' : `${ev.start} - ${ev.end}`}
-          </span>
-        </div>
-      `).join('');
+      const renderEvItem = (ev) => {
+        const tag = ev.type === 'study'
+          ? '<span class="px-1.5 py-0.5 text-[10px] rounded bg-slate-700 text-zinc-100 font-semibold">STUDY</span>'
+          : (ev.type === 'training' ? '<span class="px-1.5 py-0.5 text-[10px] rounded bg-zinc-700 text-zinc-200 font-semibold">TRAINING</span>' : '');
+        return `
+          <div class="flex items-center justify-between p-2 rounded-lg bg-zinc-950 border ${ev.type !== 'other' ? 'border-slate-600/80' : 'border-zinc-800/60 opacity-60'} text-xs">
+            <div class="flex items-center gap-2 truncate pr-2">
+              ${tag}
+              <span class="font-medium text-zinc-200 truncate">${ev.title}</span>
+            </div>
+            <span class="text-[11px] text-zinc-400 font-mono shrink-0">
+              ${ev.isAllDay ? 'Dia todo' : `${ev.start} - ${ev.end}`}
+            </span>
+          </div>
+        `;
+      };
+
+      listEl.innerHTML = [...relevantEvents.map(renderEvItem), ...otherEvents.map(renderEvItem)].join('');
     }
 
     function renderDaySelector() {
       const container = document.getElementById('daySelector');
-      const isBusyToday = busyDays[selectedDayIndex];
+      const badgesContainer = document.getElementById('dayScheduleBadges');
       const calToday = Array.isArray(calendarWeekData) ? calendarWeekData[selectedDayIndex] : null;
-      const isAutoCalBusy = calToday && calToday.autoBusy && autoCalendarBusy;
 
-      document.getElementById('selectedDayLabel').textContent = `${DAYS[selectedDayIndex]}${isBusyToday ? ' (Reduzido)' : ''}`;
-      
-      const busyBtn = document.getElementById('busyDayBtn');
-      const busyBtnText = document.getElementById('busyDayBtnText');
-      if (isBusyToday) {
-        busyBtn.className = 'text-xs font-medium px-3 py-1 rounded-lg border transition bg-slate-800 text-zinc-200 border-slate-600';
-        busyBtnText.textContent = isAutoCalBusy ? 'Modo Dia Corrido: ON (Via Agenda)' : 'Modo Dia Corrido: ON (-50%)';
+      document.getElementById('selectedDayLabel').textContent = DAYS[selectedDayIndex];
+
+      if (calToday && autoCalendarSync) {
+        const studyBadge = calToday.hasStudy
+          ? `<span class="px-2 py-0.5 rounded bg-slate-800 text-zinc-200 border border-slate-700">📚 Study: ${formatHoursMinutes(calToday.studyPlannedSeconds)}</span>`
+          : `<span class="px-2 py-0.5 rounded bg-zinc-900 text-zinc-500 border border-zinc-800">📚 Sem Study (Folga)</span>`;
+        const trainBadge = calToday.hasTraining
+          ? `<span class="px-2 py-0.5 rounded bg-slate-800 text-zinc-200 border border-slate-700">🏋️ Training: Sim</span>`
+          : `<span class="px-2 py-0.5 rounded bg-zinc-900 text-zinc-500 border border-zinc-800">🏋️ Sem Training</span>`;
+        badgesContainer.innerHTML = studyBadge + trainBadge;
       } else {
-        busyBtn.className = 'text-xs font-medium px-3 py-1 rounded-lg border transition bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-700';
-        busyBtnText.textContent = 'Modo Dia Corrido: OFF';
+        badgesContainer.innerHTML = '';
       }
 
       container.innerHTML = DAYS.map((day, idx) => {
         const isSelected = idx === selectedDayIndex;
-        const hasEvents = Array.isArray(calendarWeekData) && calendarWeekData[idx] && calendarWeekData[idx].events && calendarWeekData[idx].events.length > 0;
+        const dCal = Array.isArray(calendarWeekData) ? calendarWeekData[idx] : null;
+        const hasS = dCal && dCal.hasStudy;
+        const hasT = dCal && dCal.hasTraining;
         return `
           <button 
             onclick="selectDay(${idx})"
-            class="px-3 py-1.5 rounded-lg text-xs font-medium transition border flex items-center justify-center gap-1 ${
+            class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition border flex flex-col items-center justify-center ${
               isSelected 
-                ? 'bg-slate-700 text-zinc-100 border-slate-600' 
-                : 'bg-zinc-900 text-zinc-500 border-zinc-800 hover:bg-zinc-800/80'
+                ? 'bg-slate-700 text-zinc-100 border-slate-500' 
+                : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-800/80'
             }"
           >
-            <span>${day}${busyDays[idx] ? '*' : ''}</span>
-            ${hasEvents ? '<span class="w-1 h-1 rounded-full bg-zinc-400" title="Eventos na agenda"></span>' : ''}
+            <span>${day}</span>
+            <span class="text-[9px] text-zinc-400 mt-0.5 h-3 flex items-center gap-0.5">
+              ${hasS ? '📚' : ''}${hasT ? '🏋️' : ''}${!hasS && !hasT && dCal ? '—' : ''}
+            </span>
           </button>
         `;
       }).join('');
@@ -1279,22 +1298,32 @@
 
       const goalSecs = getEffectiveStudyGoalSeconds(selectedDayIndex);
       const todaySecs = studySeconds[selectedDayIndex] || 0;
-      const rawPct = goalSecs > 0 ? Math.round((todaySecs / goalSecs) * 100) : 0;
+      const statusBadge = document.getElementById('goalStatusBadge');
+      const remainingText = document.getElementById('goalRemainingText');
 
-      document.getElementById('goalProgressFraction').textContent = `${formatHoursMinutes(todaySecs)} de ${formatHoursMinutes(goalSecs)}`;
+      if (goalSecs === 0) {
+        document.getElementById('goalProgressFraction').textContent = `${formatHoursMinutes(todaySecs)} (Sem evento "study" hoje)`;
+        document.getElementById('goalProgressPercent').textContent = `Folga`;
+        document.getElementById('goalProgressBar').style.width = `100%`;
+        statusBadge.textContent = 'Dia Livre de Estudo';
+        statusBadge.className = 'text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400';
+        remainingText.textContent = 'Nenhum evento "study" agendado para hoje. Aproveite seu descanso ou foque nas outras tarefas.';
+        return;
+      }
+
+      const rawPct = Math.round((todaySecs / goalSecs) * 100);
+      document.getElementById('goalProgressFraction').textContent = `${formatHoursMinutes(todaySecs)} de ${formatHoursMinutes(goalSecs)} planejados`;
       document.getElementById('goalProgressPercent').textContent = `${rawPct}%`;
       document.getElementById('goalProgressBar').style.width = `${Math.min(100, rawPct)}%`;
 
-      const statusBadge = document.getElementById('goalStatusBadge');
-      const remainingText = document.getElementById('goalRemainingText');
       if (todaySecs >= goalSecs) {
-        statusBadge.textContent = 'Concluído';
-        statusBadge.className = 'text-[10px] font-medium px-2 py-0.5 rounded bg-slate-700 text-zinc-200';
-        remainingText.textContent = 'Meta de horas líquidas do dia atingida.';
+        statusBadge.textContent = 'Bloco Study Concluído';
+        statusBadge.className = 'text-[10px] font-medium px-2 py-0.5 rounded bg-slate-700 text-zinc-100';
+        remainingText.textContent = 'Você cumpriu 100% do tempo planejado no seu evento "study" de hoje.';
       } else {
-        statusBadge.textContent = busyDays[selectedDayIndex] ? 'Meta Reduzida (-50%)' : 'Em andamento';
+        statusBadge.textContent = 'Em andamento';
         statusBadge.className = 'text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400';
-        remainingText.textContent = `Restam ${formatHoursMinutes(goalSecs - todaySecs)} para completar a meta.`;
+        remainingText.textContent = `Restam ${formatHoursMinutes(goalSecs - todaySecs)} para cumprir seu bloco "study" de hoje.`;
       }
     }
 
@@ -1313,8 +1342,16 @@
       const solvedToday = questionsSolved[selectedDayIndex] || 0;
       const correctToday = questionsCorrect[selectedDayIndex] || 0;
       const accToday = solvedToday > 0 ? Math.round((correctToday / solvedToday) * 100) : 0;
-      const rawPct = effectiveQGoal > 0 ? Math.round((solvedToday / effectiveQGoal) * 100) : 0;
 
+      if (effectiveQGoal === 0) {
+        document.getElementById('qProgressFraction').textContent = `${solvedToday} questões feitas (Sem evento "study" hoje)`;
+        document.getElementById('qProgressPercent').textContent = `Folga`;
+        document.getElementById('qProgressBar').style.width = `100%`;
+        document.getElementById('qAccuracyBadge').textContent = solvedToday > 0 ? `Acerto: ${accToday}%` : 'Folga hoje';
+        return;
+      }
+
+      const rawPct = Math.round((solvedToday / effectiveQGoal) * 100);
       document.getElementById('qProgressFraction').textContent = `${solvedToday} de ${effectiveQGoal} questões (${correctToday} acertos)`;
       document.getElementById('qProgressPercent').textContent = `${rawPct}%`;
       document.getElementById('qProgressBar').style.width = `${Math.min(100, rawPct)}%`;
@@ -1336,6 +1373,12 @@
         const isDone = habit.days[selectedDayIndex];
         const isScheduled = habit.scheduledDays[selectedDayIndex];
         const isEditingDays = editingScheduleHabitId === habit.id;
+        const isTrain = isTrainingHabit(habit);
+        const isStud = isStudyHabit(habit);
+
+        const autoTag = (autoCalendarSync && Array.isArray(calendarWeekData))
+          ? (isTrain ? '<span class="ml-1.5 text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">Agenda: training</span>' : (isStud ? '<span class="ml-1.5 text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">Agenda: study</span>' : ''))
+          : '';
 
         const schedulePills = isEditingDays ? `
           <div class="mt-2.5 pt-2 border-t border-zinc-800 flex items-center justify-between gap-1">
@@ -1355,7 +1398,7 @@
         ` : '';
 
         return `
-          <div class="p-2.5 rounded-lg bg-zinc-950 border ${!isScheduled && !isDone ? 'border-zinc-900 opacity-50' : 'border-zinc-800/90'} transition">
+          <div class="p-2.5 rounded-lg bg-zinc-950 border ${!isScheduled && !isDone ? 'border-zinc-900 opacity-45' : 'border-zinc-800/90'} transition">
             <div class="flex items-center justify-between gap-2">
               <label class="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0">
                 <input 
@@ -1369,7 +1412,8 @@
                 </div>
                 <div class="truncate">
                   <span class="text-xs font-medium ${isDone ? 'line-through text-zinc-600' : 'text-zinc-200'}">${habit.name}</span>
-                  ${!isScheduled && !isDone ? '<span class="ml-1.5 text-[10px] text-zinc-500">(Folga)</span>' : ''}
+                  ${!isScheduled && !isDone ? '<span class="ml-1 text-[10px] text-zinc-500">(Sem evento hoje)</span>' : ''}
+                  ${autoTag}
                 </div>
               </label>
               <div class="flex items-center gap-1 shrink-0">
@@ -1390,9 +1434,9 @@
     function renderMatrix() {
       const theadRow = document.getElementById('matrixHeaderRow');
       theadRow.innerHTML = `
-        <th class="py-2.5 pr-4">Indicador</th>
-        ${DAYS.map((d, idx) => `<th class="py-2.5 text-center">${d}${busyDays[idx] ? '*' : ''}</th>`).join('')}
-        <th class="py-2.5 text-right">Total</th>
+        <th class="py-2.5 pr-4">Hábito / Indicador</th>
+        ${DAYS.map(d => `<th class="py-2.5 text-center">${d}</th>`).join('')}
+        <th class="py-2.5 text-right">Desempenho</th>
       `;
 
       const tbody = document.getElementById('matrixBody');
@@ -1413,7 +1457,7 @@
           if (done) {
             return `<td class="py-2.5 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-5 h-5 rounded mx-auto flex items-center justify-center bg-slate-600 text-zinc-100 font-bold text-[10px]">✓</button></td>`;
           } else if (isSched) {
-            return `<td class="py-2.5 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-5 h-5 rounded mx-auto flex items-center justify-center bg-zinc-900 text-zinc-500 hover:bg-zinc-800">·</button></td>`;
+            return `<td class="py-2.5 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-5 h-5 rounded mx-auto flex items-center justify-center bg-zinc-900 text-zinc-400 hover:bg-zinc-800">·</button></td>`;
           } else {
             return `<td class="py-2.5 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-5 h-5 rounded mx-auto flex items-center justify-center text-zinc-700 font-mono text-[10px]">—</button></td>`;
           }
@@ -1428,14 +1472,21 @@
         `;
       }).join('');
 
+      // Linha de Estudo Planejado ("study") vs Realizado
       const totalWeekSecs = studySeconds.reduce((a, b) => a + b, 0);
-      const studyCells = studySeconds.map(sec => `<td class="py-2.5 text-center text-[11px] ${sec > 0 ? 'text-zinc-300 font-medium' : 'text-zinc-600'}">${formatHoursMinutes(sec)}</td>`).join('');
+      const totalPlannedSecs = DAYS.reduce((acc, _, idx) => acc + getEffectiveStudyGoalSeconds(idx), 0);
+      const studyCells = studySeconds.map((sec, idx) => {
+        const planSec = getEffectiveStudyGoalSeconds(idx);
+        if (planSec === 0 && sec === 0) return `<td class="py-2.5 text-center text-[11px] text-zinc-600 font-mono">—</td>`;
+        const hit = planSec > 0 && sec >= planSec;
+        return `<td class="py-2.5 text-center text-[11px] ${hit ? 'text-zinc-100 font-semibold' : 'text-zinc-400'}">${formatHoursMinutes(sec)} <span class="text-[10px] text-zinc-600">/ ${formatHoursMinutes(planSec)}</span></td>`;
+      }).join('');
 
       const studyRow = `
         <tr class="bg-zinc-900/40">
-          <td class="py-2.5 pr-4 font-medium text-zinc-400">Horas Líquidas</td>
+          <td class="py-2.5 pr-4 font-medium text-zinc-400">Estudo Feito / Evento "study"</td>
           ${studyCells}
-          <td class="py-2.5 text-right font-semibold text-zinc-200">${formatHoursMinutes(totalWeekSecs)}</td>
+          <td class="py-2.5 text-right font-semibold text-zinc-200">${formatHoursMinutes(totalWeekSecs)} / ${formatHoursMinutes(totalPlannedSecs)}</td>
         </tr>
       `;
 
@@ -1447,7 +1498,7 @@
         const s = questionsSolved[idx] || 0;
         const c = questionsCorrect[idx] || 0;
         const acc = s > 0 ? Math.round((c / s) * 100) : 0;
-        if (s === 0) return `<td class="py-2.5 text-center text-[11px] text-zinc-600">—</td>`;
+        if (s === 0) return `<td class="py-2.5 text-center text-[11px] text-zinc-600 font-mono">—</td>`;
         return `<td class="py-2.5 text-center text-[11px] text-zinc-300 font-medium">${c}/${s} (${acc}%)</td>`;
       }).join('');
 
@@ -1459,24 +1510,7 @@
         </tr>
       `;
 
-      // Linha de carga horária da agenda
-      let calRow = '';
-      if (Array.isArray(calendarWeekData) && calendarWeekData.length === 7) {
-        const totalCalH = calendarWeekData.reduce((acc, d) => acc + (d ? d.totalHours : 0), 0).toFixed(1);
-        const calCells = calendarWeekData.map(d => {
-          if (!d || d.totalHours === 0) return `<td class="py-2.5 text-center text-[11px] text-zinc-600">—</td>`;
-          return `<td class="py-2.5 text-center text-[11px] ${d.autoBusy ? 'text-zinc-200 font-semibold' : 'text-zinc-400'}">${d.totalHours}h</td>`;
-        }).join('');
-        calRow = `
-          <tr class="bg-zinc-900/20">
-            <td class="py-2.5 pr-4 font-medium text-zinc-500">Agenda Google (Ocupação)</td>
-            ${calCells}
-            <td class="py-2.5 text-right font-medium text-zinc-400">${totalCalH}h</td>
-          </tr>
-        `;
-      }
-
-      tbody.innerHTML = habitRows + studyRow + questionRow + calRow;
+      tbody.innerHTML = habitRows + studyRow + questionRow;
     }
 
     function renderKPIs() {
@@ -1489,7 +1523,6 @@
       const accToday = qToday > 0 ? Math.round((cToday / qToday) * 100) : 0;
 
       document.getElementById('streakCount').textContent = `${stats.streak} ${stats.streak === 1 ? 'dia' : 'dias'}`;
-      document.getElementById('streakSubtext').textContent = busyDays[selectedDayIndex] ? 'Meta hoje: 60%' : 'Meta: 80% do dia';
       document.getElementById('dailyStudyTime').textContent = formatHoursMinutes(todaySecs);
       document.getElementById('weeklyStudyTime').textContent = `Semana: ${formatHoursMinutes(stats.totalSecs)}`;
       document.getElementById('dailyQuestionsKPI').textContent = `${qToday} (${accToday}%)`;
@@ -1545,11 +1578,13 @@
       const dataPcts = getDailyPercentages();
       const dataQAcc = getDailyQuestionAccuracies();
       const dataHours = getDailyStudyHours();
+      const dataPlannedHours = getDailyPlannedStudyHours();
 
       if (chartInstance) {
         chartInstance.data.datasets[0].data = dataPcts;
         chartInstance.data.datasets[1].data = dataQAcc;
         chartInstance.data.datasets[2].data = dataHours;
+        chartInstance.data.datasets[3].data = dataPlannedHours;
         chartInstance.update();
         return;
       }
@@ -1563,7 +1598,7 @@
               label: 'Hábitos (%)',
               data: dataPcts,
               borderColor: '#e4e4e7',
-              backgroundColor: 'rgba(228, 228, 231, 0.06)',
+              backgroundColor: 'rgba(228, 228, 231, 0.05)',
               borderWidth: 2,
               pointBackgroundColor: '#18191d',
               pointBorderColor: '#e4e4e7',
@@ -1586,10 +1621,20 @@
             },
             {
               type: 'bar',
-              label: 'Horas (h)',
+              label: 'Estudo Feito (h)',
               data: dataHours,
-              backgroundColor: 'rgba(100, 116, 139, 0.35)',
-              borderColor: '#64748b',
+              backgroundColor: 'rgba(148, 163, 184, 0.5)',
+              borderColor: '#94a3b8',
+              borderWidth: 1,
+              borderRadius: 4,
+              yAxisID: 'y1'
+            },
+            {
+              type: 'bar',
+              label: 'Planejado "study" (h)',
+              data: dataPlannedHours,
+              backgroundColor: 'rgba(63, 63, 70, 0.35)',
+              borderColor: '#52525b',
               borderWidth: 1,
               borderRadius: 4,
               yAxisID: 'y1'
@@ -1612,7 +1657,7 @@
               type: 'linear',
               position: 'right',
               beginAtZero: true,
-              suggestedMax: 6,
+              suggestedMax: 5,
               grid: { drawOnChartArea: false },
               ticks: { color: '#71717a', callback: v => v + 'h' }
             },
