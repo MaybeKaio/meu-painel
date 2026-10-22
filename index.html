@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Painel de Performance</title>
+  <title>Painel de Performance — Kaio</title>
   
-  <!-- Configurações de Web App para abrir em Tela Cheia no Celular -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Performance">
@@ -55,13 +54,13 @@
             <span id="cloudStatusText">Nuvem Off</span>
           </span>
         </div>
-        <p class="text-zinc-500 text-xs mt-1">Guiado pelos eventos <b>"study"</b> e <b>"training"</b> do seu Google Calendar.</p>
+        <p class="text-zinc-500 text-xs mt-1">Sincronização diária por data exata: Meta Líquida = <b>50% do tempo bruto</b> do evento <b>"study"</b>.</p>
       </div>
       
       <div class="flex flex-wrap items-center gap-2">
         <input type="file" id="importFileInput" accept=".json,.csv" class="hidden" onchange="handleFileImport(event)">
         
-        <button onclick="pullFromCloud(true)" class="px-3 py-1.5 text-xs font-medium text-zinc-200 bg-slate-800 hover:bg-slate-700 rounded-lg transition border border-slate-700" title="Sincronizar eventos study e training do Google Calendar">
+        <button onclick="pullFromCloud(true)" class="px-3 py-1.5 text-xs font-medium text-zinc-100 bg-slate-700 hover:bg-slate-600 rounded-lg transition border border-slate-600" title="Sincronizar datas e eventos study/training do Google Calendar">
           ↻ Sincronizar Agenda
         </button>
 
@@ -95,12 +94,21 @@
       </div>
     </header>
 
+    <!-- Alerta de Erro de Permissão do Calendário (Oculto por padrão) -->
+    <div id="calendarErrorBanner" class="hidden glass-card p-4 rounded-xl border border-rose-800/80 bg-rose-950/20 text-xs text-rose-200 flex items-center justify-between gap-4">
+      <div>
+        <p class="font-semibold">⚠️ O Google Apps Script ainda não tem permissão para ler seu Google Calendar ou precisa de Nova Versão.</p>
+        <p class="text-rose-300/80 mt-0.5" id="calendarErrorDetails">No Apps Script, execute a função "autorizarPermissoes" e publique uma Nova Versão da implantação.</p>
+      </div>
+      <button onclick="document.getElementById('calendarErrorBanner').classList.add('hidden')" class="text-rose-300 hover:text-white shrink-0">✕</button>
+    </div>
+
     <!-- Gaveta de Configuração da Sincronização Google Drive -->
     <section id="cloudConfigPanel" class="hidden glass-card p-5 rounded-xl border border-zinc-700 space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
         <div>
           <h2 class="text-sm font-semibold text-zinc-200">Sincronização — Google Planilhas + Google Calendar</h2>
-          <p class="text-xs text-zinc-500">Insira a URL do seu App da Web terminada em /exec.</p>
+          <p class="text-xs text-zinc-500">URL da sua API já pré-configurada. Você pode forçar a leitura ou envio abaixo.</p>
         </div>
         <button onclick="toggleCloudConfig()" class="text-xs text-zinc-400 hover:text-white self-end md:self-auto">Fechar ✕</button>
       </div>
@@ -133,12 +141,26 @@
       </div>
     </section>
 
+    <!-- Banner de Correlação Diária (Data Exata + Evento Study/Training) -->
+    <section class="glass-card p-4 rounded-xl border border-slate-700/60 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+      <div class="space-y-1">
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800 text-slate-300" id="exactDateBadge">Data</span>
+          <span class="text-xs font-medium text-zinc-400" id="trainingCorrelationText">Verificando evento training...</span>
+        </div>
+        <p class="text-xs md:text-sm font-medium text-zinc-100" id="dailyCorrelationStatement">
+          Sincronize a agenda para visualizar a correlação de estudo do dia.
+        </p>
+      </div>
+      <div class="grid grid-cols-7 gap-1.5 w-full lg:w-auto shrink-0" id="daySelector"></div>
+    </section>
+
     <!-- Cards de Resumo (5 KPIs Sóbrios) -->
     <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
       <div class="glass-card p-4 rounded-xl">
         <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Sequência Ativa</span>
         <p class="text-xl md:text-2xl font-semibold text-zinc-100 mt-1" id="streakCount">0 dias</p>
-        <span class="text-[11px] text-zinc-500" id="streakSubtext">Meta: 80% do dia</span>
+        <span class="text-[11px] text-zinc-500">Meta: 80% do dia</span>
       </div>
 
       <div class="glass-card p-4 rounded-xl">
@@ -166,66 +188,51 @@
       </div>
     </section>
 
-    <!-- Seletor Global de Dia da Semana -->
-    <div class="glass-card p-3.5 rounded-xl flex flex-col md:flex-row items-center justify-between gap-3">
-      <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-between md:justify-start">
-        <div class="flex items-center gap-2">
-          <span class="text-xs font-medium text-zinc-400">Dia em visualização:</span>
-          <span id="selectedDayLabel" class="text-xs font-semibold px-2.5 py-0.5 bg-zinc-800 text-zinc-200 rounded-md">Hoje</span>
-        </div>
-        <span id="dayScheduleBadges" class="flex items-center gap-1.5 text-[11px]"></span>
-      </div>
-
-      <div class="grid grid-cols-7 gap-1.5 w-full md:w-auto" id="daySelector"></div>
-    </div>
-
-    <!-- Linha Tripla: Blocos da Agenda ("study" & "training") + Meta de Horas + Meta de Questões -->
+    <!-- Linha Tripla: Blocos da Agenda + Meta Líquida (50% do Bruto) + Meta de Questões -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
-      <!-- Card 1: Blocos "study" e "training" no Google Calendar - 4 colunas -->
+      <!-- Card 1: Eventos do Dia no Google Calendar - 4 colunas -->
       <section class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between space-y-3">
         <div>
           <div class="flex items-center justify-between mb-1">
-            <h2 class="text-sm font-semibold text-zinc-200">Blocos na Agenda Hoje</h2>
-            <span id="calSyncBadge" class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">Google Calendar</span>
+            <h2 class="text-sm font-semibold text-zinc-200">Eventos no Google Calendar</h2>
+            <span id="calSyncBadge" class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">Por Data Exata</span>
           </div>
-          <p class="text-[11px] text-zinc-500 mb-3">Detecta seus eventos <b>"study"</b> (define a meta de horas) e <b>"training"</b> (ativa o treino do dia).</p>
+          <p class="text-[11px] text-zinc-500 mb-3">Lê os blocos <b>"study"</b> (calcula 50% líquido) e <b>"training"</b> da data selecionada.</p>
 
-          <!-- Lista de Eventos do Dia -->
           <div id="calendarEventsList" class="space-y-1.5 max-h-40 overflow-y-auto pr-1"></div>
         </div>
 
         <div class="pt-2 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-zinc-500">
-          <span>Sincronizar metas com a agenda:</span>
+          <span>Sincronismo diário por agenda:</span>
           <button onclick="toggleAutoCalendarSync()" id="autoCalToggleBtn" class="text-zinc-200 font-semibold hover:underline">
             Ativo (Automático)
           </button>
         </div>
       </section>
 
-      <!-- Card 2: Barra de Meta de Horas Líquidas (Guiada pelo evento "study") - 4 colunas -->
+      <!-- Card 2: Barra de Meta Líquida (50% do Bruto do evento "study") - 4 colunas -->
       <section class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between space-y-4">
         <div class="flex flex-col justify-between gap-2">
           <div class="flex items-center justify-between">
-            <h2 class="text-sm font-semibold text-zinc-200">Meta de Estudo ("study")</h2>
+            <h2 class="text-sm font-semibold text-zinc-200">Meta Líquida (50% do "study")</h2>
             <span id="goalStatusBadge" class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">Em andamento</span>
           </div>
-          <p class="text-[11px] text-zinc-500" id="goalRemainingText">A meta do dia acompanha a duração do seu evento "study".</p>
+          <p class="text-[11px] text-zinc-500" id="goalRemainingText">Desconta 50% do tempo bruto para deslocamento e pausas.</p>
 
           <div class="flex flex-wrap items-center gap-2 text-xs pt-1">
-            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg" title="Meta usada apenas se a sincronização da agenda estiver desligada">
-              <span class="text-zinc-500">Padrão s/ agenda:</span>
+            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg" title="Usado apenas se o sincronismo da agenda estiver desligado">
+              <span class="text-zinc-500">Padrão manual:</span>
               <select id="dailyGoalSelect" onchange="updateDailyGoal(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer">
                 <option value="1" class="bg-zinc-900">1h</option>
+                <option value="1.5" class="bg-zinc-900">1h 30m</option>
                 <option value="2" class="bg-zinc-900">2h</option>
                 <option value="3" class="bg-zinc-900">3h</option>
                 <option value="4" class="bg-zinc-900">4h</option>
-                <option value="5" class="bg-zinc-900">5h</option>
-                <option value="6" class="bg-zinc-900">6h</option>
               </select>
             </div>
             <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg flex-1 min-w-[120px]">
-              <span class="text-zinc-500">Auto:</span>
+              <span class="text-zinc-500">Auto-marcar:</span>
               <select id="linkedHabitSelect" onchange="updateLinkedHabit(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer w-full truncate"></select>
             </div>
           </div>
@@ -271,7 +278,7 @@
 
         <div class="space-y-1.5">
           <div class="flex justify-between text-xs">
-            <span id="qProgressFraction" class="text-zinc-400">0 de 30 questões</span>
+            <span id="qProgressFraction" class="text-zinc-400">0 de 20 questões</span>
             <span id="qProgressPercent" class="text-zinc-200 font-semibold">0%</span>
           </div>
           <div class="w-full h-2.5 bg-zinc-950 rounded-full overflow-hidden border border-zinc-800">
@@ -333,7 +340,7 @@
 
         <div class="pt-4 border-t border-zinc-800/80">
           <div class="flex items-center justify-between text-[11px] text-zinc-500 mb-2">
-            <span>Ajuste manual de tempo:</span>
+            <span>Ajuste manual de tempo líquido:</span>
             <span id="PomodoroCyclesToday" class="font-medium text-zinc-400">0 blocos hoje</span>
           </div>
           <div class="grid grid-cols-2 gap-2">
@@ -354,7 +361,7 @@
             <h2 class="text-sm font-semibold text-zinc-200">Metas do Dia</h2>
             <span class="text-xs text-zinc-400 font-medium" id="dailyProgressText">0/0 programadas</span>
           </div>
-          <p class="text-[11px] text-zinc-500 mb-3">Treino e Estudo ajustam seus dias automaticamente conforme os eventos <b>training</b> e <b>study</b>.</p>
+          <p class="text-[11px] text-zinc-500 mb-3">Treino e Estudo seguem os eventos <b>training</b> e <b>study</b> de cada data.</p>
 
           <div id="habitList" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
         </div>
@@ -383,7 +390,7 @@
       <div class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between">
         <div>
           <h2 class="text-sm font-semibold text-zinc-200">Evolução Semanal</h2>
-          <p class="text-[11px] text-zinc-500 mb-4">Linha clara: Hábitos (%) | Tracejada: Acerto (%) | Barras: Estudo Feito vs Planejado (h)</p>
+          <p class="text-[11px] text-zinc-500 mb-4">Linha clara: Hábitos (%) | Tracejada: Acerto (%) | Barras: Líquido Feito vs Meta 50% (h)</p>
         </div>
         <div class="relative h-64 md:h-72 w-full">
           <canvas id="weeklyChart"></canvas>
@@ -396,11 +403,11 @@
     <section class="glass-card p-5 rounded-xl overflow-x-auto">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
         <div>
-          <h2 class="text-sm font-semibold text-zinc-200">Quadro Semanal</h2>
-          <p class="text-[11px] text-zinc-500">Legenda: <span class="text-zinc-200 font-bold">✓</span> Concluído | <span class="text-zinc-500 font-bold">·</span> Planejado | <span class="text-zinc-600 font-mono">—</span> Folga (Sem evento na agenda)</p>
+          <h2 class="text-sm font-semibold text-zinc-200">Quadro Semanal por Data</h2>
+          <p class="text-[11px] text-zinc-500">Legenda: <span class="text-zinc-200 font-bold">✓</span> Concluído | <span class="text-zinc-500 font-bold">·</span> Planejado hoje | <span class="text-zinc-600 font-mono">—</span> Dia sem evento (Folga)</p>
         </div>
       </div>
-      <table class="w-full text-left border-collapse min-w-[620px]">
+      <table class="w-full text-left border-collapse min-w-[650px]">
         <thead>
           <tr class="border-b border-zinc-800 text-[11px] uppercase text-zinc-500" id="matrixHeaderRow"></tr>
         </thead>
@@ -421,9 +428,31 @@
 
   <script>
     const DAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbz9fYDyV8f4LH31YsaXV5Y31uaCPuCY-OIE3dBt13a6DNVRGq7s040TCn2yGlprak73oQ/exec';
     
     const jsDay = new Date().getDay();
     let selectedDayIndex = jsDay === 0 ? 6 : jsDay - 1;
+
+    // Calcula as datas exatas ( Seg a Dom ) da semana corrente sem erro de fuso/virada de mês
+    function getWeekDatesInfo() {
+      const now = new Date();
+      const currentDay = now.getDay();
+      const diffToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+      const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday);
+
+      return DAYS.map((dayLabel, idx) => {
+        const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + idx);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const iso = `${yyyy}-${mm}-${dd}`;
+        const shortBr = `${dd}/${mm}`;
+        const longBr = d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+        return { dayLabel, iso, shortBr, longBr };
+      });
+    }
+
+    const WEEK_DATES = getWeekDatesInfo();
 
     const defaultHabits = [
       { id: 1, name: 'Treino Funcional / Academia', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, false, true, true, false, false] },
@@ -433,29 +462,38 @@
       { id: 5, name: 'Rotina de Autocuidado & Sono (7h+)', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, true] }
     ];
 
-    let habits = JSON.parse(localStorage.getItem('habitDashboardData')) || defaultHabits;
-    habits.forEach(h => {
-      if (!Array.isArray(h.scheduledDays) || h.scheduledDays.length !== 7) {
-        h.scheduledDays = [true, true, true, true, true, true, true];
+    function safeParseJSON(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch (e) {
+        return fallback;
       }
+    }
+
+    let habits = safeParseJSON('habitDashboardData', defaultHabits);
+    habits.forEach(h => {
+      if (!Array.isArray(h.days) || h.days.length !== 7) h.days = [false, false, false, false, false, false, false];
+      if (!Array.isArray(h.scheduledDays) || h.scheduledDays.length !== 7) h.scheduledDays = [true, true, true, true, true, true, true];
     });
 
-    let studySeconds = JSON.parse(localStorage.getItem('habitStudySeconds')) || [0, 0, 0, 0, 0, 0, 0];
-    let pomodoroCycles = JSON.parse(localStorage.getItem('habitPomodoroCycles')) || [0, 0, 0, 0, 0, 0, 0];
-    let dailyGoalHours = Number(localStorage.getItem('habitDailyGoalHours')) || 3;
+    let studySeconds = safeParseJSON('habitStudySeconds', [0, 0, 0, 0, 0, 0, 0]);
+    let pomodoroCycles = safeParseJSON('habitPomodoroCycles', [0, 0, 0, 0, 0, 0, 0]);
+    let dailyGoalHours = Number(localStorage.getItem('habitDailyGoalHours')) || 1.5;
     let linkedHabitId = Number(localStorage.getItem('habitLinkedId')) || (habits[3] ? habits[3].id : (habits[0] ? habits[0].id : 0));
 
-    let questionsSolved = JSON.parse(localStorage.getItem('habitQuestionsSolved')) || [0, 0, 0, 0, 0, 0, 0];
-    let questionsCorrect = JSON.parse(localStorage.getItem('habitQuestionsCorrect')) || [0, 0, 0, 0, 0, 0, 0];
+    let questionsSolved = safeParseJSON('habitQuestionsSolved', [0, 0, 0, 0, 0, 0, 0]);
+    let questionsCorrect = safeParseJSON('habitQuestionsCorrect', [0, 0, 0, 0, 0, 0, 0]);
     let dailyQuestionsGoal = Number(localStorage.getItem('habitDailyQuestionsGoal')) || 20;
     let linkedQuestionHabitId = Number(localStorage.getItem('habitLinkedQuestionId')) || (habits[1] ? habits[1].id : 0);
-    let archivedWeeks = JSON.parse(localStorage.getItem('habitArchivedWeeks')) || [];
+    let archivedWeeks = safeParseJSON('habitArchivedWeeks', []);
 
-    // Dados do Google Calendar (eventos "study" e "training")
-    let calendarWeekData = JSON.parse(localStorage.getItem('habitCalendarWeekData')) || null;
+    // Mapa indexado por data exata (YYYY-MM-DD) vindo do Google Calendar
+    let calendarByDateMap = safeParseJSON('habitCalendarByDateMap', {});
     let autoCalendarSync = localStorage.getItem('habitAutoCalendarSync') !== 'false';
 
-    let gasWebAppUrl = localStorage.getItem('habitGasWebAppUrl') || '';
+    // Usa automaticamente a URL do Apps Script do usuário caso ainda não esteja salva no aparelho
+    let gasWebAppUrl = localStorage.getItem('habitGasWebAppUrl') || DEFAULT_GAS_URL;
     let lastCloudSync = localStorage.getItem('habitLastCloudSync') || '';
     let cloudSyncTimeout = null;
 
@@ -480,42 +518,69 @@
       }, 3500);
     }
 
-    // Identifica se um hábito é de Treino/Academia
+    function getDayCalData(dayIdx) {
+      const dateIso = WEEK_DATES[dayIdx].iso;
+      return calendarByDateMap && calendarByDateMap[dateIso] ? calendarByDateMap[dateIso] : null;
+    }
+
+    function hasCalendarSyncedForWeek() {
+      return WEEK_DATES.some(d => Boolean(calendarByDateMap && calendarByDateMap[d.iso]));
+    }
+
     function isTrainingHabit(habit) {
       const n = habit.name.toLowerCase();
       return n.includes('treino') || n.includes('training') || n.includes('academia') || n.includes('força');
     }
 
-    // Identifica se um hábito é vinculado ao Estudo ("study")
     function isStudyHabit(habit) {
       const n = habit.name.toLowerCase();
-      return habit.id === Number(linkedHabitId) || habit.id === Number(linkedQuestionHabitId) || n.includes('estudo') || n.includes('questões') || n.includes('questoes') || n.includes('revisão') || n.includes('study');
+      return habit.id === Number(linkedHabitId) || habit.id === Number(linkedQuestionHabitId) || n.includes('estudo') || n.includes('questões') || n.includes('questoes') || n.includes('revisão') || n.includes('study') || n.includes('leitura');
     }
 
-    // Sincroniza os dias ativos de Treino e Estudo conforme os eventos "training" e "study" da agenda
+    // Sincroniza cada dia (0 a 6) casando a data exata YYYY-MM-DD com os eventos "study" e "training"
     function applyCalendarScheduleToHabits() {
-      if (!autoCalendarSync || !Array.isArray(calendarWeekData) || calendarWeekData.length !== 7) return;
+      if (!autoCalendarSync || !hasCalendarSyncedForWeek()) return;
       habits.forEach(h => {
         if (isTrainingHabit(h)) {
-          h.scheduledDays = calendarWeekData.map(d => Boolean(d && d.hasTraining));
+          h.scheduledDays = WEEK_DATES.map((_, idx) => {
+            const cal = getDayCalData(idx);
+            return Boolean(cal && cal.hasTraining);
+          });
         } else if (isStudyHabit(h)) {
-          h.scheduledDays = calendarWeekData.map(d => Boolean(d && d.hasStudy));
+          h.scheduledDays = WEEK_DATES.map((_, idx) => {
+            const cal = getDayCalData(idx);
+            return Boolean(cal && cal.hasStudy);
+          });
         }
       });
     }
 
-    // Meta de segundos líquidos do dia baseada na duração do evento "study"
+    // Retorna o Tempo Bruto agendado no evento "study" na data exata
+    function getGrossStudySeconds(dayIdx) {
+      const cal = getDayCalData(dayIdx);
+      if (autoCalendarSync && cal) {
+        if (typeof cal.grossStudySeconds === 'number') return cal.grossStudySeconds;
+        if (typeof cal.studyPlannedSeconds === 'number') return cal.studyPlannedSeconds;
+      }
+      return dailyGoalHours * 3600 * 2;
+    }
+
+    // Regra de Ouro: Meta Líquida = 50% do Bruto do evento "study" na data exata
     function getEffectiveStudyGoalSeconds(dayIdx) {
-      if (autoCalendarSync && Array.isArray(calendarWeekData) && calendarWeekData[dayIdx]) {
-        return calendarWeekData[dayIdx].studyPlannedSeconds || 0;
+      const cal = getDayCalData(dayIdx);
+      if (autoCalendarSync && hasCalendarSyncedForWeek()) {
+        if (!cal || !cal.hasStudy) return 0;
+        if (typeof cal.netStudyGoalSeconds === 'number') return cal.netStudyGoalSeconds;
+        const gross = cal.grossStudySeconds || cal.studyPlannedSeconds || 0;
+        return Math.round(gross * 0.5);
       }
       return dailyGoalHours * 3600;
     }
 
-    // Meta de questões do dia (0 se não houver evento "study" no dia)
     function getEffectiveQuestionGoal(dayIdx) {
-      if (autoCalendarSync && Array.isArray(calendarWeekData) && calendarWeekData[dayIdx]) {
-        if (!calendarWeekData[dayIdx].hasStudy) return 0;
+      const cal = getDayCalData(dayIdx);
+      if (autoCalendarSync && hasCalendarSyncedForWeek()) {
+        if (!cal || !cal.hasStudy) return 0;
       }
       return dailyQuestionsGoal;
     }
@@ -527,12 +592,12 @@
         applyCalendarScheduleToHabits();
       }
       saveState();
-      showToast(autoCalendarSync ? 'Agenda "study" e "training" comandando as metas.' : 'Sincronização automática de metas pausada.');
+      showToast(autoCalendarSync ? 'Sincronismo por data exata ativado.' : 'Sincronismo automático pausado.');
     }
 
     function buildFullPayload() {
       return {
-        version: 5,
+        version: 6,
         updatedAt: new Date().toISOString(),
         dailyGoalHours,
         linkedHabitId,
@@ -551,7 +616,8 @@
       if (!data || !Array.isArray(data.habits)) return false;
       habits = data.habits.map(h => ({
         ...h,
-        scheduledDays: Array.isArray(h.scheduledDays) && h.scheduledDays.length === 7 ? h.scheduledDays : [true,true,true,true,true,true,true]
+        days: Array.isArray(h.days) && h.days.length === 7 ? h.days.map(Boolean) : [false,false,false,false,false,false,false],
+        scheduledDays: Array.isArray(h.scheduledDays) && h.scheduledDays.length === 7 ? h.scheduledDays.map(Boolean) : [true,true,true,true,true,true,true]
       }));
       if (Array.isArray(data.studySeconds) && data.studySeconds.length === 7) studySeconds = data.studySeconds.map(Number);
       if (Array.isArray(data.pomodoroCycles) && data.pomodoroCycles.length === 7) pomodoroCycles = data.pomodoroCycles.map(Number);
@@ -576,9 +642,7 @@
       localStorage.setItem('habitDailyQuestionsGoal', String(dailyQuestionsGoal));
       localStorage.setItem('habitLinkedQuestionId', String(linkedQuestionHabitId));
       localStorage.setItem('habitArchivedWeeks', JSON.stringify(archivedWeeks));
-      if (calendarWeekData) {
-        localStorage.setItem('habitCalendarWeekData', JSON.stringify(calendarWeekData));
-      }
+      localStorage.setItem('habitCalendarByDateMap', JSON.stringify(calendarByDateMap));
     }
 
     function saveState(skipCloud = false) {
@@ -632,7 +696,7 @@
       }
       gasWebAppUrl = url;
       localStorage.setItem('habitGasWebAppUrl', gasWebAppUrl);
-      showToast('Conectado! Buscando eventos study e training...');
+      showToast('Conectado! Buscando eventos por data...');
       pullFromCloud(true);
     }
 
@@ -685,25 +749,56 @@
       }
       updateCloudStatusUI('syncing', 'Lendo Agenda...');
       try {
-        const response = await fetch(`${gasWebAppUrl}?t=${Date.now()}`);
+        const datesCsv = WEEK_DATES.map(d => d.iso).join(',');
+        const response = await fetch(`${gasWebAppUrl}?dates=${encodeURIComponent(datesCsv)}&t=${Date.now()}`);
         const resData = await response.json();
         if (resData.status === 'ok') {
           if (resData.hasData && resData.data) {
             applyPayloadToState(resData.data);
           }
-          if (Array.isArray(resData.calendar) && resData.calendar.length === 7) {
-            calendarWeekData = resData.calendar;
-            applyCalendarScheduleToHabits();
-            checkAutoCompleteStudyHabit(selectedDayIndex);
-            checkAutoCompleteQuestionHabit(selectedDayIndex);
+
+          const errBanner = document.getElementById('calendarErrorBanner');
+          if (resData.calendarError) {
+            errBanner.classList.remove('hidden');
+            document.getElementById('calendarErrorDetails').textContent = `Detalhe técnico: ${resData.calendarError} — Abra o Apps Script, rode a função "autorizarPermissoes" e crie uma Nova Versão na implantação.`;
+          } else {
+            errBanner.classList.add('hidden');
           }
+
+          if (Array.isArray(resData.calendar) && resData.calendar.length === 7) {
+            resData.calendar.forEach((dayObj, idx) => {
+              const targetIso = (dayObj && dayObj.date) ? dayObj.date : WEEK_DATES[idx].iso;
+              // Compatibilidade mesmo se o Apps Script antigo ainda estiver publicado
+              const gross = typeof dayObj.grossStudySeconds === 'number'
+                ? dayObj.grossStudySeconds
+                : (dayObj.studyPlannedSeconds || 0);
+              const net = typeof dayObj.netStudyGoalSeconds === 'number'
+                ? dayObj.netStudyGoalSeconds
+                : Math.round(gross * 0.5);
+
+              calendarByDateMap[targetIso] = {
+                date: targetIso,
+                hasStudy: Boolean(dayObj.hasStudy),
+                grossStudySeconds: gross,
+                netStudyGoalSeconds: net,
+                hasTraining: Boolean(dayObj.hasTraining),
+                events: Array.isArray(dayObj.events) ? dayObj.events : []
+              };
+            });
+            applyCalendarScheduleToHabits();
+            WEEK_DATES.forEach((_, idx) => {
+              checkAutoCompleteStudyHabit(idx);
+              checkAutoCompleteQuestionHabit(idx);
+            });
+          }
+
           saveLocalOnly();
           renderAll();
           const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
           lastCloudSync = `${new Date().toLocaleDateString('pt-BR')} às ${timeStr}`;
           localStorage.setItem('habitLastCloudSync', lastCloudSync);
           updateCloudStatusUI('ok', `Sincronizado (${timeStr})`);
-          if (showNotification) showToast('Eventos "study" e "training" sincronizados!');
+          if (showNotification) showToast('Datas e eventos "study"/"training" sincronizados!');
           if (!resData.hasData) {
             await pushToCloud(false);
           }
@@ -780,7 +875,7 @@
 
     function clearTodayQuestions() {
       if (questionsSolved[selectedDayIndex] === 0) return;
-      if (confirm(`Zerar questões de ${DAYS[selectedDayIndex]}?`)) {
+      if (confirm(`Zerar questões de ${WEEK_DATES[selectedDayIndex].shortBr}?`)) {
         questionsSolved[selectedDayIndex] = 0;
         questionsCorrect[selectedDayIndex] = 0;
         saveState();
@@ -795,6 +890,7 @@
 
     function updateLinkedQuestionHabit(val) {
       linkedQuestionHabitId = Number(val);
+      applyCalendarScheduleToHabits();
       checkAutoCompleteQuestionHabit(selectedDayIndex);
       saveState();
     }
@@ -829,7 +925,7 @@
 
     function archiveAndResetWeek() {
       const stats = getWeeklyStatsSummary();
-      const defaultLabel = `Semana encerrada em ${new Date().toLocaleDateString('pt-BR')}`;
+      const defaultLabel = `Semana ${WEEK_DATES[0].shortBr} a ${WEEK_DATES[6].shortBr}`;
       const weekLabel = prompt('Identificação da semana para o histórico:', defaultLabel);
       if (weekLabel === null) return;
 
@@ -876,7 +972,7 @@
     }
 
     function getFormattedDate() {
-      return new Date().toISOString().split('T')[0];
+      return WEEK_DATES[selectedDayIndex].iso;
     }
 
     function triggerDownload(content, filename, mimeType) {
@@ -898,7 +994,8 @@
 
     function exportCSV() {
       const escapeCSV = (str) => `"${String(str).replace(/"/g, '""')}"`;
-      const rows = [['Tipo', 'ID', 'Item', ...DAYS, 'Acumulado_Semana', 'Dias_Programados']];
+      const headers = WEEK_DATES.map(d => `${d.dayLabel}_${d.shortBr}`);
+      const rows = [['Tipo', 'ID', 'Item', ...headers, 'Acumulado_Semana', 'Dias_Programados']];
 
       habits.forEach(h => {
         const schedCount = h.scheduledDays.filter(Boolean).length;
@@ -964,8 +1061,8 @@
         if (targetHabit && !targetHabit.days[dayIdx]) {
           targetHabit.days[dayIdx] = true;
           playBeep(880, 0.4);
-          showToast(`Bloco "study" concluído: "${targetHabit.name}" marcado.`);
-          sendDesktopNotification('Meta de Estudo Concluída', `O hábito "${targetHabit.name}" foi marcado automaticamente.`);
+          showToast(`Meta líquida (50% do study) atingida! "${targetHabit.name}" marcado.`);
+          sendDesktopNotification('Meta Líquida Concluída', `O hábito "${targetHabit.name}" foi marcado automaticamente.`);
           return true;
         }
       }
@@ -1182,34 +1279,86 @@
       return studySeconds.map(sec => +(sec / 3600).toFixed(2));
     }
 
-    function getDailyPlannedStudyHours() {
+    function getDailyPlannedNetStudyHours() {
       return DAYS.map((_, idx) => +(getEffectiveStudyGoalSeconds(idx) / 3600).toFixed(2));
+    }
+
+    function renderDaySelector() {
+      const container = document.getElementById('daySelector');
+      const dInfo = WEEK_DATES[selectedDayIndex];
+      const calToday = getDayCalData(selectedDayIndex);
+
+      document.getElementById('exactDateBadge').textContent = `${dInfo.dayLabel} • ${dInfo.shortBr}`;
+
+      const statementEl = document.getElementById('dailyCorrelationStatement');
+      const trainingEl = document.getElementById('trainingCorrelationText');
+
+      if (calToday && autoCalendarSync) {
+        if (calToday.hasStudy) {
+          const grossStr = formatHoursMinutes(calToday.grossStudySeconds);
+          const netStr = formatHoursMinutes(calToday.netStudyGoalSeconds);
+          statementEl.innerHTML = `Dia <b>${dInfo.longBr}</b>: Kaio vai estudar <b>${netStr} líquidas</b> — correlação com evento <b>"study"</b> (${grossStr} brutas na agenda, 50% líquido).`;
+        } else {
+          statementEl.innerHTML = `Dia <b>${dInfo.longBr}</b>: Sem evento <b>"study"</b> no calendário — hoje Kaio não tem meta de estudo (Folga programada).`;
+        }
+        trainingEl.innerHTML = calToday.hasTraining
+          ? `🏋️ Evento <b>"training"</b> detectado hoje (Academia ativa)`
+          : `🏋️ Sem evento <b>"training"</b> hoje (Descanso de academia)`;
+      } else {
+        statementEl.innerHTML = `Dia <b>${dInfo.longBr}</b>: Clique em <b>↻ Sincronizar Agenda</b> para correlacionar os eventos "study" e "training" desta data.`;
+        trainingEl.textContent = 'Agenda aguardando sincronização';
+      }
+
+      container.innerHTML = WEEK_DATES.map((info, idx) => {
+        const isSelected = idx === selectedDayIndex;
+        const dCal = getDayCalData(idx);
+        const hasS = dCal && dCal.hasStudy;
+        const hasT = dCal && dCal.hasTraining;
+        return `
+          <button 
+            onclick="selectDay(${idx})"
+            class="px-2 py-1.5 rounded-lg text-xs font-medium transition border flex flex-col items-center justify-center ${
+              isSelected 
+                ? 'bg-slate-700 text-zinc-100 border-slate-500' 
+                : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-800/80'
+            }"
+          >
+            <span>${info.dayLabel}</span>
+            <span class="text-[10px] text-zinc-500 font-mono">${info.shortBr}</span>
+            <span class="text-[9px] text-zinc-400 mt-0.5 h-3 flex items-center gap-0.5">
+              ${hasS ? '📚' : ''}${hasT ? '🏋️' : ''}${!hasS && !hasT && dCal ? '—' : ''}
+            </span>
+          </button>
+        `;
+      }).join('');
     }
 
     function renderCalendarCard() {
       const listEl = document.getElementById('calendarEventsList');
       const badgeEl = document.getElementById('calSyncBadge');
       const toggleBtn = document.getElementById('autoCalToggleBtn');
+      const dInfo = WEEK_DATES[selectedDayIndex];
 
       if (toggleBtn) {
         toggleBtn.textContent = autoCalendarSync ? 'Ativo (Automático)' : 'Pausado (Manual)';
         toggleBtn.className = autoCalendarSync ? 'text-zinc-200 font-semibold hover:underline' : 'text-zinc-500 font-medium hover:underline';
       }
 
-      if (!Array.isArray(calendarWeekData) || !calendarWeekData[selectedDayIndex]) {
-        badgeEl.textContent = 'Aguardando Sync';
+      const dayCal = getDayCalData(selectedDayIndex);
+      if (!dayCal) {
+        badgeEl.textContent = dInfo.shortBr;
         listEl.innerHTML = `
           <div class="text-xs text-zinc-500 py-4 text-center border border-dashed border-zinc-800 rounded-lg">
-            Clique em <b>↻ Sincronizar Agenda</b> no topo para buscar seus eventos <b>"study"</b> e <b>"training"</b>.
+            Clique em <b>↻ Sincronizar Agenda</b> para ler o dia ${dInfo.shortBr}.
           </div>
         `;
         return;
       }
 
-      const dayCal = calendarWeekData[selectedDayIndex];
-      const studyPlanStr = dayCal.hasStudy ? formatHoursMinutes(dayCal.studyPlannedSeconds) : 'Sem study';
-      const trainPlanStr = dayCal.hasTraining ? 'Com training' : 'Sem training';
-      badgeEl.textContent = `${studyPlanStr} • ${trainPlanStr}`;
+      const studyPlanStr = dayCal.hasStudy
+        ? `Bruto ${formatHoursMinutes(dayCal.grossStudySeconds)} → Meta ${formatHoursMinutes(dayCal.netStudyGoalSeconds)}`
+        : 'Sem study';
+      badgeEl.textContent = `${dInfo.shortBr} • ${studyPlanStr}`;
 
       const relevantEvents = (dayCal.events || []).filter(e => e.type === 'study' || e.type === 'training');
       const otherEvents = (dayCal.events || []).filter(e => e.type === 'other');
@@ -1217,7 +1366,7 @@
       if (relevantEvents.length === 0 && otherEvents.length === 0) {
         listEl.innerHTML = `
           <div class="text-xs text-zinc-500 py-4 text-center border border-dashed border-zinc-800/80 rounded-lg">
-            Nenhum evento em ${DAYS[selectedDayIndex]} (Folga de estudo e treino).
+            Nenhum evento registrado em ${dInfo.shortBr}.
           </div>
         `;
         return;
@@ -1225,10 +1374,10 @@
 
       const renderEvItem = (ev) => {
         const tag = ev.type === 'study'
-          ? '<span class="px-1.5 py-0.5 text-[10px] rounded bg-slate-700 text-zinc-100 font-semibold">STUDY</span>'
+          ? `<span class="px-1.5 py-0.5 text-[10px] rounded bg-slate-700 text-zinc-100 font-semibold">STUDY (50% = ${ev.netMinutes}m)</span>`
           : (ev.type === 'training' ? '<span class="px-1.5 py-0.5 text-[10px] rounded bg-zinc-700 text-zinc-200 font-semibold">TRAINING</span>' : '');
         return `
-          <div class="flex items-center justify-between p-2 rounded-lg bg-zinc-950 border ${ev.type !== 'other' ? 'border-slate-600/80' : 'border-zinc-800/60 opacity-60'} text-xs">
+          <div class="flex items-center justify-between p-2 rounded-lg bg-zinc-950 border ${ev.type !== 'other' ? 'border-slate-600/80' : 'border-zinc-800/60 opacity-55'} text-xs">
             <div class="flex items-center gap-2 truncate pr-2">
               ${tag}
               <span class="font-medium text-zinc-200 truncate">${ev.title}</span>
@@ -1243,48 +1392,6 @@
       listEl.innerHTML = [...relevantEvents.map(renderEvItem), ...otherEvents.map(renderEvItem)].join('');
     }
 
-    function renderDaySelector() {
-      const container = document.getElementById('daySelector');
-      const badgesContainer = document.getElementById('dayScheduleBadges');
-      const calToday = Array.isArray(calendarWeekData) ? calendarWeekData[selectedDayIndex] : null;
-
-      document.getElementById('selectedDayLabel').textContent = DAYS[selectedDayIndex];
-
-      if (calToday && autoCalendarSync) {
-        const studyBadge = calToday.hasStudy
-          ? `<span class="px-2 py-0.5 rounded bg-slate-800 text-zinc-200 border border-slate-700">📚 Study: ${formatHoursMinutes(calToday.studyPlannedSeconds)}</span>`
-          : `<span class="px-2 py-0.5 rounded bg-zinc-900 text-zinc-500 border border-zinc-800">📚 Sem Study (Folga)</span>`;
-        const trainBadge = calToday.hasTraining
-          ? `<span class="px-2 py-0.5 rounded bg-slate-800 text-zinc-200 border border-slate-700">🏋️ Training: Sim</span>`
-          : `<span class="px-2 py-0.5 rounded bg-zinc-900 text-zinc-500 border border-zinc-800">🏋️ Sem Training</span>`;
-        badgesContainer.innerHTML = studyBadge + trainBadge;
-      } else {
-        badgesContainer.innerHTML = '';
-      }
-
-      container.innerHTML = DAYS.map((day, idx) => {
-        const isSelected = idx === selectedDayIndex;
-        const dCal = Array.isArray(calendarWeekData) ? calendarWeekData[idx] : null;
-        const hasS = dCal && dCal.hasStudy;
-        const hasT = dCal && dCal.hasTraining;
-        return `
-          <button 
-            onclick="selectDay(${idx})"
-            class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition border flex flex-col items-center justify-center ${
-              isSelected 
-                ? 'bg-slate-700 text-zinc-100 border-slate-500' 
-                : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-800/80'
-            }"
-          >
-            <span>${day}</span>
-            <span class="text-[9px] text-zinc-400 mt-0.5 h-3 flex items-center gap-0.5">
-              ${hasS ? '📚' : ''}${hasT ? '🏋️' : ''}${!hasS && !hasT && dCal ? '—' : ''}
-            </span>
-          </button>
-        `;
-      }).join('');
-    }
-
     function renderGoalBar() {
       const goalSelect = document.getElementById('dailyGoalSelect');
       if (goalSelect) goalSelect.value = String(dailyGoalHours);
@@ -1296,34 +1403,35 @@
           : habits.map(h => `<option value="${h.id}" class="bg-zinc-900" ${h.id === Number(linkedHabitId) ? 'selected' : ''}>${h.name}</option>`).join('');
       }
 
+      const grossSecs = getGrossStudySeconds(selectedDayIndex);
       const goalSecs = getEffectiveStudyGoalSeconds(selectedDayIndex);
       const todaySecs = studySeconds[selectedDayIndex] || 0;
       const statusBadge = document.getElementById('goalStatusBadge');
       const remainingText = document.getElementById('goalRemainingText');
 
       if (goalSecs === 0) {
-        document.getElementById('goalProgressFraction').textContent = `${formatHoursMinutes(todaySecs)} (Sem evento "study" hoje)`;
+        document.getElementById('goalProgressFraction').textContent = `${formatHoursMinutes(todaySecs)} (Sem evento "study" em ${WEEK_DATES[selectedDayIndex].shortBr})`;
         document.getElementById('goalProgressPercent').textContent = `Folga`;
         document.getElementById('goalProgressBar').style.width = `100%`;
-        statusBadge.textContent = 'Dia Livre de Estudo';
+        statusBadge.textContent = 'Sem Estudo Hoje';
         statusBadge.className = 'text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400';
-        remainingText.textContent = 'Nenhum evento "study" agendado para hoje. Aproveite seu descanso ou foque nas outras tarefas.';
+        remainingText.textContent = 'Não há bloco "study" nesta data. Meta líquida = 0h.';
         return;
       }
 
       const rawPct = Math.round((todaySecs / goalSecs) * 100);
-      document.getElementById('goalProgressFraction').textContent = `${formatHoursMinutes(todaySecs)} de ${formatHoursMinutes(goalSecs)} planejados`;
+      document.getElementById('goalProgressFraction').textContent = `${formatHoursMinutes(todaySecs)} de ${formatHoursMinutes(goalSecs)} líquidos (Bruto: ${formatHoursMinutes(grossSecs)})`;
       document.getElementById('goalProgressPercent').textContent = `${rawPct}%`;
       document.getElementById('goalProgressBar').style.width = `${Math.min(100, rawPct)}%`;
 
       if (todaySecs >= goalSecs) {
-        statusBadge.textContent = 'Bloco Study Concluído';
+        statusBadge.textContent = 'Meta 50% Concluída';
         statusBadge.className = 'text-[10px] font-medium px-2 py-0.5 rounded bg-slate-700 text-zinc-100';
-        remainingText.textContent = 'Você cumpriu 100% do tempo planejado no seu evento "study" de hoje.';
+        remainingText.textContent = `Você cumpriu os ${formatHoursMinutes(goalSecs)} líquidos (metade das ${formatHoursMinutes(grossSecs)} brutas).`;
       } else {
         statusBadge.textContent = 'Em andamento';
         statusBadge.className = 'text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400';
-        remainingText.textContent = `Restam ${formatHoursMinutes(goalSecs - todaySecs)} para cumprir seu bloco "study" de hoje.`;
+        remainingText.textContent = `Restam ${formatHoursMinutes(goalSecs - todaySecs)} líquidos para atingir metade do evento "study" (${formatHoursMinutes(grossSecs)}).`;
       }
     }
 
@@ -1344,7 +1452,7 @@
       const accToday = solvedToday > 0 ? Math.round((correctToday / solvedToday) * 100) : 0;
 
       if (effectiveQGoal === 0) {
-        document.getElementById('qProgressFraction').textContent = `${solvedToday} questões feitas (Sem evento "study" hoje)`;
+        document.getElementById('qProgressFraction').textContent = `${solvedToday} questões feitas (Sem "study" em ${WEEK_DATES[selectedDayIndex].shortBr})`;
         document.getElementById('qProgressPercent').textContent = `Folga`;
         document.getElementById('qProgressBar').style.width = `100%`;
         document.getElementById('qAccuracyBadge').textContent = solvedToday > 0 ? `Acerto: ${accToday}%` : 'Folga hoje';
@@ -1376,8 +1484,8 @@
         const isTrain = isTrainingHabit(habit);
         const isStud = isStudyHabit(habit);
 
-        const autoTag = (autoCalendarSync && Array.isArray(calendarWeekData))
-          ? (isTrain ? '<span class="ml-1.5 text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">Agenda: training</span>' : (isStud ? '<span class="ml-1.5 text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">Agenda: study</span>' : ''))
+        const autoTag = (autoCalendarSync && hasCalendarSyncedForWeek())
+          ? (isTrain ? '<span class="ml-1.5 text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">training</span>' : (isStud ? '<span class="ml-1.5 text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">study</span>' : ''))
           : '';
 
         const schedulePills = isEditingDays ? `
@@ -1435,7 +1543,7 @@
       const theadRow = document.getElementById('matrixHeaderRow');
       theadRow.innerHTML = `
         <th class="py-2.5 pr-4">Hábito / Indicador</th>
-        ${DAYS.map(d => `<th class="py-2.5 text-center">${d}</th>`).join('')}
+        ${WEEK_DATES.map(d => `<th class="py-2.5 text-center">${d.dayLabel}<br><span class="text-[9px] font-mono text-zinc-600">${d.shortBr}</span></th>`).join('')}
         <th class="py-2.5 text-right">Desempenho</th>
       `;
 
@@ -1472,21 +1580,20 @@
         `;
       }).join('');
 
-      // Linha de Estudo Planejado ("study") vs Realizado
       const totalWeekSecs = studySeconds.reduce((a, b) => a + b, 0);
-      const totalPlannedSecs = DAYS.reduce((acc, _, idx) => acc + getEffectiveStudyGoalSeconds(idx), 0);
+      const totalPlannedNetSecs = DAYS.reduce((acc, _, idx) => acc + getEffectiveStudyGoalSeconds(idx), 0);
       const studyCells = studySeconds.map((sec, idx) => {
-        const planSec = getEffectiveStudyGoalSeconds(idx);
-        if (planSec === 0 && sec === 0) return `<td class="py-2.5 text-center text-[11px] text-zinc-600 font-mono">—</td>`;
-        const hit = planSec > 0 && sec >= planSec;
-        return `<td class="py-2.5 text-center text-[11px] ${hit ? 'text-zinc-100 font-semibold' : 'text-zinc-400'}">${formatHoursMinutes(sec)} <span class="text-[10px] text-zinc-600">/ ${formatHoursMinutes(planSec)}</span></td>`;
+        const netGoalSec = getEffectiveStudyGoalSeconds(idx);
+        if (netGoalSec === 0 && sec === 0) return `<td class="py-2.5 text-center text-[11px] text-zinc-600 font-mono">—</td>`;
+        const hit = netGoalSec > 0 && sec >= netGoalSec;
+        return `<td class="py-2.5 text-center text-[11px] ${hit ? 'text-zinc-100 font-semibold' : 'text-zinc-400'}">${formatHoursMinutes(sec)} <span class="text-[10px] text-zinc-600">/ ${formatHoursMinutes(netGoalSec)}</span></td>`;
       }).join('');
 
       const studyRow = `
         <tr class="bg-zinc-900/40">
-          <td class="py-2.5 pr-4 font-medium text-zinc-400">Estudo Feito / Evento "study"</td>
+          <td class="py-2.5 pr-4 font-medium text-zinc-400">Estudo Líquido / Meta (50% "study")</td>
           ${studyCells}
-          <td class="py-2.5 text-right font-semibold text-zinc-200">${formatHoursMinutes(totalWeekSecs)} / ${formatHoursMinutes(totalPlannedSecs)}</td>
+          <td class="py-2.5 text-right font-semibold text-zinc-200">${formatHoursMinutes(totalWeekSecs)} / ${formatHoursMinutes(totalPlannedNetSecs)}</td>
         </tr>
       `;
 
@@ -1578,9 +1685,11 @@
       const dataPcts = getDailyPercentages();
       const dataQAcc = getDailyQuestionAccuracies();
       const dataHours = getDailyStudyHours();
-      const dataPlannedHours = getDailyPlannedStudyHours();
+      const dataPlannedHours = getDailyPlannedNetStudyHours();
+      const labelsWithDates = WEEK_DATES.map(d => `${d.dayLabel} (${d.shortBr})`);
 
       if (chartInstance) {
+        chartInstance.data.labels = labelsWithDates;
         chartInstance.data.datasets[0].data = dataPcts;
         chartInstance.data.datasets[1].data = dataQAcc;
         chartInstance.data.datasets[2].data = dataHours;
@@ -1591,7 +1700,7 @@
 
       chartInstance = new Chart(ctx, {
         data: {
-          labels: DAYS,
+          labels: labelsWithDates,
           datasets: [
             {
               type: 'line',
@@ -1621,9 +1730,9 @@
             },
             {
               type: 'bar',
-              label: 'Estudo Feito (h)',
+              label: 'Estudo Líquido Feito (h)',
               data: dataHours,
-              backgroundColor: 'rgba(148, 163, 184, 0.5)',
+              backgroundColor: 'rgba(148, 163, 184, 0.55)',
               borderColor: '#94a3b8',
               borderWidth: 1,
               borderRadius: 4,
@@ -1631,9 +1740,9 @@
             },
             {
               type: 'bar',
-              label: 'Planejado "study" (h)',
+              label: 'Meta 50% do "study" (h)',
               data: dataPlannedHours,
-              backgroundColor: 'rgba(63, 63, 70, 0.35)',
+              backgroundColor: 'rgba(63, 63, 70, 0.4)',
               borderColor: '#52525b',
               borderWidth: 1,
               borderRadius: 4,
@@ -1657,13 +1766,13 @@
               type: 'linear',
               position: 'right',
               beginAtZero: true,
-              suggestedMax: 5,
+              suggestedMax: 4,
               grid: { drawOnChartArea: false },
               ticks: { color: '#71717a', callback: v => v + 'h' }
             },
             x: {
               grid: { display: false },
-              ticks: { color: '#71717a' }
+              ticks: { color: '#71717a', font: { size: 10 } }
             }
           },
           plugins: {
