@@ -2,8 +2,16 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Painel de Alta Performance — Sincronizado na Nuvem</title>
+
+  <!-- Tags para abrir como App em Tela Cheia no Celular/Tablet -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Painel Hábitos">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0f172a">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -422,6 +430,7 @@
 
   <script>
     const DAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbz9fYDyV8f4LH31YsaXV5Y31uaCPuCY-OIE3dBt13a6DNVRGq7s040TCn2yGlprak73oQ/exec';
     
     const jsDay = new Date().getDay();
     let selectedDayIndex = jsDay === 0 ? 6 : jsDay - 1;
@@ -434,41 +443,54 @@
       { id: 5, name: 'Rotina de Autocuidado & Sono (7h+)', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, true] }
     ];
 
-    let habits = JSON.parse(localStorage.getItem('habitDashboardData')) || defaultHabits;
+    function safeParseJSON(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    let habits = safeParseJSON('habitDashboardData', defaultHabits);
     habits.forEach(h => {
+      if (!Array.isArray(h.days) || h.days.length !== 7) h.days = [false, false, false, false, false, false, false];
       if (!Array.isArray(h.scheduledDays) || h.scheduledDays.length !== 7) {
         const isWorkout = h.name.toLowerCase().includes('treino');
         h.scheduledDays = isWorkout ? [true, true, false, true, true, false, false] : [true, true, true, true, true, true, true];
       }
     });
 
-    let studySeconds = JSON.parse(localStorage.getItem('habitStudySeconds')) || [0, 0, 0, 0, 0, 0, 0];
-    let pomodoroCycles = JSON.parse(localStorage.getItem('habitPomodoroCycles')) || [0, 0, 0, 0, 0, 0, 0];
+    let studySeconds = safeParseJSON('habitStudySeconds', [0, 0, 0, 0, 0, 0, 0]);
+    let pomodoroCycles = safeParseJSON('habitPomodoroCycles', [0, 0, 0, 0, 0, 0, 0]);
     let dailyGoalHours = Number(localStorage.getItem('habitDailyGoalHours')) || 4;
     let linkedHabitId = Number(localStorage.getItem('habitLinkedId')) || (habits[3] ? habits[3].id : (habits[0] ? habits[0].id : 0));
 
-    let questionsSolved = JSON.parse(localStorage.getItem('habitQuestionsSolved')) || [0, 0, 0, 0, 0, 0, 0];
-    let questionsCorrect = JSON.parse(localStorage.getItem('habitQuestionsCorrect')) || [0, 0, 0, 0, 0, 0, 0];
+    let questionsSolved = safeParseJSON('habitQuestionsSolved', [0, 0, 0, 0, 0, 0, 0]);
+    let questionsCorrect = safeParseJSON('habitQuestionsCorrect', [0, 0, 0, 0, 0, 0, 0]);
     let dailyQuestionsGoal = Number(localStorage.getItem('habitDailyQuestionsGoal')) || 30;
     let linkedQuestionHabitId = Number(localStorage.getItem('habitLinkedQuestionId')) || (habits[1] ? habits[1].id : 0);
-    let busyDays = JSON.parse(localStorage.getItem('habitBusyDays')) || [false, false, false, false, false, false, false];
-    let archivedWeeks = JSON.parse(localStorage.getItem('habitArchivedWeeks')) || [];
+    let busyDays = safeParseJSON('habitBusyDays', [false, false, false, false, false, false, false]);
+    let archivedWeeks = safeParseJSON('habitArchivedWeeks', []);
 
-    // Configuração Google Apps Script (Nuvem)
-    let gasWebAppUrl = localStorage.getItem('habitGasWebAppUrl') || '';
+    // Configuração Google Apps Script (Nuvem) - Já vem com sua URL salva por padrão
+    let gasWebAppUrl = localStorage.getItem('habitGasWebAppUrl') || DEFAULT_GAS_URL;
     let lastCloudSync = localStorage.getItem('habitLastCloudSync') || '';
     let cloudSyncTimeout = null;
+    let isPullingFromCloud = false;
+    let hasCompletedInitialPull = false;
 
     // Estado UI
     let editingScheduleHabitId = null;
     let newHabitSchedule = [true, true, true, true, true, true, true];
     let chartInstance = null;
 
-    // Estado Pomodoro
+    // Estado Pomodoro com precisão de Timestamp
     let timerMode = 'focus25';
     let timeLeft = 25 * 60;
     let timerInterval = null;
     let isRunning = false;
+    let lastTickTimestamp = null;
     let toastTimeout = null;
 
     function showToast(message, icon = '✅') {
@@ -504,18 +526,19 @@
       if (!data || !Array.isArray(data.habits)) return false;
       habits = data.habits.map(h => ({
         ...h,
-        scheduledDays: Array.isArray(h.scheduledDays) && h.scheduledDays.length === 7 ? h.scheduledDays : [true,true,true,true,true,true,true]
+        days: Array.isArray(h.days) && h.days.length === 7 ? h.days.map(Boolean) : [false,false,false,false,false,false,false],
+        scheduledDays: Array.isArray(h.scheduledDays) && h.scheduledDays.length === 7 ? h.scheduledDays.map(Boolean) : [true,true,true,true,true,true,true]
       }));
-      if (Array.isArray(data.studySeconds) && data.studySeconds.length === 7) studySeconds = data.studySeconds.map(Number);
-      if (Array.isArray(data.pomodoroCycles) && data.pomodoroCycles.length === 7) pomodoroCycles = data.pomodoroCycles.map(Number);
-      if (Array.isArray(data.questionsSolved) && data.questionsSolved.length === 7) questionsSolved = data.questionsSolved.map(Number);
-      if (Array.isArray(data.questionsCorrect) && data.questionsCorrect.length === 7) questionsCorrect = data.questionsCorrect.map(Number);
+      if (Array.isArray(data.studySeconds) && data.studySeconds.length === 7) studySeconds = data.studySeconds.map(v => Math.max(0, Number(v) || 0));
+      if (Array.isArray(data.pomodoroCycles) && data.pomodoroCycles.length === 7) pomodoroCycles = data.pomodoroCycles.map(v => Math.max(0, Number(v) || 0));
+      if (Array.isArray(data.questionsSolved) && data.questionsSolved.length === 7) questionsSolved = data.questionsSolved.map(v => Math.max(0, Number(v) || 0));
+      if (Array.isArray(data.questionsCorrect) && data.questionsCorrect.length === 7) questionsCorrect = data.questionsCorrect.map(v => Math.max(0, Number(v) || 0));
       if (Array.isArray(data.busyDays) && data.busyDays.length === 7) busyDays = data.busyDays.map(Boolean);
       if (Array.isArray(data.archivedWeeks)) archivedWeeks = data.archivedWeeks;
       if (data.dailyGoalHours) dailyGoalHours = Number(data.dailyGoalHours);
-      if (data.linkedHabitId) linkedHabitId = Number(data.linkedHabitId);
+      if (data.linkedHabitId !== undefined) linkedHabitId = Number(data.linkedHabitId);
       if (data.dailyQuestionsGoal) dailyQuestionsGoal = Number(data.dailyQuestionsGoal);
-      if (data.linkedQuestionHabitId) linkedQuestionHabitId = Number(data.linkedQuestionHabitId);
+      if (data.linkedQuestionHabitId !== undefined) linkedQuestionHabitId = Number(data.linkedQuestionHabitId);
       return true;
     }
 
@@ -536,7 +559,7 @@
     function saveState(skipCloud = false) {
       saveLocalOnly();
       renderAll();
-      if (!skipCloud && gasWebAppUrl) {
+      if (!skipCloud && gasWebAppUrl && !isPullingFromCloud) {
         scheduleCloudPush();
       }
     }
@@ -600,7 +623,7 @@
     }
 
     function scheduleCloudPush() {
-      if (!gasWebAppUrl) return;
+      if (!gasWebAppUrl || isPullingFromCloud || !hasCompletedInitialPull) return;
       updateCloudStatusUI('syncing', 'Salvando...');
       clearTimeout(cloudSyncTimeout);
       cloudSyncTimeout = setTimeout(() => {
@@ -609,14 +632,13 @@
     }
 
     async function pushToCloud(showNotification = false) {
-      if (!gasWebAppUrl) {
-        if (showNotification) showToast('Configure a URL do Google Apps Script primeiro.', '⚠️');
+      if (!gasWebAppUrl || isPullingFromCloud) {
+        if (showNotification && !gasWebAppUrl) showToast('Configure a URL do Google Apps Script primeiro.', '⚠️');
         return;
       }
       updateCloudStatusUI('syncing', 'Enviando...');
       try {
         const payload = buildFullPayload();
-        // Usa text/plain para evitar bloqueio de preflight CORS no Google Apps Script
         const response = await fetch(gasWebAppUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -640,7 +662,12 @@
     }
 
     async function pullFromCloud(showNotification = false) {
-      if (!gasWebAppUrl) return;
+      if (!gasWebAppUrl) {
+        hasCompletedInitialPull = true;
+        return;
+      }
+      isPullingFromCloud = true;
+      clearTimeout(cloudSyncTimeout);
       updateCloudStatusUI('syncing', 'Carregando...');
       try {
         const response = await fetch(`${gasWebAppUrl}?t=${Date.now()}`);
@@ -654,11 +681,18 @@
           localStorage.setItem('habitLastCloudSync', lastCloudSync);
           updateCloudStatusUI('ok', `Sincronizado (${timeStr})`);
           if (showNotification) showToast('Dados carregados da Planilha Google!', '☁️');
+          isPullingFromCloud = false;
+          hasCompletedInitialPull = true;
         } else if (resData.status === 'ok' && !resData.hasData) {
-          // Planilha nova/vazia: envia os dados locais atuais para inicializar a planilha
+          isPullingFromCloud = false;
+          hasCompletedInitialPull = true;
           await pushToCloud(showNotification);
+        } else {
+          throw new Error('Retorno inválido');
         }
       } catch (err) {
+        isPullingFromCloud = false;
+        hasCompletedInitialPull = true;
         console.error('Erro ao puxar da nuvem:', err);
         updateCloudStatusUI('error', 'Modo Offline');
         if (showNotification) showToast('Erro ao carregar da Planilha. Usando dados locais.', '⚠️');
@@ -988,7 +1022,7 @@
                 const name = cols[2] || `Hábito ${i}`;
                 const rawSlice = cols.slice(3, 10);
                 const days = rawSlice.map(val => val === '1' || val.toLowerCase() === 'true');
-                const maskStr = cols[11] || '';
+                const maskStr = (cols[11] || '').replace(/"/g, '');
                 const scheduledDays = maskStr.length === 7 
                   ? maskStr.split('').map(c => c === '1')
                   : rawSlice.map(val => val !== '-');
@@ -1108,50 +1142,65 @@
       else startTimer();
     }
 
+    function processTimerDelta() {
+      if (!isRunning || !lastTickTimestamp) return;
+      const now = Date.now();
+      const elapsedSeconds = Math.floor((now - lastTickTimestamp) / 1000);
+      if (elapsedSeconds < 1) return;
+
+      lastTickTimestamp += elapsedSeconds * 1000;
+      const effectiveDelta = Math.min(elapsedSeconds, timeLeft);
+      timeLeft -= effectiveDelta;
+
+      if (timerMode === 'focus25' || timerMode === 'focus50') {
+        studySeconds[selectedDayIndex] = (studySeconds[selectedDayIndex] || 0) + effectiveDelta;
+        const autoChecked = checkAutoCompleteStudyHabit(selectedDayIndex);
+        if (autoChecked || studySeconds[selectedDayIndex] % 60 < effectiveDelta) {
+          saveState();
+        } else if (studySeconds[selectedDayIndex] % 10 < effectiveDelta) {
+          saveLocalOnly();
+          renderAll();
+        } else {
+          renderKPIs();
+          renderGoalBar();
+        }
+      }
+
+      updateTimerDisplay();
+
+      if (timeLeft <= 0) {
+        playBeep(880, 0.6);
+        if (timerMode === 'focus25' || timerMode === 'focus50') {
+          pomodoroCycles[selectedDayIndex] = (pomodoroCycles[selectedDayIndex] || 0) + 1;
+          checkAutoCompleteStudyHabit(selectedDayIndex);
+          saveState();
+          sendDesktopNotification('Bloco de Foco Concluído! ✅', 'Excelente trabalho! Hora de fazer uma pausa de 5 minutos.');
+          setTimerMode('break');
+        } else {
+          sendDesktopNotification('Fim da Pausa! 🚀', 'Hora de retomar o próximo bloco de estudo.');
+          setTimerMode('focus25');
+        }
+      }
+    }
+
     function startTimer() {
+      if (isRunning) return;
       isRunning = true;
+      lastTickTimestamp = Date.now();
       const btn = document.getElementById('startPauseBtn');
       btn.textContent = '⏸ Pausar';
       btn.className = 'flex-1 bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2.5 rounded-xl text-sm transition';
 
-      timerInterval = setInterval(() => {
-        if (timeLeft > 0) {
-          timeLeft--;
-          if (timerMode === 'focus25' || timerMode === 'focus50') {
-            studySeconds[selectedDayIndex]++;
-            const autoChecked = checkAutoCompleteStudyHabit(selectedDayIndex);
-            if (autoChecked) {
-              saveState();
-            } else if (studySeconds[selectedDayIndex] % 60 === 0) {
-              // Salva na nuvem a cada 1 minuto de foco contínuo
-              saveState();
-            } else if (studySeconds[selectedDayIndex] % 10 === 0) {
-              saveLocalOnly();
-              renderAll();
-            } else {
-              renderKPIs();
-              renderGoalBar();
-            }
-          }
-          updateTimerDisplay();
-        } else {
-          playBeep(880, 0.6);
-          if (timerMode === 'focus25' || timerMode === 'focus50') {
-            pomodoroCycles[selectedDayIndex]++;
-            checkAutoCompleteStudyHabit(selectedDayIndex);
-            saveState();
-            sendDesktopNotification('Bloco de Foco Concluído! ✅', 'Excelente trabalho! Hora de fazer uma pausa de 5 minutos.');
-            setTimerMode('break');
-          } else {
-            sendDesktopNotification('Fim da Pausa! 🚀', 'Hora de retomar o próximo bloco de estudo.');
-            setTimerMode('focus25');
-          }
-        }
-      }, 1000);
+      clearInterval(timerInterval);
+      timerInterval = setInterval(processTimerDelta, 1000);
     }
 
     function pauseTimer() {
+      if (isRunning) {
+        processTimerDelta();
+      }
       isRunning = false;
+      lastTickTimestamp = null;
       clearInterval(timerInterval);
       const btn = document.getElementById('startPauseBtn');
       btn.textContent = '▶ Retomar';
@@ -1167,6 +1216,15 @@
       setTimerMode(timerMode);
     }
 
+    document.addEventListener('visibilitychange', () => {
+      if (isRunning) {
+        processTimerDelta();
+        if (document.visibilityState === 'hidden') {
+          saveState();
+        }
+      }
+    });
+
     function adjustStudyTime(secondsDelta) {
       studySeconds[selectedDayIndex] = Math.max(0, studySeconds[selectedDayIndex] + secondsDelta);
       checkAutoCompleteStudyHabit(selectedDayIndex);
@@ -1174,8 +1232,9 @@
     }
 
     function formatHoursMinutes(totalSeconds) {
-      const hours = Math.floor(totalSeconds / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const safeSecs = Math.max(0, Math.round(totalSeconds || 0));
+      const hours = Math.floor(safeSecs / 3600);
+      const minutes = Math.floor((safeSecs % 3600) / 60);
       return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
     }
 
