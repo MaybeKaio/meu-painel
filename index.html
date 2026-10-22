@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Painel de Alta Performance — Sincronizado na Nuvem</title>
 
-  <!-- Tags para abrir como App em Tela Cheia no Celular/Tablet -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Painel Hábitos">
@@ -56,7 +55,7 @@
             <span id="cloudStatusText">Nuvem Off</span>
           </span>
         </div>
-        <p class="text-slate-400 text-sm mt-1">Sincronização automática via Google Drive, dias programáveis, horas líquidas e histórico semanal.</p>
+        <p class="text-slate-400 text-sm mt-1">Sincronização automática via Google Drive, métricas por Grande Área, horas líquidas e histórico semanal.</p>
       </div>
       
       <div class="flex flex-wrap items-center gap-2">
@@ -91,6 +90,25 @@
         </button>
       </div>
     </header>
+
+    <!-- Banner Automático de Virada de Semana (Item 5) -->
+    <div id="newWeekBanner" class="hidden glass-card p-4 rounded-2xl border border-amber-500/40 bg-amber-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">📅</span>
+        <div>
+          <h3 class="text-xs md:text-sm font-bold text-amber-300">Uma nova semana começou!</h3>
+          <p class="text-xs text-slate-300">Os dados na tela pertencem à semana anterior. Deseja arquivá-los no histórico e começar a nova semana limpa?</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button onclick="archiveAndResetWeek()" class="px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white font-semibold rounded-xl text-xs transition">
+          📦 Arquivar e Iniciar Nova
+        </button>
+        <button onclick="dismissNewWeekBanner()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs transition border border-slate-700">
+          Manter Dados Atuais
+        </button>
+      </div>
+    </div>
 
     <!-- Gaveta de Configuração da Sincronização Google Drive -->
     <section id="cloudConfigPanel" class="hidden glass-card p-5 rounded-2xl border border-teal-500/30 space-y-4">
@@ -194,7 +212,7 @@
       <div class="grid grid-cols-7 gap-1.5 w-full md:w-auto" id="daySelector"></div>
     </div>
 
-    <!-- Barras Duplas: Meta de Horas Líquidas + Rastreador de Questões -->
+    <!-- Barras Duplas: Meta de Horas Líquidas + Rastreador de Questões por Grande Área -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       
       <!-- Card 1: Barra de Meta de Horas Líquidas -->
@@ -242,17 +260,17 @@
         </div>
       </section>
 
-      <!-- Card 2: Rastreador de Questões & Taxa de Acerto -->
-      <section class="glass-card p-5 rounded-2xl flex flex-col justify-between space-y-4">
+      <!-- Card 2: Rastreador de Questões & Taxa de Acerto por Grande Área (Itens 2 e 5) -->
+      <section class="glass-card p-5 rounded-2xl flex flex-col justify-between space-y-3.5">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div class="flex items-center gap-2.5">
             <span class="text-xl">📝</span>
             <div>
               <div class="flex items-center gap-2">
-                <h2 class="text-sm md:text-base font-semibold text-white">Meta de Questões & Taxa de Acerto</h2>
+                <h2 class="text-sm md:text-base font-semibold text-white">Questões & Desempenho por Área</h2>
                 <span id="qAccuracyBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">Acerto: 0%</span>
               </div>
-              <p class="text-[11px] text-slate-400 mt-0.5">Registre suas baterias de questões e acompanhe sua precisão.</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">Separe seus blocos por Grande Área e monitore seus pontos fracos.</p>
             </div>
           </div>
 
@@ -286,19 +304,36 @@
           </div>
         </div>
 
+        <!-- Pílulas de Desempenho por Grande Área na Semana (Item 2) -->
+        <div id="areaStatsPills" class="flex flex-wrap items-center gap-1.5 pt-0.5"></div>
+
+        <!-- Formulário com Seletor de Grande Área + Botão Desfazer (Itens 2 e 5) -->
         <form onsubmit="addQuestionBatch(event)" class="flex flex-wrap items-center gap-2 pt-1">
-          <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1.5 flex-1 min-w-[110px]">
+          <div class="flex items-center bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1.5">
+            <select id="qAreaSelect" class="bg-transparent text-xs text-cyan-300 font-semibold focus:outline-none cursor-pointer">
+              <option value="Clínica" class="bg-slate-900">🩺 Clínica</option>
+              <option value="Cirurgia" class="bg-slate-900">🔪 Cirurgia</option>
+              <option value="GO" class="bg-slate-900">🤰 GO</option>
+              <option value="Pediatria" class="bg-slate-900">👶 Pediatria</option>
+              <option value="Preventiva" class="bg-slate-900">🏥 Preventiva</option>
+              <option value="Geral" class="bg-slate-900">📚 Geral / Outros</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1.5 flex-1 min-w-[90px]">
             <span class="text-[11px] text-slate-400">Feitas:</span>
-            <input type="number" id="qSolvedInput" min="1" max="500" placeholder="Ex: 20" required class="w-full bg-transparent text-xs text-white font-semibold focus:outline-none">
+            <input type="number" id="qSolvedInput" min="1" max="500" placeholder="20" required class="w-full bg-transparent text-xs text-white font-semibold focus:outline-none">
           </div>
-          <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1.5 flex-1 min-w-[110px]">
+          <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1.5 flex-1 min-w-[90px]">
             <span class="text-[11px] text-slate-400">Acertos:</span>
-            <input type="number" id="qCorrectInput" min="0" max="500" placeholder="Ex: 16" required class="w-full bg-transparent text-xs text-emerald-300 font-semibold focus:outline-none">
+            <input type="number" id="qCorrectInput" min="0" max="500" placeholder="16" required class="w-full bg-transparent text-xs text-emerald-300 font-semibold focus:outline-none">
           </div>
-          <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold px-3.5 py-1.5 rounded-xl text-xs transition">
-            + Somar Bloco
+          <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold px-3 py-1.5 rounded-xl text-xs transition">
+            + Somar
           </button>
-          <button type="button" onclick="clearTodayQuestions()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 rounded-xl text-xs transition border border-slate-700">
+          <button type="button" onclick="undoLastQuestionBatch()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-amber-950/60 text-slate-300 hover:text-amber-300 rounded-xl text-xs transition border border-slate-700" title="Desfazer apenas o último bloco lançado neste dia">
+            ↩️ Desfazer
+          </button>
+          <button type="button" onclick="clearTodayQuestions()" class="px-2 py-1.5 bg-slate-800 hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 rounded-xl text-xs transition border border-slate-700" title="Zerar todas as questões do dia selecionado">
             Zerar
           </button>
         </form>
@@ -354,14 +389,14 @@
         </div>
       </div>
 
-      <!-- Coluna 2: Checklist Diário com Dias Programáveis -->
+      <!-- Coluna 2: Checklist Diário com Edição, Reordenação e Dias Programáveis (Item 1) -->
       <div class="lg:col-span-4 glass-card p-6 rounded-2xl flex flex-col justify-between space-y-4">
         <div>
           <div class="flex items-center justify-between mb-1">
             <h2 class="text-lg font-semibold text-white">Metas do Dia</h2>
             <span class="text-xs text-emerald-400 font-semibold" id="dailyProgressText">0/0 programadas</span>
           </div>
-          <p class="text-[11px] text-slate-400 mb-4">Clique em <b>📅 Dias</b> para definir quais dias da semana cada hábito é obrigatório.</p>
+          <p class="text-[11px] text-slate-400 mb-4">Use <b>📅 Dias</b> para frequência, <b>✏️</b> para renomear e <b>↑↓</b> para ordenar.</p>
 
           <div id="habitList" class="space-y-2.5 max-h-72 overflow-y-auto pr-1"></div>
         </div>
@@ -430,10 +465,25 @@
 
   <script>
     const DAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+    const AREAS = ['Clínica', 'Cirurgia', 'GO', 'Pediatria', 'Preventiva', 'Geral'];
     const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbz9fYDyV8f4LH31YsaXV5Y31uaCPuCY-OIE3dBt13a6DNVRGq7s040TCn2yGlprak73oQ/exec';
     
     const jsDay = new Date().getDay();
     let selectedDayIndex = jsDay === 0 ? 6 : jsDay - 1;
+
+    // Calcula o identificador da segunda-feira da semana atual para detectar virada de semana
+    function getCurrentWeekMondayIso() {
+      const now = new Date();
+      const d = now.getDay();
+      const diff = d === 0 ? -6 : 1 - d;
+      const mon = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff);
+      const yyyy = mon.getFullYear();
+      const mm = String(mon.getMonth() + 1).padStart(2, '0');
+      const dd = String(mon.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    const CURRENT_WEEK_MONDAY_ISO = getCurrentWeekMondayIso();
 
     const defaultHabits = [
       { id: 1, name: 'Treino Funcional / Força', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, false, true, true, false, false] },
@@ -452,6 +502,15 @@
       }
     }
 
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     let habits = safeParseJSON('habitDashboardData', defaultHabits);
     habits.forEach(h => {
       if (!Array.isArray(h.days) || h.days.length !== 7) h.days = [false, false, false, false, false, false, false];
@@ -468,24 +527,24 @@
 
     let questionsSolved = safeParseJSON('habitQuestionsSolved', [0, 0, 0, 0, 0, 0, 0]);
     let questionsCorrect = safeParseJSON('habitQuestionsCorrect', [0, 0, 0, 0, 0, 0, 0]);
+    // Histórico detalhado de blocos de questões para permitir "Desfazer" e cálculo por Grande Área
+    let questionLogs = safeParseJSON('habitQuestionLogs', []);
     let dailyQuestionsGoal = Number(localStorage.getItem('habitDailyQuestionsGoal')) || 30;
     let linkedQuestionHabitId = Number(localStorage.getItem('habitLinkedQuestionId')) || (habits[1] ? habits[1].id : 0);
     let busyDays = safeParseJSON('habitBusyDays', [false, false, false, false, false, false, false]);
     let archivedWeeks = safeParseJSON('habitArchivedWeeks', []);
+    let storedWeekStartIso = localStorage.getItem('habitWeekStartIso') || CURRENT_WEEK_MONDAY_ISO;
 
-    // Configuração Google Apps Script (Nuvem) - Já vem com sua URL salva por padrão
     let gasWebAppUrl = localStorage.getItem('habitGasWebAppUrl') || DEFAULT_GAS_URL;
     let lastCloudSync = localStorage.getItem('habitLastCloudSync') || '';
     let cloudSyncTimeout = null;
     let isPullingFromCloud = false;
     let hasCompletedInitialPull = false;
 
-    // Estado UI
     let editingScheduleHabitId = null;
     let newHabitSchedule = [true, true, true, true, true, true, true];
     let chartInstance = null;
 
-    // Estado Pomodoro com precisão de Timestamp
     let timerMode = 'focus25';
     let timeLeft = 25 * 60;
     let timerInterval = null;
@@ -504,9 +563,27 @@
       }, 3800);
     }
 
+    function checkNewWeekRollover() {
+      const hasAnyProgress = studySeconds.some(s => s > 0) || questionsSolved.some(q => q > 0) || habits.some(h => h.days.some(Boolean));
+      if (storedWeekStartIso && storedWeekStartIso !== CURRENT_WEEK_MONDAY_ISO && hasAnyProgress) {
+        document.getElementById('newWeekBanner').classList.remove('hidden');
+      } else {
+        storedWeekStartIso = CURRENT_WEEK_MONDAY_ISO;
+        localStorage.setItem('habitWeekStartIso', CURRENT_WEEK_MONDAY_ISO);
+      }
+    }
+
+    function dismissNewWeekBanner() {
+      storedWeekStartIso = CURRENT_WEEK_MONDAY_ISO;
+      localStorage.setItem('habitWeekStartIso', CURRENT_WEEK_MONDAY_ISO);
+      document.getElementById('newWeekBanner').classList.add('hidden');
+      saveState();
+    }
+
     function buildFullPayload() {
       return {
-        version: 3,
+        version: 4,
+        weekStartIso: storedWeekStartIso,
         updatedAt: new Date().toISOString(),
         dailyGoalHours,
         linkedHabitId,
@@ -516,6 +593,7 @@
         pomodoroCycles,
         questionsSolved,
         questionsCorrect,
+        questionLogs,
         busyDays,
         habits,
         archivedWeeks
@@ -533,12 +611,14 @@
       if (Array.isArray(data.pomodoroCycles) && data.pomodoroCycles.length === 7) pomodoroCycles = data.pomodoroCycles.map(v => Math.max(0, Number(v) || 0));
       if (Array.isArray(data.questionsSolved) && data.questionsSolved.length === 7) questionsSolved = data.questionsSolved.map(v => Math.max(0, Number(v) || 0));
       if (Array.isArray(data.questionsCorrect) && data.questionsCorrect.length === 7) questionsCorrect = data.questionsCorrect.map(v => Math.max(0, Number(v) || 0));
+      if (Array.isArray(data.questionLogs)) questionLogs = data.questionLogs;
       if (Array.isArray(data.busyDays) && data.busyDays.length === 7) busyDays = data.busyDays.map(Boolean);
       if (Array.isArray(data.archivedWeeks)) archivedWeeks = data.archivedWeeks;
       if (data.dailyGoalHours) dailyGoalHours = Number(data.dailyGoalHours);
       if (data.linkedHabitId !== undefined) linkedHabitId = Number(data.linkedHabitId);
       if (data.dailyQuestionsGoal) dailyQuestionsGoal = Number(data.dailyQuestionsGoal);
       if (data.linkedQuestionHabitId !== undefined) linkedQuestionHabitId = Number(data.linkedQuestionHabitId);
+      if (data.weekStartIso) storedWeekStartIso = data.weekStartIso;
       return true;
     }
 
@@ -550,10 +630,12 @@
       localStorage.setItem('habitLinkedId', String(linkedHabitId));
       localStorage.setItem('habitQuestionsSolved', JSON.stringify(questionsSolved));
       localStorage.setItem('habitQuestionsCorrect', JSON.stringify(questionsCorrect));
+      localStorage.setItem('habitQuestionLogs', JSON.stringify(questionLogs));
       localStorage.setItem('habitDailyQuestionsGoal', String(dailyQuestionsGoal));
       localStorage.setItem('habitLinkedQuestionId', String(linkedQuestionHabitId));
       localStorage.setItem('habitBusyDays', JSON.stringify(busyDays));
       localStorage.setItem('habitArchivedWeeks', JSON.stringify(archivedWeeks));
+      localStorage.setItem('habitWeekStartIso', storedWeekStartIso);
     }
 
     function saveState(skipCloud = false) {
@@ -675,6 +757,7 @@
         if (resData.status === 'ok' && resData.hasData && resData.data) {
           applyPayloadToState(resData.data);
           saveLocalOnly();
+          checkNewWeekRollover();
           renderAll();
           const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
           lastCloudSync = `${new Date().toLocaleDateString('pt-BR')} às ${timeStr}`;
@@ -769,28 +852,36 @@
     }
 
     // ==========================================
-    // RASTREADOR DE QUESTÕES E TAXA DE ACERTO
+    // RASTREADOR DE QUESTÕES, GRANDE ÁREA E DESFAZER
     // ==========================================
 
     function checkAutoCompleteQuestionHabit(dayIdx) {
       const goalQ = getEffectiveQuestionGoal(dayIdx);
       const currentQ = questionsSolved[dayIdx] || 0;
-      if (currentQ >= goalQ && linkedQuestionHabitId) {
-        const targetHabit = habits.find(h => h.id === Number(linkedQuestionHabitId));
-        if (targetHabit && !targetHabit.days[dayIdx]) {
-          targetHabit.days[dayIdx] = true;
-          playBeep(1046.5, 0.5);
-          showToast(`Meta de ${goalQ} questões batida! "${targetHabit.name}" marcado!`, '📝');
-          return true;
-        }
+      if (!linkedQuestionHabitId) return false;
+      const targetHabit = habits.find(h => h.id === Number(linkedQuestionHabitId));
+      if (!targetHabit) return false;
+
+      if (currentQ >= goalQ && !targetHabit.days[dayIdx]) {
+        targetHabit.days[dayIdx] = true;
+        playBeep(1046.5, 0.5);
+        showToast(`Meta de ${goalQ} questões batida! "${targetHabit.name}" marcado!`, '📝');
+        return true;
+      } else if (currentQ < goalQ && targetHabit.days[dayIdx]) {
+        // Se desfez ou zerou questões e caiu abaixo da meta, desmarca automaticamente
+        targetHabit.days[dayIdx] = false;
+        return true;
       }
       return false;
     }
 
     function addQuestionBatch(event) {
       event.preventDefault();
+      const areaEl = document.getElementById('qAreaSelect');
       const solvedEl = document.getElementById('qSolvedInput');
       const correctEl = document.getElementById('qCorrectInput');
+      
+      const area = areaEl ? areaEl.value : 'Geral';
       const solved = Math.max(0, Number(solvedEl.value) || 0);
       const correct = Math.max(0, Number(correctEl.value) || 0);
 
@@ -803,20 +894,54 @@
       questionsSolved[selectedDayIndex] = (questionsSolved[selectedDayIndex] || 0) + solved;
       questionsCorrect[selectedDayIndex] = (questionsCorrect[selectedDayIndex] || 0) + correct;
 
+      questionLogs.push({
+        id: Date.now(),
+        dayIdx: selectedDayIndex,
+        area: area,
+        solved: solved,
+        correct: correct
+      });
+
       solvedEl.value = '';
       correctEl.value = '';
 
       checkAutoCompleteQuestionHabit(selectedDayIndex);
       saveState();
       const batchAcc = Math.round((correct / solved) * 100);
-      showToast(`+${solved} questões registradas (${batchAcc}% de acerto)!`, '📝');
+      showToast(`+${solved} questões em ${area} (${batchAcc}% de acerto)!`, '📝');
+    }
+
+    function undoLastQuestionBatch() {
+      // Procura o último lançamento feito no dia atualmente selecionado
+      let lastLogIndex = -1;
+      for (let i = questionLogs.length - 1; i >= 0; i--) {
+        if (questionLogs[i].dayIdx === selectedDayIndex) {
+          lastLogIndex = i;
+          break;
+        }
+      }
+
+      if (lastLogIndex === -1) {
+        showToast(`Nenhum bloco recente em ${DAYS[selectedDayIndex]} para desfazer.`, '⚠️');
+        return;
+      }
+
+      const removed = questionLogs.splice(lastLogIndex, 1)[0];
+      questionsSolved[selectedDayIndex] = Math.max(0, (questionsSolved[selectedDayIndex] || 0) - removed.solved);
+      questionsCorrect[selectedDayIndex] = Math.max(0, (questionsCorrect[selectedDayIndex] || 0) - removed.correct);
+
+      checkAutoCompleteQuestionHabit(selectedDayIndex);
+      saveState();
+      showToast(`Desfeito: -${removed.solved} questões de ${removed.area} em ${DAYS[selectedDayIndex]}.`, '↩️');
     }
 
     function clearTodayQuestions() {
       if (questionsSolved[selectedDayIndex] === 0) return;
-      if (confirm(`Zerar o registro de questões de ${DAYS[selectedDayIndex]}?`)) {
+      if (confirm(`Zerar todas as questões de ${DAYS[selectedDayIndex]}?`)) {
         questionsSolved[selectedDayIndex] = 0;
         questionsCorrect[selectedDayIndex] = 0;
+        questionLogs = questionLogs.filter(log => log.dayIdx !== selectedDayIndex);
+        checkAutoCompleteQuestionHabit(selectedDayIndex);
         saveState();
         showToast('Questões do dia zeradas.', '↺');
       }
@@ -840,6 +965,17 @@
         const c = questionsCorrect[idx] || 0;
         return s > 0 ? Math.round((c / s) * 100) : 0;
       });
+    }
+
+    function getAreaStatsForWeek() {
+      const map = {};
+      AREAS.forEach(a => { map[a] = { solved: 0, correct: 0 }; });
+      questionLogs.forEach(log => {
+        const area = map[log.area] ? log.area : 'Geral';
+        map[area].solved += (Number(log.solved) || 0);
+        map[area].correct += (Number(log.correct) || 0);
+      });
+      return map;
     }
 
     // ==========================================
@@ -891,7 +1027,10 @@
       pomodoroCycles = [0, 0, 0, 0, 0, 0, 0];
       questionsSolved = [0, 0, 0, 0, 0, 0, 0];
       questionsCorrect = [0, 0, 0, 0, 0, 0, 0];
+      questionLogs = [];
       busyDays = [false, false, false, false, false, false, false];
+      storedWeekStartIso = CURRENT_WEEK_MONDAY_ISO;
+      document.getElementById('newWeekBanner').classList.add('hidden');
 
       saveState();
       showToast('Semana arquivada e sincronizada!', '📦');
@@ -904,7 +1043,10 @@
         pomodoroCycles = [0, 0, 0, 0, 0, 0, 0];
         questionsSolved = [0, 0, 0, 0, 0, 0, 0];
         questionsCorrect = [0, 0, 0, 0, 0, 0, 0];
+        questionLogs = [];
         busyDays = [false, false, false, false, false, false, false];
+        storedWeekStartIso = CURRENT_WEEK_MONDAY_ISO;
+        document.getElementById('newWeekBanner').classList.add('hidden');
         saveState();
         showToast('Semana atual reiniciada!', '🔄');
       }
@@ -966,6 +1108,15 @@
       rows.push(['QUESTOES_FEITAS', '0', '"Questoes Resolvidas"', ...questionsSolved, totalQ, '']);
       rows.push(['QUESTOES_ACERTOS', '0', '"Questoes Certas"', ...questionsCorrect, totalC, '']);
       rows.push(['DIA_CORRIDO', '0', '"Modo Dia Corrido"', ...busyDays.map(b => b ? '1' : '0'), '', '']);
+
+      const areaMap = getAreaStatsForWeek();
+      AREAS.forEach(area => {
+        const st = areaMap[area];
+        if (st.solved > 0) {
+          const acc = Math.round((st.correct / st.solved) * 100);
+          rows.push(['AREA_QUESTOES', '0', escapeCSV(area), st.solved, st.correct, `${acc}%`, '', '', '', '', '', '']);
+        }
+      });
 
       const csvContent = '\uFEFF' + rows.map(r => r.join(',')).join('\r\n');
       triggerDownload(csvContent, `relatorio-painel-${getFormattedDate()}.csv`, 'text/csv;charset=utf-8;');
@@ -1072,15 +1223,16 @@
     function checkAutoCompleteStudyHabit(dayIdx) {
       const goalSeconds = getEffectiveStudyGoalSeconds(dayIdx);
       const currentSeconds = studySeconds[dayIdx] || 0;
-      if (currentSeconds >= goalSeconds && linkedHabitId) {
-        const targetHabit = habits.find(h => h.id === Number(linkedHabitId));
-        if (targetHabit && !targetHabit.days[dayIdx]) {
-          targetHabit.days[dayIdx] = true;
-          playBeep(1046.5, 0.5);
-          showToast(`Meta de estudo atingida! "${targetHabit.name}" marcado!`, '🎯');
-          sendDesktopNotification('Meta Diária Atingida! 🎯', `Você completou sua meta de horas líquidas e o hábito "${targetHabit.name}" foi marcado.`);
-          return true;
-        }
+      if (!linkedHabitId) return false;
+      const targetHabit = habits.find(h => h.id === Number(linkedHabitId));
+      if (!targetHabit) return false;
+
+      if (currentSeconds >= goalSeconds && !targetHabit.days[dayIdx]) {
+        targetHabit.days[dayIdx] = true;
+        playBeep(1046.5, 0.5);
+        showToast(`Meta de estudo atingida! "${targetHabit.name}" marcado!`, '🎯');
+        sendDesktopNotification('Meta Diária Atingida! 🎯', `Você completou sua meta de horas líquidas e o hábito "${targetHabit.name}" foi marcado.`);
+        return true;
       }
       return false;
     }
@@ -1239,7 +1391,7 @@
     }
 
     // ==========================================
-    // GESTÃO DE HÁBITOS & DIAS PROGRAMADOS
+    // GESTÃO DE HÁBITOS: EDITAR, MOVER & DIAS (Item 1)
     // ==========================================
 
     function selectDay(index) {
@@ -1253,6 +1405,26 @@
         habit.days[dayIdx] = !habit.days[dayIdx];
         saveState();
       }
+    }
+
+    function renameHabit(habitId) {
+      const habit = habits.find(h => h.id === habitId);
+      if (!habit) return;
+      const newName = prompt('Novo nome para o hábito:', habit.name);
+      if (newName !== null && newName.trim() !== '') {
+        habit.name = newName.trim();
+        saveState();
+        showToast('Hábito renomeado com sucesso!', '✏️');
+      }
+    }
+
+    function moveHabit(index, direction) {
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= habits.length) return;
+      const temp = habits[index];
+      habits[index] = habits[targetIndex];
+      habits[targetIndex] = temp;
+      saveState();
     }
 
     function toggleScheduleEditor(habitId) {
@@ -1391,7 +1563,7 @@
       if (linkedSelect) {
         linkedSelect.innerHTML = habits.length === 0
           ? '<option value="0" class="bg-slate-900">Nenhum</option>'
-          : habits.map(h => `<option value="${h.id}" class="bg-slate-900" ${h.id === Number(linkedHabitId) ? 'selected' : ''}>${h.name}</option>`).join('');
+          : habits.map(h => `<option value="${h.id}" class="bg-slate-900" ${h.id === Number(linkedHabitId) ? 'selected' : ''}>${escapeHtml(h.name)}</option>`).join('');
       }
 
       const goalSecs = getEffectiveStudyGoalSeconds(selectedDayIndex);
@@ -1438,7 +1610,7 @@
       if (linkedQSelect) {
         linkedQSelect.innerHTML = habits.length === 0
           ? '<option value="0" class="bg-slate-900">Nenhum</option>'
-          : habits.map(h => `<option value="${h.id}" class="bg-slate-900" ${h.id === Number(linkedQuestionHabitId) ? 'selected' : ''}>${h.name}</option>`).join('');
+          : habits.map(h => `<option value="${h.id}" class="bg-slate-900" ${h.id === Number(linkedQuestionHabitId) ? 'selected' : ''}>${escapeHtml(h.name)}</option>`).join('');
       }
 
       const effectiveQGoal = getEffectiveQuestionGoal(selectedDayIndex);
@@ -1456,6 +1628,28 @@
       accBadge.className = accToday >= 80
         ? 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300'
         : (accToday >= 65 ? 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300' : 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300');
+
+      // Renderiza pílulas de desempenho por Grande Área na semana
+      const pillsContainer = document.getElementById('areaStatsPills');
+      const areaStats = getAreaStatsForWeek();
+      const activeAreas = AREAS.filter(a => areaStats[a].solved > 0);
+
+      if (activeAreas.length === 0) {
+        pillsContainer.innerHTML = `<span class="text-[10px] text-slate-500">Nenhuma questão por área registrada nesta semana.</span>`;
+      } else {
+        pillsContainer.innerHTML = activeAreas.map(area => {
+          const st = areaStats[area];
+          const pct = Math.round((st.correct / st.solved) * 100);
+          const colorClass = pct >= 80
+            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+            : (pct >= 65 ? 'bg-amber-500/15 text-amber-300 border-amber-500/30' : 'bg-rose-500/15 text-rose-300 border-rose-500/30');
+          return `
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-lg border ${colorClass}">
+              ${area}: ${st.correct}/${st.solved} (${pct}%)
+            </span>
+          `;
+        }).join('');
+      }
     }
 
     function renderHabitList() {
@@ -1469,7 +1663,7 @@
         return;
       }
 
-      container.innerHTML = habits.map(habit => {
+      container.innerHTML = habits.map((habit, idx) => {
         const isDone = habit.days[selectedDayIndex];
         const isScheduled = habit.scheduledDays[selectedDayIndex];
         const isStudyLinked = habit.id === Number(linkedHabitId);
@@ -1507,17 +1701,20 @@
                   ${isDone ? '<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>' : ''}
                 </div>
                 <div class="truncate">
-                  <span class="text-sm font-medium ${isDone ? 'line-through text-slate-500' : 'text-slate-200'}">${habit.name}</span>
+                  <span class="text-sm font-medium ${isDone ? 'line-through text-slate-500' : 'text-slate-200'}">${escapeHtml(habit.name)}</span>
                   ${!isScheduled && !isDone ? '<span class="ml-1.5 text-[10px] font-medium px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">Folga hoje</span>' : ''}
                   ${isStudyLinked ? '<span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded">⚡ Horas</span>' : ''}
                   ${isQLinked ? '<span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 bg-cyan-500/20 text-cyan-300 rounded">⚡ Questões</span>' : ''}
                 </div>
               </label>
               <div class="flex items-center gap-1 shrink-0">
-                <button onclick="toggleScheduleEditor(${habit.id})" class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+                <button onclick="moveHabit(${idx}, -1)" class="px-1.5 py-1 rounded text-[10px] bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition" title="Subir hábito">↑</button>
+                <button onclick="moveHabit(${idx}, 1)" class="px-1.5 py-1 rounded text-[10px] bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition" title="Descer hábito">↓</button>
+                <button onclick="renameHabit(${habit.id})" class="px-1.5 py-1 rounded text-[10px] bg-slate-800/80 hover:bg-slate-700 text-slate-300 transition" title="Renomear hábito">✏️</button>
+                <button onclick="toggleScheduleEditor(${habit.id})" class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition" title="Dias da semana">
                   📅 Dias
                 </button>
-                <button onclick="deleteHabit(${habit.id})" class="text-slate-600 hover:text-rose-400 p-1 text-xs transition">
+                <button onclick="deleteHabit(${habit.id})" class="text-slate-600 hover:text-rose-400 p-1 text-xs transition" title="Excluir hábito">
                   ✕
                 </button>
               </div>
@@ -1562,7 +1759,7 @@
 
         return `
           <tr>
-            <td class="py-3 pr-4 font-medium text-slate-200">${habit.name}</td>
+            <td class="py-3 pr-4 font-medium text-slate-200">${escapeHtml(habit.name)}</td>
             ${dayCells}
             <td class="py-3 text-right font-semibold text-emerald-400">${doneCount}/${schedCount} (${pct}%)</td>
           </tr>
@@ -1640,7 +1837,7 @@
 
       const rows = archivedWeeks.map(w => `
         <tr class="border-b border-slate-800/60 text-xs md:text-sm">
-          <td class="py-3 pr-4 font-semibold text-white">${w.label}</td>
+          <td class="py-3 pr-4 font-semibold text-white">${escapeHtml(w.label)}</td>
           <td class="py-3 text-center text-emerald-400 font-bold">${w.weeklyRate}% (${w.totalDone}/${w.totalScheduled})</td>
           <td class="py-3 text-center text-indigo-400 font-semibold">${formatHoursMinutes(w.totalStudySeconds)}</td>
           <td class="py-3 text-center text-cyan-400 font-semibold">${w.totalCorrect}/${w.totalQuestions} (${w.questionAccuracy}%)</td>
@@ -1770,7 +1967,7 @@
       renderChart();
     }
 
-    // Inicializa interface e busca dados mais recentes da Planilha Google
+    checkNewWeekRollover();
     renderAll();
     if (gasWebAppUrl) {
       pullFromCloud(false);
