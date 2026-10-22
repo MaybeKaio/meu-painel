@@ -2,33 +2,27 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Painel de Performance — Kaio</title>
-  
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Performance">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#121316">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Alta Performance — Sincronizado na Nuvem</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
-      background-color: #121316;
-      color: #e4e4e7;
+      background-color: #0f172a;
+      color: #f8fafc;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
     .glass-card {
-      background: #18191d;
-      border: 1px solid #27282f;
+      background: rgba(30, 41, 59, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
     .custom-checkbox:checked + div {
-      background-color: #52637a;
-      border-color: #64748b;
+      background-color: #10b981;
+      border-color: #10b981;
     }
-    .timer-sober {
-      letter-spacing: -0.03em;
+    .timer-glow {
+      text-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
     }
   </style>
 </head>
@@ -36,81 +30,70 @@
 
   <!-- Notificação Toast Interna -->
   <div id="toastNotification" class="fixed bottom-5 right-5 z-50 hidden transform transition-all duration-300">
-    <div class="glass-card px-4 py-3 rounded-xl shadow-2xl border border-zinc-600 flex items-center gap-3">
-      <span id="toastIcon" class="text-base">✓</span>
-      <span id="toastMessage" class="text-xs md:text-sm font-medium text-zinc-200">Operação realizada.</span>
+    <div class="glass-card px-4 py-3 rounded-xl shadow-2xl border border-emerald-500/40 flex items-center gap-3">
+      <span id="toastIcon" class="text-lg">✅</span>
+      <span id="toastMessage" class="text-xs md:text-sm font-medium text-slate-100">Operação realizada!</span>
     </div>
   </div>
 
-  <div class="max-w-7xl mx-auto space-y-5">
+  <div class="max-w-7xl mx-auto space-y-6">
     
-    <!-- Cabeçalho Sóbrio -->
-    <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-zinc-800">
+    <!-- Cabeçalho com Status da Nuvem, Alertas e Backup -->
+    <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
       <div>
         <div class="flex items-center gap-3">
-          <h1 class="text-xl md:text-2xl font-semibold tracking-tight text-zinc-100">Painel de Hábitos & Estudo</h1>
-          <span id="cloudStatusPill" onclick="toggleCloudConfig()" class="cursor-pointer text-[11px] font-medium px-2.5 py-0.5 rounded-md bg-zinc-900 text-zinc-400 border border-zinc-800 hover:border-zinc-600 transition flex items-center gap-1.5" title="Configurar sincronização com Google Drive e Google Calendar">
-            <span id="cloudStatusDot" class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
+          <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-white">Painel de Hábitos, Horas & Questões</h1>
+          <span id="cloudStatusPill" onclick="toggleCloudConfig()" class="cursor-pointer text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700 hover:border-slate-500 transition flex items-center gap-1.5" title="Clique para configurar a sincronização com o Google Drive">
+            <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-slate-500"></span>
             <span id="cloudStatusText">Nuvem Off</span>
           </span>
         </div>
-        <p class="text-zinc-500 text-xs mt-1">Sincronização diária por data exata: Meta Líquida = <b>50% do tempo bruto</b> do evento <b>"study"</b>.</p>
+        <p class="text-slate-400 text-sm mt-1">Sincronização automática via Google Drive, dias programáveis, horas líquidas e histórico semanal.</p>
       </div>
       
       <div class="flex flex-wrap items-center gap-2">
         <input type="file" id="importFileInput" accept=".json,.csv" class="hidden" onchange="handleFileImport(event)">
         
-        <button onclick="pullFromCloud(true)" class="px-3 py-1.5 text-xs font-medium text-zinc-100 bg-slate-700 hover:bg-slate-600 rounded-lg transition border border-slate-600" title="Sincronizar datas e eventos study/training do Google Calendar">
-          ↻ Sincronizar Agenda
+        <button onclick="toggleCloudConfig()" class="px-3 py-2 text-xs font-semibold text-teal-300 bg-teal-950/50 hover:bg-teal-900/60 rounded-xl transition border border-teal-700/50 flex items-center gap-1.5">
+          <span>☁️</span> Nuvem (Drive)
         </button>
 
-        <button onclick="toggleCloudConfig()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-800">
-          Nuvem (Drive)
+        <button id="notifBtn" onclick="requestDesktopNotifications()" class="px-3 py-2 text-xs font-medium text-amber-300 bg-amber-950/40 hover:bg-amber-900/50 rounded-xl transition border border-amber-700/50 flex items-center gap-1.5" title="Receber alertas do Pomodoro mesmo em outra aba">
+          <span>🔔</span> <span id="notifBtnText">Alertas</span>
         </button>
 
-        <button id="notifBtn" onclick="requestDesktopNotifications()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-800">
-          <span id="notifBtnText">Alertas</span>
+        <button onclick="exportJSON()" class="px-3 py-2 text-xs font-medium text-emerald-300 bg-emerald-950/50 hover:bg-emerald-900/60 rounded-xl transition border border-emerald-700/50 flex items-center gap-1.5">
+          <span>⬇️</span> JSON
         </button>
 
-        <button onclick="exportJSON()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-800">
-          JSON
+        <button onclick="exportCSV()" class="px-3 py-2 text-xs font-medium text-sky-300 bg-sky-950/50 hover:bg-sky-900/60 rounded-xl transition border border-sky-700/50 flex items-center gap-1.5">
+          <span>📊</span> CSV
         </button>
 
-        <button onclick="exportCSV()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-800">
-          CSV
+        <button onclick="document.getElementById('importFileInput').click()" class="px-3 py-2 text-xs font-medium text-indigo-300 bg-indigo-950/50 hover:bg-indigo-900/60 rounded-xl transition border border-indigo-700/50 flex items-center gap-1.5">
+          <span>⬆️</span> Importar
         </button>
 
-        <button onclick="document.getElementById('importFileInput').click()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-800">
-          Importar
+        <button onclick="archiveAndResetWeek()" class="px-3.5 py-2 text-xs font-semibold text-purple-200 bg-purple-900/60 hover:bg-purple-800/80 rounded-xl transition border border-purple-600/60 flex items-center gap-1.5">
+          <span>📦</span> Arquivar Semana
         </button>
 
-        <button onclick="archiveAndResetWeek()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-700">
-          Arquivar Semana
-        </button>
-
-        <button onclick="resetWeekOnly()" class="px-2.5 py-1.5 text-xs font-medium text-zinc-500 bg-zinc-900 hover:text-zinc-300 rounded-lg transition border border-zinc-800" title="Zerar semana atual sem arquivar">
+        <button onclick="resetWeekOnly()" class="px-2.5 py-2 text-xs font-medium text-slate-400 bg-slate-800/80 hover:bg-rose-950/60 hover:text-rose-300 rounded-xl transition border border-slate-700" title="Zerar semana atual sem arquivar">
           ↺
         </button>
       </div>
     </header>
 
-    <!-- Alerta de Erro de Permissão do Calendário (Oculto por padrão) -->
-    <div id="calendarErrorBanner" class="hidden glass-card p-4 rounded-xl border border-rose-800/80 bg-rose-950/20 text-xs text-rose-200 flex items-center justify-between gap-4">
-      <div>
-        <p class="font-semibold">⚠️ O Google Apps Script ainda não tem permissão para ler seu Google Calendar ou precisa de Nova Versão.</p>
-        <p class="text-rose-300/80 mt-0.5" id="calendarErrorDetails">No Apps Script, execute a função "autorizarPermissoes" e publique uma Nova Versão da implantação.</p>
-      </div>
-      <button onclick="document.getElementById('calendarErrorBanner').classList.add('hidden')" class="text-rose-300 hover:text-white shrink-0">✕</button>
-    </div>
-
     <!-- Gaveta de Configuração da Sincronização Google Drive -->
-    <section id="cloudConfigPanel" class="hidden glass-card p-5 rounded-xl border border-zinc-700 space-y-4">
+    <section id="cloudConfigPanel" class="hidden glass-card p-5 rounded-2xl border border-teal-500/30 space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
         <div>
-          <h2 class="text-sm font-semibold text-zinc-200">Sincronização — Google Planilhas + Google Calendar</h2>
-          <p class="text-xs text-zinc-500">URL da sua API já pré-configurada. Você pode forçar a leitura ou envio abaixo.</p>
+          <h2 class="text-sm md:text-base font-semibold text-white flex items-center gap-2">
+            <span>☁️</span> Sincronização Automática — Google Planilhas (Apps Script)
+          </h2>
+          <p class="text-xs text-slate-400">Cole abaixo a <b>URL do App da Web</b> gerada no seu Google Apps Script. O painel salvará automaticamente suas alterações na nuvem.</p>
         </div>
-        <button onclick="toggleCloudConfig()" class="text-xs text-zinc-400 hover:text-white self-end md:self-auto">Fechar ✕</button>
+        <button onclick="toggleCloudConfig()" class="text-xs text-slate-400 hover:text-white self-end md:self-auto">Fechar ✕</button>
       </div>
 
       <div class="flex flex-col sm:flex-row gap-2">
@@ -118,188 +101,197 @@
           type="url" 
           id="gasUrlInput" 
           placeholder="https://script.google.com/macros/s/.../exec" 
-          class="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-slate-500"
+          class="flex-1 bg-slate-900/90 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500"
         >
-        <button onclick="saveGasUrl()" class="bg-slate-700 hover:bg-slate-600 text-zinc-100 font-medium px-4 py-2 rounded-lg text-xs transition">
+        <button onclick="saveGasUrl()" class="bg-teal-600 hover:bg-teal-500 text-white font-semibold px-4 py-2 rounded-xl text-xs transition">
           Salvar & Conectar
         </button>
       </div>
 
-      <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-zinc-800/80 text-xs">
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800 text-xs">
         <div class="flex flex-wrap items-center gap-2">
-          <button onclick="pullFromCloud(true)" class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg border border-zinc-800 transition">
-            Puxar Planilha e Agenda agora
+          <button onclick="pullFromCloud(true)" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-sky-300 rounded-lg font-medium border border-slate-700 transition flex items-center gap-1.5">
+            <span>⬇️</span> Puxar dados da Planilha agora
           </button>
-          <button onclick="pushToCloud(true)" class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg border border-zinc-800 transition">
-            Forçar envio para a Planilha
+          <button onclick="pushToCloud(true)" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-300 rounded-lg font-medium border border-slate-700 transition flex items-center gap-1.5">
+            <span>⬆️</span> Forçar envio para a Planilha agora
           </button>
-          <button onclick="disconnectCloud()" class="px-3 py-1.5 bg-zinc-950 hover:bg-zinc-900 text-zinc-500 hover:text-zinc-300 rounded-lg border border-zinc-800 transition">
-            Desconectar
+          <button onclick="disconnectCloud()" class="px-3 py-1.5 bg-slate-900 hover:bg-rose-950/50 text-slate-400 hover:text-rose-300 rounded-lg font-medium border border-slate-800 transition">
+            Desconectar URL
           </button>
         </div>
-        <span id="lastSyncTimestamp" class="text-[11px] text-zinc-500">Última sincronização: Nunca</span>
+        <span id="lastSyncTimestamp" class="text-[11px] text-slate-400">Última sincronização: Nunca</span>
       </div>
     </section>
 
-    <!-- Banner de Correlação Diária (Data Exata + Evento Study/Training) -->
-    <section class="glass-card p-4 rounded-xl border border-slate-700/60 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-      <div class="space-y-1">
-        <div class="flex items-center gap-2">
-          <span class="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800 text-slate-300" id="exactDateBadge">Data</span>
-          <span class="text-xs font-medium text-zinc-400" id="trainingCorrelationText">Verificando evento training...</span>
-        </div>
-        <p class="text-xs md:text-sm font-medium text-zinc-100" id="dailyCorrelationStatement">
-          Sincronize a agenda para visualizar a correlação de estudo do dia.
-        </p>
-      </div>
-      <div class="grid grid-cols-7 gap-1.5 w-full lg:w-auto shrink-0" id="daySelector"></div>
-    </section>
-
-    <!-- Cards de Resumo (5 KPIs Sóbrios) -->
-    <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-      <div class="glass-card p-4 rounded-xl">
-        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Sequência Ativa</span>
-        <p class="text-xl md:text-2xl font-semibold text-zinc-100 mt-1" id="streakCount">0 dias</p>
-        <span class="text-[11px] text-zinc-500">Meta: 80% do dia</span>
-      </div>
-
-      <div class="glass-card p-4 rounded-xl">
-        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Horas Líquidas (Dia)</span>
-        <p class="text-xl md:text-2xl font-semibold text-slate-300 mt-1" id="dailyStudyTime">0h 00m</p>
-        <span class="text-[11px] text-zinc-500" id="weeklyStudyTime">Semana: 0h 00m</span>
-      </div>
-
-      <div class="glass-card p-4 rounded-xl">
-        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Questões & Acerto</span>
-        <p class="text-xl md:text-2xl font-semibold text-zinc-200 mt-1" id="dailyQuestionsKPI">0 (0%)</p>
-        <span class="text-[11px] text-zinc-500" id="weeklyQuestionsKPI">Semana: 0 (0%)</span>
-      </div>
-
-      <div class="glass-card p-4 rounded-xl">
-        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Taxa da Semana</span>
-        <p class="text-xl md:text-2xl font-semibold text-zinc-100 mt-1" id="weeklyRate">0%</p>
-        <span class="text-[11px] text-zinc-500">Sobre dias planejados</span>
-      </div>
-
-      <div class="glass-card p-4 rounded-xl col-span-2 sm:col-span-1">
-        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Check-ins</span>
-        <p class="text-xl md:text-2xl font-semibold text-zinc-300 mt-1" id="totalCompleted">0 / 0</p>
-        <span class="text-[11px] text-zinc-500">Total concluído</span>
-      </div>
-    </section>
-
-    <!-- Linha Tripla: Blocos da Agenda + Meta Líquida (50% do Bruto) + Meta de Questões -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-
-      <!-- Card 1: Eventos do Dia no Google Calendar - 4 colunas -->
-      <section class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between space-y-3">
+    <!-- Cards de Resumo (5 KPIs) -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
         <div>
-          <div class="flex items-center justify-between mb-1">
-            <h2 class="text-sm font-semibold text-zinc-200">Eventos no Google Calendar</h2>
-            <span id="calSyncBadge" class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">Por Data Exata</span>
-          </div>
-          <p class="text-[11px] text-zinc-500 mb-3">Lê os blocos <b>"study"</b> (calcula 50% líquido) e <b>"training"</b> da data selecionada.</p>
-
-          <div id="calendarEventsList" class="space-y-1.5 max-h-40 overflow-y-auto pr-1"></div>
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Sequência Ativa</span>
+          <p class="text-2xl font-bold text-amber-400 mt-1" id="streakCount">0 dias</p>
+          <span class="text-[11px] text-slate-500" id="streakSubtext">Meta: 80% do dia</span>
         </div>
+        <div class="text-2xl">🔥</div>
+      </div>
 
-        <div class="pt-2 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-zinc-500">
-          <span>Sincronismo diário por agenda:</span>
-          <button onclick="toggleAutoCalendarSync()" id="autoCalToggleBtn" class="text-zinc-200 font-semibold hover:underline">
-            Ativo (Automático)
-          </button>
+      <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+        <div>
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Horas Líquidas (Dia)</span>
+          <p class="text-2xl font-bold text-indigo-400 mt-1" id="dailyStudyTime">0h 00m</p>
+          <span class="text-[11px] text-slate-500" id="weeklyStudyTime">Semana: 0h 00m</span>
         </div>
-      </section>
+        <div class="text-2xl">⏱️</div>
+      </div>
 
-      <!-- Card 2: Barra de Meta Líquida (50% do Bruto do evento "study") - 4 colunas -->
-      <section class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between space-y-4">
-        <div class="flex flex-col justify-between gap-2">
-          <div class="flex items-center justify-between">
-            <h2 class="text-sm font-semibold text-zinc-200">Meta Líquida (50% do "study")</h2>
-            <span id="goalStatusBadge" class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">Em andamento</span>
+      <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+        <div>
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Questões & Acerto</span>
+          <p class="text-2xl font-bold text-cyan-400 mt-1" id="dailyQuestionsKPI">0 (0%)</p>
+          <span class="text-[11px] text-slate-500" id="weeklyQuestionsKPI">Semana: 0 feitas (0%)</span>
+        </div>
+        <div class="text-2xl">📝</div>
+      </div>
+
+      <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+        <div>
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Taxa da Semana</span>
+          <p class="text-2xl font-bold text-emerald-400 mt-1" id="weeklyRate">0%</p>
+          <span class="text-[11px] text-slate-500">Sobre dias programados</span>
+        </div>
+        <div class="text-2xl">📈</div>
+      </div>
+
+      <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+        <div>
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Check-ins Feitos</span>
+          <p class="text-2xl font-bold text-sky-400 mt-1" id="totalCompleted">0 / 0</p>
+          <span class="text-[11px] text-slate-500">Metas programadas</span>
+        </div>
+        <div class="text-2xl">✅</div>
+      </div>
+    </section>
+
+    <!-- Seletor Global de Dia da Semana + Botão Modo Dia Corrido -->
+    <div class="glass-card p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex flex-wrap items-center gap-3">
+        <span class="text-sm font-medium text-slate-300">Dia em edição:</span>
+        <span id="selectedDayLabel" class="text-xs font-semibold px-2.5 py-1 bg-emerald-500/20 text-emerald-300 rounded-full">Hoje</span>
+        
+        <button id="busyDayBtn" onclick="toggleBusyDay()" class="text-xs font-semibold px-3 py-1.5 rounded-xl border transition flex items-center gap-1.5 bg-slate-800/90 text-slate-300 border-slate-700 hover:border-amber-500/50">
+          <span>⚡</span> <span id="busyDayBtnText">Modo Dia Corrido: OFF</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-7 gap-1.5 w-full md:w-auto" id="daySelector"></div>
+    </div>
+
+    <!-- Barras Duplas: Meta de Horas Líquidas + Rastreador de Questões -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <!-- Card 1: Barra de Meta de Horas Líquidas -->
+      <section class="glass-card p-5 rounded-2xl flex flex-col justify-between space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5">
+            <span class="text-xl">🎯</span>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-sm md:text-base font-semibold text-white">Meta de Horas Líquidas</h2>
+                <span id="goalStatusBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">Em andamento</span>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-0.5" id="goalRemainingText">Marca o hábito de estudo automaticamente ao atingir 100%.</p>
+            </div>
           </div>
-          <p class="text-[11px] text-zinc-500" id="goalRemainingText">Desconta 50% do tempo bruto para deslocamento e pausas.</p>
 
-          <div class="flex flex-wrap items-center gap-2 text-xs pt-1">
-            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg" title="Usado apenas se o sincronismo da agenda estiver desligado">
-              <span class="text-zinc-500">Padrão manual:</span>
-              <select id="dailyGoalSelect" onchange="updateDailyGoal(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer">
-                <option value="1" class="bg-zinc-900">1h</option>
-                <option value="1.5" class="bg-zinc-900">1h 30m</option>
-                <option value="2" class="bg-zinc-900">2h</option>
-                <option value="3" class="bg-zinc-900">3h</option>
-                <option value="4" class="bg-zinc-900">4h</option>
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-lg">
+              <span class="text-slate-400">Padrão:</span>
+              <select id="dailyGoalSelect" onchange="updateDailyGoal(this.value)" class="bg-transparent text-indigo-300 font-semibold focus:outline-none cursor-pointer">
+                <option value="1" class="bg-slate-900">1h/dia</option>
+                <option value="2" class="bg-slate-900">2h/dia</option>
+                <option value="3" class="bg-slate-900">3h/dia</option>
+                <option value="4" class="bg-slate-900">4h/dia</option>
+                <option value="5" class="bg-slate-900">5h/dia</option>
+                <option value="6" class="bg-slate-900">6h/dia</option>
+                <option value="8" class="bg-slate-900">8h/dia</option>
               </select>
             </div>
-            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg flex-1 min-w-[120px]">
-              <span class="text-zinc-500">Auto-marcar:</span>
-              <select id="linkedHabitSelect" onchange="updateLinkedHabit(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer w-full truncate"></select>
+            <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-lg">
+              <span class="text-slate-400">Auto:</span>
+              <select id="linkedHabitSelect" onchange="updateLinkedHabit(this.value)" class="bg-transparent text-emerald-300 font-semibold focus:outline-none cursor-pointer max-w-[130px] truncate"></select>
             </div>
           </div>
         </div>
 
         <div class="space-y-1.5">
-          <div class="flex justify-between text-xs">
-            <span id="goalProgressFraction" class="text-zinc-400">0h 00m de 0h 00m</span>
-            <span id="goalProgressPercent" class="text-zinc-200 font-semibold">0%</span>
+          <div class="flex justify-between text-xs font-medium">
+            <span id="goalProgressFraction" class="text-slate-300">0h 00m de 4h 00m</span>
+            <span id="goalProgressPercent" class="text-indigo-400 font-bold">0%</span>
           </div>
-          <div class="w-full h-2.5 bg-zinc-950 rounded-full overflow-hidden border border-zinc-800">
-            <div id="goalProgressBar" class="h-full rounded-full transition-all duration-500 bg-slate-500" style="width: 0%"></div>
+          <div class="w-full h-3.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
+            <div id="goalProgressBar" class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-indigo-500 to-indigo-400" style="width: 0%"></div>
           </div>
         </div>
       </section>
 
-      <!-- Card 3: Rastreador de Questões & Taxa de Acerto - 4 colunas -->
-      <section class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between space-y-3">
-        <div>
-          <div class="flex items-center justify-between">
-            <h2 class="text-sm font-semibold text-zinc-200">Questões & Taxa de Acerto</h2>
-            <span id="qAccuracyBadge" class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-300">Acerto: 0%</span>
+      <!-- Card 2: Rastreador de Questões & Taxa de Acerto -->
+      <section class="glass-card p-5 rounded-2xl flex flex-col justify-between space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5">
+            <span class="text-xl">📝</span>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-sm md:text-base font-semibold text-white">Meta de Questões & Taxa de Acerto</h2>
+                <span id="qAccuracyBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">Acerto: 0%</span>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-0.5">Registre suas baterias de questões e acompanhe sua precisão.</p>
+            </div>
           </div>
 
-          <div class="flex flex-wrap items-center gap-2 text-xs mt-2">
-            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg">
-              <span class="text-zinc-500">Meta (dias c/ study):</span>
-              <select id="dailyQGoalSelect" onchange="updateDailyQuestionGoal(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer">
-                <option value="10" class="bg-zinc-900">10</option>
-                <option value="15" class="bg-zinc-900">15</option>
-                <option value="20" class="bg-zinc-900">20</option>
-                <option value="30" class="bg-zinc-900">30</option>
-                <option value="40" class="bg-zinc-900">40</option>
-                <option value="50" class="bg-zinc-900">50</option>
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-lg">
+              <span class="text-slate-400">Meta:</span>
+              <select id="dailyQGoalSelect" onchange="updateDailyQuestionGoal(this.value)" class="bg-transparent text-cyan-300 font-semibold focus:outline-none cursor-pointer">
+                <option value="10" class="bg-slate-900">10/dia</option>
+                <option value="15" class="bg-slate-900">15/dia</option>
+                <option value="20" class="bg-slate-900">20/dia</option>
+                <option value="30" class="bg-slate-900">30/dia</option>
+                <option value="40" class="bg-slate-900">40/dia</option>
+                <option value="50" class="bg-slate-900">50/dia</option>
+                <option value="80" class="bg-slate-900">80/dia</option>
               </select>
             </div>
-            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg flex-1 min-w-[110px]">
-              <span class="text-zinc-500">Auto:</span>
-              <select id="linkedQHabitSelect" onchange="updateLinkedQuestionHabit(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer w-full truncate"></select>
+            <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-lg">
+              <span class="text-slate-400">Auto:</span>
+              <select id="linkedQHabitSelect" onchange="updateLinkedQuestionHabit(this.value)" class="bg-transparent text-emerald-300 font-semibold focus:outline-none cursor-pointer max-w-[130px] truncate"></select>
             </div>
           </div>
         </div>
 
         <div class="space-y-1.5">
-          <div class="flex justify-between text-xs">
-            <span id="qProgressFraction" class="text-zinc-400">0 de 20 questões</span>
-            <span id="qProgressPercent" class="text-zinc-200 font-semibold">0%</span>
+          <div class="flex justify-between text-xs font-medium">
+            <span id="qProgressFraction" class="text-slate-300">0 de 30 questões</span>
+            <span id="qProgressPercent" class="text-cyan-400 font-bold">0%</span>
           </div>
-          <div class="w-full h-2.5 bg-zinc-950 rounded-full overflow-hidden border border-zinc-800">
-            <div id="qProgressBar" class="h-full rounded-full transition-all duration-500 bg-zinc-400" style="width: 0%"></div>
+          <div class="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
+            <div id="qProgressBar" class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-cyan-500 to-sky-400" style="width: 0%"></div>
           </div>
         </div>
 
-        <form onsubmit="addQuestionBatch(event)" class="flex flex-wrap items-center gap-1.5 pt-1">
-          <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 rounded-lg px-2 py-1 flex-1 min-w-[75px]">
-            <span class="text-[10px] text-zinc-500">Feitas:</span>
-            <input type="number" id="qSolvedInput" min="1" max="500" placeholder="20" required class="w-full bg-transparent text-xs text-zinc-200 font-medium focus:outline-none">
+        <form onsubmit="addQuestionBatch(event)" class="flex flex-wrap items-center gap-2 pt-1">
+          <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1.5 flex-1 min-w-[110px]">
+            <span class="text-[11px] text-slate-400">Feitas:</span>
+            <input type="number" id="qSolvedInput" min="1" max="500" placeholder="Ex: 20" required class="w-full bg-transparent text-xs text-white font-semibold focus:outline-none">
           </div>
-          <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 rounded-lg px-2 py-1 flex-1 min-w-[75px]">
-            <span class="text-[10px] text-zinc-500">Certas:</span>
-            <input type="number" id="qCorrectInput" min="0" max="500" placeholder="16" required class="w-full bg-transparent text-xs text-zinc-200 font-medium focus:outline-none">
+          <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1.5 flex-1 min-w-[110px]">
+            <span class="text-[11px] text-slate-400">Acertos:</span>
+            <input type="number" id="qCorrectInput" min="0" max="500" placeholder="Ex: 16" required class="w-full bg-transparent text-xs text-emerald-300 font-semibold focus:outline-none">
           </div>
-          <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-zinc-100 font-medium px-2.5 py-1 rounded-lg text-xs transition">
-            + Somar
+          <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold px-3.5 py-1.5 rounded-xl text-xs transition">
+            + Somar Bloco
           </button>
-          <button type="button" onclick="clearTodayQuestions()" class="px-2 py-1 bg-zinc-900 hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 rounded-lg text-xs transition border border-zinc-800">
-            ↺
+          <button type="button" onclick="clearTodayQuestions()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 rounded-xl text-xs transition border border-slate-700">
+            Zerar
           </button>
         </form>
       </section>
@@ -307,79 +299,79 @@
     </div>
 
     <!-- Área Principal: Pomodoro + Checklist + Gráfico -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       
       <!-- Coluna 1: Cronômetro Pomodoro -->
-      <div class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between space-y-5">
+      <div class="lg:col-span-4 glass-card p-6 rounded-2xl flex flex-col justify-between space-y-5">
         <div>
           <div class="flex items-center justify-between mb-3">
-            <h2 class="text-sm font-semibold text-zinc-200">Cronômetro Pomodoro</h2>
-            <span id="timerStatusBadge" class="text-[11px] font-medium px-2 py-0.5 bg-zinc-800 text-zinc-300 rounded">Modo Foco</span>
+            <h2 class="text-lg font-semibold text-white">Cronômetro Pomodoro</h2>
+            <span id="timerStatusBadge" class="text-xs font-semibold px-2.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full">Modo Foco</span>
           </div>
 
-          <div class="grid grid-cols-3 gap-1 bg-zinc-950 p-1 rounded-lg border border-zinc-800 mb-5">
-            <button onclick="setTimerMode('focus25')" id="btn-focus25" class="py-1.5 text-xs font-medium rounded-md bg-slate-700 text-zinc-100 transition">Foco 25m</button>
-            <button onclick="setTimerMode('focus50')" id="btn-focus50" class="py-1.5 text-xs font-medium rounded-md text-zinc-500 hover:text-zinc-300 transition">Foco 50m</button>
-            <button onclick="setTimerMode('break')" id="btn-break" class="py-1.5 text-xs font-medium rounded-md text-zinc-500 hover:text-zinc-300 transition">Pausa 5m</button>
+          <div class="grid grid-cols-3 gap-1.5 bg-slate-900/80 p-1 rounded-xl border border-slate-800 mb-6">
+            <button onclick="setTimerMode('focus25')" id="btn-focus25" class="py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white transition">Foco 25m</button>
+            <button onclick="setTimerMode('focus50')" id="btn-focus50" class="py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Foco 50m</button>
+            <button onclick="setTimerMode('break')" id="btn-break" class="py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Pausa 5m</button>
           </div>
 
-          <div class="text-center py-7 bg-zinc-950 rounded-xl border border-zinc-800/80 mb-5">
-            <div id="timerDisplay" class="text-5xl md:text-6xl font-bold text-zinc-100 font-mono timer-sober">25:00</div>
-            <p class="text-[11px] text-zinc-500 mt-2" id="timerSubtext">Tempo em Foco contabilizado nas Horas Líquidas</p>
+          <div class="text-center py-6 bg-slate-900/60 rounded-2xl border border-slate-800/80 mb-5">
+            <div id="timerDisplay" class="text-6xl font-extrabold tracking-tight text-white font-mono timer-glow">25:00</div>
+            <p class="text-xs text-slate-400 mt-2" id="timerSubtext">Cada segundo em Foco soma nas Horas Líquidas</p>
           </div>
 
           <div class="flex gap-2">
-            <button onclick="toggleTimer()" id="startPauseBtn" class="flex-1 bg-slate-700 hover:bg-slate-600 text-zinc-100 font-medium py-2.5 rounded-lg text-xs transition">
+            <button onclick="toggleTimer()" id="startPauseBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl text-sm transition shadow-lg shadow-emerald-900/30">
               ▶ Iniciar Foco
             </button>
-            <button onclick="resetTimer()" class="px-3.5 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 rounded-lg text-xs transition border border-zinc-800">
+            <button onclick="resetTimer()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl text-sm transition border border-slate-700">
               ↺
             </button>
           </div>
         </div>
 
-        <div class="pt-4 border-t border-zinc-800/80">
-          <div class="flex items-center justify-between text-[11px] text-zinc-500 mb-2">
-            <span>Ajuste manual de tempo líquido:</span>
-            <span id="PomodoroCyclesToday" class="font-medium text-zinc-400">0 blocos hoje</span>
+        <div class="pt-4 border-t border-slate-800">
+          <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+            <span>Ajuste manual no dia selecionado:</span>
+            <span id="PomodoroCyclesToday" class="font-semibold text-indigo-400">0 blocos hoje</span>
           </div>
           <div class="grid grid-cols-2 gap-2">
-            <button onclick="adjustStudyTime(-900)" class="py-1.5 px-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 rounded-lg text-xs border border-zinc-800 transition">
+            <button onclick="adjustStudyTime(-900)" class="py-1.5 px-3 bg-slate-800/80 hover:bg-rose-950/50 hover:text-rose-300 text-slate-300 rounded-lg text-xs font-medium border border-slate-700/70 transition">
               - 15 min
             </button>
-            <button onclick="adjustStudyTime(900)" class="py-1.5 px-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg text-xs border border-zinc-800 transition">
-              + 15 min
+            <button onclick="adjustStudyTime(900)" class="py-1.5 px-3 bg-slate-800/80 hover:bg-indigo-950/60 hover:text-indigo-300 text-slate-300 rounded-lg text-xs font-medium border border-slate-700/70 transition">
+              + 15 min (Externo)
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Coluna 2: Checklist Diário -->
-      <div class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between space-y-4">
+      <!-- Coluna 2: Checklist Diário com Dias Programáveis -->
+      <div class="lg:col-span-4 glass-card p-6 rounded-2xl flex flex-col justify-between space-y-4">
         <div>
           <div class="flex items-center justify-between mb-1">
-            <h2 class="text-sm font-semibold text-zinc-200">Metas do Dia</h2>
-            <span class="text-xs text-zinc-400 font-medium" id="dailyProgressText">0/0 programadas</span>
+            <h2 class="text-lg font-semibold text-white">Metas do Dia</h2>
+            <span class="text-xs text-emerald-400 font-semibold" id="dailyProgressText">0/0 programadas</span>
           </div>
-          <p class="text-[11px] text-zinc-500 mb-3">Treino e Estudo seguem os eventos <b>training</b> e <b>study</b> de cada data.</p>
+          <p class="text-[11px] text-slate-400 mb-4">Clique em <b>📅 Dias</b> para definir quais dias da semana cada hábito é obrigatório.</p>
 
-          <div id="habitList" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
+          <div id="habitList" class="space-y-2.5 max-h-72 overflow-y-auto pr-1"></div>
         </div>
 
-        <form onsubmit="addHabit(event)" class="pt-3 border-t border-zinc-800/80 space-y-2.5">
+        <form onsubmit="addHabit(event)" class="pt-3 border-t border-slate-800 space-y-2.5">
           <div class="flex gap-2">
             <input 
               type="text" 
               id="newHabitInput" 
-              placeholder="Novo hábito..." 
+              placeholder="Novo hábito (ex: Treino, Simulado)..." 
               required
-              class="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-slate-500"
+              class="flex-1 bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
             >
-            <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-zinc-100 font-medium px-3.5 py-2 rounded-lg text-xs transition">
+            <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3.5 py-2 rounded-xl text-xs transition">
               + Criar
             </button>
           </div>
-          <div class="flex items-center justify-between gap-1 text-[11px] text-zinc-500">
+          <div class="flex items-center justify-between gap-1 text-[11px] text-slate-400">
             <span>Dias ativos:</span>
             <div class="flex gap-1" id="newHabitDaysPicker"></div>
           </div>
@@ -387,10 +379,10 @@
       </div>
 
       <!-- Coluna 3: Gráfico Combinado -->
-      <div class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between">
+      <div class="lg:col-span-4 glass-card p-6 rounded-2xl flex flex-col justify-between">
         <div>
-          <h2 class="text-sm font-semibold text-zinc-200">Evolução Semanal</h2>
-          <p class="text-[11px] text-zinc-500 mb-4">Linha clara: Hábitos (%) | Tracejada: Acerto (%) | Barras: Líquido Feito vs Meta 50% (h)</p>
+          <h2 class="text-lg font-semibold text-white">Curva Semanal Multidimensional</h2>
+          <p class="text-xs text-slate-400 mb-4">Verde: Hábitos (%) | Azul: Acerto Questões (%) | Barras: Estudo (h)</p>
         </div>
         <div class="relative h-64 md:h-72 w-full">
           <canvas id="weeklyChart"></canvas>
@@ -400,26 +392,28 @@
     </div>
 
     <!-- Matriz Completa da Semana -->
-    <section class="glass-card p-5 rounded-xl overflow-x-auto">
+    <section class="glass-card p-6 rounded-2xl overflow-x-auto">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
         <div>
-          <h2 class="text-sm font-semibold text-zinc-200">Quadro Semanal por Data</h2>
-          <p class="text-[11px] text-zinc-500">Legenda: <span class="text-zinc-200 font-bold">✓</span> Concluído | <span class="text-zinc-500 font-bold">·</span> Planejado hoje | <span class="text-zinc-600 font-mono">—</span> Dia sem evento (Folga)</p>
+          <h2 class="text-lg font-semibold text-white">Visão Panorâmica da Semana</h2>
+          <p class="text-xs text-slate-400">Legenda: <span class="text-emerald-400 font-bold">✓</span> Concluído | <span class="text-slate-400 font-bold">·</span> Pendente | <span class="text-slate-600 font-mono">—</span> Folga Programada</p>
         </div>
       </div>
       <table class="w-full text-left border-collapse min-w-[650px]">
         <thead>
-          <tr class="border-b border-zinc-800 text-[11px] uppercase text-zinc-500" id="matrixHeaderRow"></tr>
+          <tr class="border-b border-slate-800 text-xs uppercase text-slate-400" id="matrixHeaderRow"></tr>
         </thead>
-        <tbody id="matrixBody" class="divide-y divide-zinc-800/60 text-xs"></tbody>
+        <tbody id="matrixBody" class="divide-y divide-slate-800/60 text-sm"></tbody>
       </table>
     </section>
 
     <!-- Histórico de Semanas Arquivadas -->
-    <section class="glass-card p-5 rounded-xl overflow-x-auto">
-      <div class="mb-3">
-        <h2 class="text-sm font-semibold text-zinc-200">Histórico de Semanas Arquivadas</h2>
-        <p class="text-[11px] text-zinc-500">Registros anteriores salvos localmente e na planilha.</p>
+    <section class="glass-card p-6 rounded-2xl overflow-x-auto">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-lg font-semibold text-white">📦 Histórico de Semanas Arquivadas</h2>
+          <p class="text-xs text-slate-400">Histórico consolidado salvo localmente e sincronizado com sua Planilha do Google Drive.</p>
+        </div>
       </div>
       <div id="archiveContainer"></div>
     </section>
@@ -428,86 +422,56 @@
 
   <script>
     const DAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbz9fYDyV8f4LH31YsaXV5Y31uaCPuCY-OIE3dBt13a6DNVRGq7s040TCn2yGlprak73oQ/exec';
     
     const jsDay = new Date().getDay();
     let selectedDayIndex = jsDay === 0 ? 6 : jsDay - 1;
 
-    // Calcula as datas exatas ( Seg a Dom ) da semana corrente sem erro de fuso/virada de mês
-    function getWeekDatesInfo() {
-      const now = new Date();
-      const currentDay = now.getDay();
-      const diffToMonday = currentDay === 0 ? -6 : 1 - currentDay;
-      const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday);
-
-      return DAYS.map((dayLabel, idx) => {
-        const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + idx);
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        const iso = `${yyyy}-${mm}-${dd}`;
-        const shortBr = `${dd}/${mm}`;
-        const longBr = d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
-        return { dayLabel, iso, shortBr, longBr };
-      });
-    }
-
-    const WEEK_DATES = getWeekDatesInfo();
-
     const defaultHabits = [
-      { id: 1, name: 'Treino Funcional / Academia', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, false, true, true, false, false] },
+      { id: 1, name: 'Treino Funcional / Força', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, false, true, true, false, false] },
       { id: 2, name: 'Bloco de Questões & Revisão Ativa', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, false] },
       { id: 3, name: 'Hidratação (3L) + Creatina', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, true] },
       { id: 4, name: 'Leitura / Estudo Dirigido', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, false] },
       { id: 5, name: 'Rotina de Autocuidado & Sono (7h+)', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, true] }
     ];
 
-    function safeParseJSON(key, fallback) {
-      try {
-        const raw = localStorage.getItem(key);
-        return raw ? JSON.parse(raw) : fallback;
-      } catch (e) {
-        return fallback;
-      }
-    }
-
-    let habits = safeParseJSON('habitDashboardData', defaultHabits);
+    let habits = JSON.parse(localStorage.getItem('habitDashboardData')) || defaultHabits;
     habits.forEach(h => {
-      if (!Array.isArray(h.days) || h.days.length !== 7) h.days = [false, false, false, false, false, false, false];
-      if (!Array.isArray(h.scheduledDays) || h.scheduledDays.length !== 7) h.scheduledDays = [true, true, true, true, true, true, true];
+      if (!Array.isArray(h.scheduledDays) || h.scheduledDays.length !== 7) {
+        const isWorkout = h.name.toLowerCase().includes('treino');
+        h.scheduledDays = isWorkout ? [true, true, false, true, true, false, false] : [true, true, true, true, true, true, true];
+      }
     });
 
-    let studySeconds = safeParseJSON('habitStudySeconds', [0, 0, 0, 0, 0, 0, 0]);
-    let pomodoroCycles = safeParseJSON('habitPomodoroCycles', [0, 0, 0, 0, 0, 0, 0]);
-    let dailyGoalHours = Number(localStorage.getItem('habitDailyGoalHours')) || 1.5;
+    let studySeconds = JSON.parse(localStorage.getItem('habitStudySeconds')) || [0, 0, 0, 0, 0, 0, 0];
+    let pomodoroCycles = JSON.parse(localStorage.getItem('habitPomodoroCycles')) || [0, 0, 0, 0, 0, 0, 0];
+    let dailyGoalHours = Number(localStorage.getItem('habitDailyGoalHours')) || 4;
     let linkedHabitId = Number(localStorage.getItem('habitLinkedId')) || (habits[3] ? habits[3].id : (habits[0] ? habits[0].id : 0));
 
-    let questionsSolved = safeParseJSON('habitQuestionsSolved', [0, 0, 0, 0, 0, 0, 0]);
-    let questionsCorrect = safeParseJSON('habitQuestionsCorrect', [0, 0, 0, 0, 0, 0, 0]);
-    let dailyQuestionsGoal = Number(localStorage.getItem('habitDailyQuestionsGoal')) || 20;
+    let questionsSolved = JSON.parse(localStorage.getItem('habitQuestionsSolved')) || [0, 0, 0, 0, 0, 0, 0];
+    let questionsCorrect = JSON.parse(localStorage.getItem('habitQuestionsCorrect')) || [0, 0, 0, 0, 0, 0, 0];
+    let dailyQuestionsGoal = Number(localStorage.getItem('habitDailyQuestionsGoal')) || 30;
     let linkedQuestionHabitId = Number(localStorage.getItem('habitLinkedQuestionId')) || (habits[1] ? habits[1].id : 0);
-    let archivedWeeks = safeParseJSON('habitArchivedWeeks', []);
+    let busyDays = JSON.parse(localStorage.getItem('habitBusyDays')) || [false, false, false, false, false, false, false];
+    let archivedWeeks = JSON.parse(localStorage.getItem('habitArchivedWeeks')) || [];
 
-    // Mapa indexado por data exata (YYYY-MM-DD) vindo do Google Calendar
-    let calendarByDateMap = safeParseJSON('habitCalendarByDateMap', {});
-    let autoCalendarSync = localStorage.getItem('habitAutoCalendarSync') !== 'false';
-
-    // Usa automaticamente a URL do Apps Script do usuário caso ainda não esteja salva no aparelho
-    let gasWebAppUrl = localStorage.getItem('habitGasWebAppUrl') || DEFAULT_GAS_URL;
+    // Configuração Google Apps Script (Nuvem)
+    let gasWebAppUrl = localStorage.getItem('habitGasWebAppUrl') || '';
     let lastCloudSync = localStorage.getItem('habitLastCloudSync') || '';
     let cloudSyncTimeout = null;
 
+    // Estado UI
     let editingScheduleHabitId = null;
     let newHabitSchedule = [true, true, true, true, true, true, true];
     let chartInstance = null;
 
+    // Estado Pomodoro
     let timerMode = 'focus25';
     let timeLeft = 25 * 60;
     let timerInterval = null;
     let isRunning = false;
     let toastTimeout = null;
 
-    function showToast(message, icon = '✓') {
+    function showToast(message, icon = '✅') {
       const toast = document.getElementById('toastNotification');
       document.getElementById('toastMessage').textContent = message;
       document.getElementById('toastIcon').textContent = icon;
@@ -515,89 +479,12 @@
       clearTimeout(toastTimeout);
       toastTimeout = setTimeout(() => {
         toast.classList.add('hidden');
-      }, 3500);
-    }
-
-    function getDayCalData(dayIdx) {
-      const dateIso = WEEK_DATES[dayIdx].iso;
-      return calendarByDateMap && calendarByDateMap[dateIso] ? calendarByDateMap[dateIso] : null;
-    }
-
-    function hasCalendarSyncedForWeek() {
-      return WEEK_DATES.some(d => Boolean(calendarByDateMap && calendarByDateMap[d.iso]));
-    }
-
-    function isTrainingHabit(habit) {
-      const n = habit.name.toLowerCase();
-      return n.includes('treino') || n.includes('training') || n.includes('academia') || n.includes('força');
-    }
-
-    function isStudyHabit(habit) {
-      const n = habit.name.toLowerCase();
-      return habit.id === Number(linkedHabitId) || habit.id === Number(linkedQuestionHabitId) || n.includes('estudo') || n.includes('questões') || n.includes('questoes') || n.includes('revisão') || n.includes('study') || n.includes('leitura');
-    }
-
-    // Sincroniza cada dia (0 a 6) casando a data exata YYYY-MM-DD com os eventos "study" e "training"
-    function applyCalendarScheduleToHabits() {
-      if (!autoCalendarSync || !hasCalendarSyncedForWeek()) return;
-      habits.forEach(h => {
-        if (isTrainingHabit(h)) {
-          h.scheduledDays = WEEK_DATES.map((_, idx) => {
-            const cal = getDayCalData(idx);
-            return Boolean(cal && cal.hasTraining);
-          });
-        } else if (isStudyHabit(h)) {
-          h.scheduledDays = WEEK_DATES.map((_, idx) => {
-            const cal = getDayCalData(idx);
-            return Boolean(cal && cal.hasStudy);
-          });
-        }
-      });
-    }
-
-    // Retorna o Tempo Bruto agendado no evento "study" na data exata
-    function getGrossStudySeconds(dayIdx) {
-      const cal = getDayCalData(dayIdx);
-      if (autoCalendarSync && cal) {
-        if (typeof cal.grossStudySeconds === 'number') return cal.grossStudySeconds;
-        if (typeof cal.studyPlannedSeconds === 'number') return cal.studyPlannedSeconds;
-      }
-      return dailyGoalHours * 3600 * 2;
-    }
-
-    // Regra de Ouro: Meta Líquida = 50% do Bruto do evento "study" na data exata
-    function getEffectiveStudyGoalSeconds(dayIdx) {
-      const cal = getDayCalData(dayIdx);
-      if (autoCalendarSync && hasCalendarSyncedForWeek()) {
-        if (!cal || !cal.hasStudy) return 0;
-        if (typeof cal.netStudyGoalSeconds === 'number') return cal.netStudyGoalSeconds;
-        const gross = cal.grossStudySeconds || cal.studyPlannedSeconds || 0;
-        return Math.round(gross * 0.5);
-      }
-      return dailyGoalHours * 3600;
-    }
-
-    function getEffectiveQuestionGoal(dayIdx) {
-      const cal = getDayCalData(dayIdx);
-      if (autoCalendarSync && hasCalendarSyncedForWeek()) {
-        if (!cal || !cal.hasStudy) return 0;
-      }
-      return dailyQuestionsGoal;
-    }
-
-    function toggleAutoCalendarSync() {
-      autoCalendarSync = !autoCalendarSync;
-      localStorage.setItem('habitAutoCalendarSync', String(autoCalendarSync));
-      if (autoCalendarSync) {
-        applyCalendarScheduleToHabits();
-      }
-      saveState();
-      showToast(autoCalendarSync ? 'Sincronismo por data exata ativado.' : 'Sincronismo automático pausado.');
+      }, 3800);
     }
 
     function buildFullPayload() {
       return {
-        version: 6,
+        version: 3,
         updatedAt: new Date().toISOString(),
         dailyGoalHours,
         linkedHabitId,
@@ -607,6 +494,7 @@
         pomodoroCycles,
         questionsSolved,
         questionsCorrect,
+        busyDays,
         habits,
         archivedWeeks
       };
@@ -616,13 +504,13 @@
       if (!data || !Array.isArray(data.habits)) return false;
       habits = data.habits.map(h => ({
         ...h,
-        days: Array.isArray(h.days) && h.days.length === 7 ? h.days.map(Boolean) : [false,false,false,false,false,false,false],
-        scheduledDays: Array.isArray(h.scheduledDays) && h.scheduledDays.length === 7 ? h.scheduledDays.map(Boolean) : [true,true,true,true,true,true,true]
+        scheduledDays: Array.isArray(h.scheduledDays) && h.scheduledDays.length === 7 ? h.scheduledDays : [true,true,true,true,true,true,true]
       }));
       if (Array.isArray(data.studySeconds) && data.studySeconds.length === 7) studySeconds = data.studySeconds.map(Number);
       if (Array.isArray(data.pomodoroCycles) && data.pomodoroCycles.length === 7) pomodoroCycles = data.pomodoroCycles.map(Number);
       if (Array.isArray(data.questionsSolved) && data.questionsSolved.length === 7) questionsSolved = data.questionsSolved.map(Number);
       if (Array.isArray(data.questionsCorrect) && data.questionsCorrect.length === 7) questionsCorrect = data.questionsCorrect.map(Number);
+      if (Array.isArray(data.busyDays) && data.busyDays.length === 7) busyDays = data.busyDays.map(Boolean);
       if (Array.isArray(data.archivedWeeks)) archivedWeeks = data.archivedWeeks;
       if (data.dailyGoalHours) dailyGoalHours = Number(data.dailyGoalHours);
       if (data.linkedHabitId) linkedHabitId = Number(data.linkedHabitId);
@@ -641,8 +529,8 @@
       localStorage.setItem('habitQuestionsCorrect', JSON.stringify(questionsCorrect));
       localStorage.setItem('habitDailyQuestionsGoal', String(dailyQuestionsGoal));
       localStorage.setItem('habitLinkedQuestionId', String(linkedQuestionHabitId));
+      localStorage.setItem('habitBusyDays', JSON.stringify(busyDays));
       localStorage.setItem('habitArchivedWeeks', JSON.stringify(archivedWeeks));
-      localStorage.setItem('habitCalendarByDateMap', JSON.stringify(calendarByDateMap));
     }
 
     function saveState(skipCloud = false) {
@@ -652,6 +540,10 @@
         scheduleCloudPush();
       }
     }
+
+    // ==========================================
+    // SINCRONIZAÇÃO COM GOOGLE DRIVE (APPS SCRIPT)
+    // ==========================================
 
     function toggleCloudConfig() {
       const panel = document.getElementById('cloudConfigPanel');
@@ -670,20 +562,20 @@
       }
 
       if (!gasWebAppUrl) {
-        dot.className = 'w-1.5 h-1.5 rounded-full bg-zinc-600';
+        dot.className = 'w-2 h-2 rounded-full bg-slate-500';
         text.textContent = 'Nuvem Off';
         return;
       }
 
       if (state === 'syncing') {
-        dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping';
+        dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
         text.textContent = customText || 'Sincronizando...';
       } else if (state === 'ok') {
-        dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500';
-        text.textContent = customText || 'Sincronizado';
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+        text.textContent = customText || 'Drive Sincronizado';
       } else if (state === 'error') {
-        dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-500';
-        text.textContent = customText || 'Erro Nuvem';
+        dot.className = 'w-2 h-2 rounded-full bg-rose-500';
+        text.textContent = customText || 'Erro na Nuvem';
       }
     }
 
@@ -691,12 +583,12 @@
       const input = document.getElementById('gasUrlInput');
       const url = (input.value || '').trim();
       if (!url.startsWith('https://script.google.com/')) {
-        showToast('Insira uma URL válida do Google Apps Script.', '!');
+        showToast('Insira uma URL válida do Google Apps Script (terminada em /exec).', '⚠️');
         return;
       }
       gasWebAppUrl = url;
       localStorage.setItem('habitGasWebAppUrl', gasWebAppUrl);
-      showToast('Conectado! Buscando eventos por data...');
+      showToast('URL conectada! Verificando dados na sua planilha...', '☁️');
       pullFromCloud(true);
     }
 
@@ -704,7 +596,7 @@
       gasWebAppUrl = '';
       localStorage.removeItem('habitGasWebAppUrl');
       updateCloudStatusUI('off');
-      showToast('Nuvem desconectada.');
+      showToast('Sincronização em nuvem desconectada.', '☁️');
     }
 
     function scheduleCloudPush() {
@@ -717,10 +609,14 @@
     }
 
     async function pushToCloud(showNotification = false) {
-      if (!gasWebAppUrl) return;
+      if (!gasWebAppUrl) {
+        if (showNotification) showToast('Configure a URL do Google Apps Script primeiro.', '⚠️');
+        return;
+      }
       updateCloudStatusUI('syncing', 'Enviando...');
       try {
         const payload = buildFullPayload();
+        // Usa text/plain para evitar bloqueio de preflight CORS no Google Apps Script
         const response = await fetch(gasWebAppUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -732,98 +628,74 @@
           lastCloudSync = `${new Date().toLocaleDateString('pt-BR')} às ${timeStr}`;
           localStorage.setItem('habitLastCloudSync', lastCloudSync);
           updateCloudStatusUI('ok', `Salvo (${timeStr})`);
-          if (showNotification) showToast('Dados salvos na planilha.');
+          if (showNotification) showToast('Dados enviados para a Planilha Google com sucesso!', '☁️');
         } else {
-          throw new Error('Erro ao salvar');
+          throw new Error(resData.message || 'Resposta inesperada');
         }
       } catch (err) {
-        updateCloudStatusUI('error', 'Falha no envio');
-        if (showNotification) showToast('Falha ao enviar para a planilha.', '!');
+        console.error('Erro ao enviar para nuvem:', err);
+        updateCloudStatusUI('error', 'Falha ao enviar');
+        if (showNotification) showToast('Não foi possível enviar para a Planilha. Verifique a URL e permissão.', '❌');
       }
     }
 
     async function pullFromCloud(showNotification = false) {
-      if (!gasWebAppUrl) {
-        if (showNotification) toggleCloudConfig();
-        return;
-      }
-      updateCloudStatusUI('syncing', 'Lendo Agenda...');
+      if (!gasWebAppUrl) return;
+      updateCloudStatusUI('syncing', 'Carregando...');
       try {
-        const datesCsv = WEEK_DATES.map(d => d.iso).join(',');
-        const response = await fetch(`${gasWebAppUrl}?dates=${encodeURIComponent(datesCsv)}&t=${Date.now()}`);
+        const response = await fetch(`${gasWebAppUrl}?t=${Date.now()}`);
         const resData = await response.json();
-        if (resData.status === 'ok') {
-          if (resData.hasData && resData.data) {
-            applyPayloadToState(resData.data);
-          }
-
-          const errBanner = document.getElementById('calendarErrorBanner');
-          if (resData.calendarError) {
-            errBanner.classList.remove('hidden');
-            document.getElementById('calendarErrorDetails').textContent = `Detalhe técnico: ${resData.calendarError} — Abra o Apps Script, rode a função "autorizarPermissoes" e crie uma Nova Versão na implantação.`;
-          } else {
-            errBanner.classList.add('hidden');
-          }
-
-          if (Array.isArray(resData.calendar) && resData.calendar.length === 7) {
-            resData.calendar.forEach((dayObj, idx) => {
-              const targetIso = (dayObj && dayObj.date) ? dayObj.date : WEEK_DATES[idx].iso;
-              // Compatibilidade mesmo se o Apps Script antigo ainda estiver publicado
-              const gross = typeof dayObj.grossStudySeconds === 'number'
-                ? dayObj.grossStudySeconds
-                : (dayObj.studyPlannedSeconds || 0);
-              const net = typeof dayObj.netStudyGoalSeconds === 'number'
-                ? dayObj.netStudyGoalSeconds
-                : Math.round(gross * 0.5);
-
-              calendarByDateMap[targetIso] = {
-                date: targetIso,
-                hasStudy: Boolean(dayObj.hasStudy),
-                grossStudySeconds: gross,
-                netStudyGoalSeconds: net,
-                hasTraining: Boolean(dayObj.hasTraining),
-                events: Array.isArray(dayObj.events) ? dayObj.events : []
-              };
-            });
-            applyCalendarScheduleToHabits();
-            WEEK_DATES.forEach((_, idx) => {
-              checkAutoCompleteStudyHabit(idx);
-              checkAutoCompleteQuestionHabit(idx);
-            });
-          }
-
+        if (resData.status === 'ok' && resData.hasData && resData.data) {
+          applyPayloadToState(resData.data);
           saveLocalOnly();
           renderAll();
           const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
           lastCloudSync = `${new Date().toLocaleDateString('pt-BR')} às ${timeStr}`;
           localStorage.setItem('habitLastCloudSync', lastCloudSync);
           updateCloudStatusUI('ok', `Sincronizado (${timeStr})`);
-          if (showNotification) showToast('Datas e eventos "study"/"training" sincronizados!');
-          if (!resData.hasData) {
-            await pushToCloud(false);
-          }
+          if (showNotification) showToast('Dados carregados da Planilha Google!', '☁️');
+        } else if (resData.status === 'ok' && !resData.hasData) {
+          // Planilha nova/vazia: envia os dados locais atuais para inicializar a planilha
+          await pushToCloud(showNotification);
         }
       } catch (err) {
-        updateCloudStatusUI('error', 'Offline');
-        if (showNotification) showToast('Sem conexão com a planilha/agenda.', '!');
+        console.error('Erro ao puxar da nuvem:', err);
+        updateCloudStatusUI('error', 'Modo Offline');
+        if (showNotification) showToast('Erro ao carregar da Planilha. Usando dados locais.', '⚠️');
       }
     }
 
+    // ==========================================
+    // NOTIFICAÇÕES NATIVAS DA ÁREA DE TRABALHO
+    // ==========================================
+
     function updateNotificationButtonUI() {
       const btnText = document.getElementById('notifBtnText');
+      const btn = document.getElementById('notifBtn');
       if (!('Notification' in window)) {
         btnText.textContent = 'Sem Suporte';
         return;
       }
-      btnText.textContent = Notification.permission === 'granted' ? 'Alertas ON' : 'Alertas';
+      if (Notification.permission === 'granted') {
+        btnText.textContent = 'Alertas ON';
+        btn.className = 'px-3 py-2 text-xs font-medium text-emerald-300 bg-emerald-950/40 rounded-xl border border-emerald-700/50 flex items-center gap-1.5';
+      } else {
+        btnText.textContent = 'Alertas';
+      }
     }
 
     function requestDesktopNotifications() {
-      if (!('Notification' in window)) return;
+      if (!('Notification' in window)) {
+        showToast('Seu navegador não suporta notificações nativas.', '⚠️');
+        return;
+      }
       Notification.requestPermission().then(permission => {
         updateNotificationButtonUI();
         if (permission === 'granted') {
-          showToast('Notificações ativadas.');
+          showToast('Notificações ativadas!', '🔔');
+          new Notification('Painel Sincronizado', {
+            body: 'Você será avisado quando seus ciclos Pomodoro terminarem!'
+          });
         }
       });
     }
@@ -834,15 +706,47 @@
       }
     }
 
+    // ==========================================
+    // METAS DINÂMICAS & MODO DIA CORRIDO
+    // ==========================================
+
+    function getEffectiveStudyGoalSeconds(dayIdx) {
+      const factor = busyDays[dayIdx] ? 0.5 : 1;
+      return dailyGoalHours * 3600 * factor;
+    }
+
+    function getEffectiveQuestionGoal(dayIdx) {
+      const factor = busyDays[dayIdx] ? 0.5 : 1;
+      return Math.max(1, Math.round(dailyQuestionsGoal * factor));
+    }
+
+    function toggleBusyDay() {
+      busyDays[selectedDayIndex] = !busyDays[selectedDayIndex];
+      const isBusy = busyDays[selectedDayIndex];
+      checkAutoCompleteStudyHabit(selectedDayIndex);
+      checkAutoCompleteQuestionHabit(selectedDayIndex);
+      saveState();
+      showToast(
+        isBusy 
+          ? `Modo Dia Corrido ativado para ${DAYS[selectedDayIndex]}! Metas reduzidas pela metade.` 
+          : `Modo Dia Corrido desativado para ${DAYS[selectedDayIndex]}.`,
+        '⚡'
+      );
+    }
+
+    // ==========================================
+    // RASTREADOR DE QUESTÕES E TAXA DE ACERTO
+    // ==========================================
+
     function checkAutoCompleteQuestionHabit(dayIdx) {
       const goalQ = getEffectiveQuestionGoal(dayIdx);
       const currentQ = questionsSolved[dayIdx] || 0;
-      if (goalQ > 0 && currentQ >= goalQ && linkedQuestionHabitId) {
+      if (currentQ >= goalQ && linkedQuestionHabitId) {
         const targetHabit = habits.find(h => h.id === Number(linkedQuestionHabitId));
         if (targetHabit && !targetHabit.days[dayIdx]) {
           targetHabit.days[dayIdx] = true;
           playBeep(1046.5, 0.5);
-          showToast(`Meta de questões atingida: "${targetHabit.name}" concluído.`);
+          showToast(`Meta de ${goalQ} questões batida! "${targetHabit.name}" marcado!`, '📝');
           return true;
         }
       }
@@ -858,7 +762,7 @@
 
       if (solved === 0) return;
       if (correct > solved) {
-        showToast('Acertos não podem superar o total de questões.', '!');
+        showToast('O número de acertos não pode ser maior que as questões feitas.', '⚠️');
         return;
       }
 
@@ -870,15 +774,17 @@
 
       checkAutoCompleteQuestionHabit(selectedDayIndex);
       saveState();
-      showToast(`+${solved} questões registradas.`);
+      const batchAcc = Math.round((correct / solved) * 100);
+      showToast(`+${solved} questões registradas (${batchAcc}% de acerto)!`, '📝');
     }
 
     function clearTodayQuestions() {
       if (questionsSolved[selectedDayIndex] === 0) return;
-      if (confirm(`Zerar questões de ${WEEK_DATES[selectedDayIndex].shortBr}?`)) {
+      if (confirm(`Zerar o registro de questões de ${DAYS[selectedDayIndex]}?`)) {
         questionsSolved[selectedDayIndex] = 0;
         questionsCorrect[selectedDayIndex] = 0;
         saveState();
+        showToast('Questões do dia zeradas.', '↺');
       }
     }
 
@@ -890,7 +796,6 @@
 
     function updateLinkedQuestionHabit(val) {
       linkedQuestionHabitId = Number(val);
-      applyCalendarScheduleToHabits();
       checkAutoCompleteQuestionHabit(selectedDayIndex);
       saveState();
     }
@@ -902,6 +807,10 @@
         return s > 0 ? Math.round((c / s) * 100) : 0;
       });
     }
+
+    // ==========================================
+    // ARQUIVAMENTO DE SEMANAS (HISTÓRICO)
+    // ==========================================
 
     function getWeeklyStatsSummary() {
       let totalScheduled = 0;
@@ -925,8 +834,8 @@
 
     function archiveAndResetWeek() {
       const stats = getWeeklyStatsSummary();
-      const defaultLabel = `Semana ${WEEK_DATES[0].shortBr} a ${WEEK_DATES[6].shortBr}`;
-      const weekLabel = prompt('Identificação da semana para o histórico:', defaultLabel);
+      const defaultLabel = `Semana encerrada em ${new Date().toLocaleDateString('pt-BR')}`;
+      const weekLabel = prompt('Digite um nome ou período para arquivar esta semana no histórico:', defaultLabel);
       if (weekLabel === null) return;
 
       archivedWeeks.unshift({
@@ -948,31 +857,38 @@
       pomodoroCycles = [0, 0, 0, 0, 0, 0, 0];
       questionsSolved = [0, 0, 0, 0, 0, 0, 0];
       questionsCorrect = [0, 0, 0, 0, 0, 0, 0];
+      busyDays = [false, false, false, false, false, false, false];
 
       saveState();
-      showToast('Semana arquivada com sucesso.');
+      showToast('Semana arquivada e sincronizada!', '📦');
     }
 
     function resetWeekOnly() {
-      if (confirm('Zerar a semana atual sem salvar no histórico?')) {
+      if (confirm('Deseja zerar as marcações da semana atual SEM arquivar no histórico?')) {
         habits.forEach(h => h.days = [false, false, false, false, false, false, false]);
         studySeconds = [0, 0, 0, 0, 0, 0, 0];
         pomodoroCycles = [0, 0, 0, 0, 0, 0, 0];
         questionsSolved = [0, 0, 0, 0, 0, 0, 0];
         questionsCorrect = [0, 0, 0, 0, 0, 0, 0];
+        busyDays = [false, false, false, false, false, false, false];
         saveState();
+        showToast('Semana atual reiniciada!', '🔄');
       }
     }
 
     function deleteArchivedWeek(id) {
-      if (confirm('Excluir este registro do histórico?')) {
+      if (confirm('Remover este registro do histórico de semanas?')) {
         archivedWeeks = archivedWeeks.filter(w => w.id !== id);
         saveState();
       }
     }
 
+    // ==========================================
+    // EXPORTAÇÃO E IMPORTAÇÃO (JSON & CSV)
+    // ==========================================
+
     function getFormattedDate() {
-      return WEEK_DATES[selectedDayIndex].iso;
+      return new Date().toISOString().split('T')[0];
     }
 
     function triggerDownload(content, filename, mimeType) {
@@ -990,12 +906,14 @@
     function exportJSON() {
       const jsonString = JSON.stringify(buildFullPayload(), null, 2);
       triggerDownload(jsonString, `backup-painel-${getFormattedDate()}.json`, 'application/json;charset=utf-8;');
+      showToast('Backup JSON exportado!', '⬇️');
     }
 
     function exportCSV() {
       const escapeCSV = (str) => `"${String(str).replace(/"/g, '""')}"`;
-      const headers = WEEK_DATES.map(d => `${d.dayLabel}_${d.shortBr}`);
-      const rows = [['Tipo', 'ID', 'Item', ...headers, 'Acumulado_Semana', 'Dias_Programados']];
+      const rows = [];
+
+      rows.push(['Tipo', 'ID', 'Item', ...DAYS, 'Acumulado_Semana', 'Dias_Programados']);
 
       habits.forEach(h => {
         const schedCount = h.scheduledDays.filter(Boolean).length;
@@ -1007,30 +925,90 @@
 
       const totalSecs = studySeconds.reduce((a, b) => a + b, 0);
       rows.push(['ESTUDO_SEGUNDOS', '0', '"Horas Liquidas (Segundos)"', ...studySeconds, totalSecs, '']);
+      rows.push(['ESTUDO_FORMATADO', '0', '"Horas Liquidas (h m)"', ...studySeconds.map(s => escapeCSV(formatHoursMinutes(s))), escapeCSV(formatHoursMinutes(totalSecs)), '']);
+
       const totalQ = questionsSolved.reduce((a, b) => a + b, 0);
       const totalC = questionsCorrect.reduce((a, b) => a + b, 0);
       rows.push(['QUESTOES_FEITAS', '0', '"Questoes Resolvidas"', ...questionsSolved, totalQ, '']);
       rows.push(['QUESTOES_ACERTOS', '0', '"Questoes Certas"', ...questionsCorrect, totalC, '']);
+      rows.push(['DIA_CORRIDO', '0', '"Modo Dia Corrido"', ...busyDays.map(b => b ? '1' : '0'), '', '']);
 
       const csvContent = '\uFEFF' + rows.map(r => r.join(',')).join('\r\n');
       triggerDownload(csvContent, `relatorio-painel-${getFormattedDate()}.csv`, 'text/csv;charset=utf-8;');
+      showToast('Planilha CSV exportada!', '📊');
+    }
+
+    function parseCSVLine(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          if (inQuotes && line[i + 1] === '"') {
+            current += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          result.push(current);
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current);
+      return result;
     }
 
     function handleFileImport(event) {
       const file = event.target.files[0];
       if (!file) return;
+
       const reader = new FileReader();
       reader.onload = function(e) {
+        const content = e.target.result;
         try {
           if (file.name.toLowerCase().endsWith('.json')) {
-            const data = JSON.parse(e.target.result);
-            if (applyPayloadToState(data)) {
-              saveState();
-              showToast('Backup restaurado.');
+            const data = JSON.parse(content);
+            if (!applyPayloadToState(data)) throw new Error('JSON inválido.');
+            saveState();
+            showToast('Backup JSON restaurado e sincronizado!', '🎉');
+          } else if (file.name.toLowerCase().endsWith('.csv')) {
+            const cleanContent = content.replace(/^\uFEFF/, '');
+            const lines = cleanContent.split(/\r?\n/).filter(l => l.trim() !== '');
+            const importedHabits = [];
+
+            for (let i = 1; i < lines.length; i++) {
+              const cols = parseCSVLine(lines[i]);
+              const type = cols[0];
+              if (type === 'HABITO') {
+                const id = Number(cols[1]) || Date.now() + i;
+                const name = cols[2] || `Hábito ${i}`;
+                const rawSlice = cols.slice(3, 10);
+                const days = rawSlice.map(val => val === '1' || val.toLowerCase() === 'true');
+                const maskStr = cols[11] || '';
+                const scheduledDays = maskStr.length === 7 
+                  ? maskStr.split('').map(c => c === '1')
+                  : rawSlice.map(val => val !== '-');
+                importedHabits.push({ id, name, days, scheduledDays });
+              } else if (type === 'ESTUDO_SEGUNDOS') {
+                studySeconds = cols.slice(3, 10).map(v => Number(v) || 0);
+              } else if (type === 'QUESTOES_FEITAS') {
+                questionsSolved = cols.slice(3, 10).map(v => Number(v) || 0);
+              } else if (type === 'QUESTOES_ACERTOS') {
+                questionsCorrect = cols.slice(3, 10).map(v => Number(v) || 0);
+              } else if (type === 'DIA_CORRIDO') {
+                busyDays = cols.slice(3, 10).map(v => v === '1');
+              }
             }
+            if (importedHabits.length > 0) habits = importedHabits;
+            saveState();
+            showToast('Planilha CSV importada com sucesso!', '🎉');
           }
         } catch (err) {
-          showToast('Arquivo inválido.', '!');
+          showToast('Erro ao importar arquivo.', '❌');
         } finally {
           event.target.value = '';
         }
@@ -1038,14 +1016,18 @@
       reader.readAsText(file);
     }
 
-    function playBeep(freq = 660, duration = 0.35) {
+    // ==========================================
+    // LÓGICA DO POMODORO E HORAS LÍQUIDAS
+    // ==========================================
+
+    function playBeep(freq = 880, duration = 0.4) {
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start();
@@ -1056,13 +1038,13 @@
     function checkAutoCompleteStudyHabit(dayIdx) {
       const goalSeconds = getEffectiveStudyGoalSeconds(dayIdx);
       const currentSeconds = studySeconds[dayIdx] || 0;
-      if (goalSeconds > 0 && currentSeconds >= goalSeconds && linkedHabitId) {
+      if (currentSeconds >= goalSeconds && linkedHabitId) {
         const targetHabit = habits.find(h => h.id === Number(linkedHabitId));
         if (targetHabit && !targetHabit.days[dayIdx]) {
           targetHabit.days[dayIdx] = true;
-          playBeep(880, 0.4);
-          showToast(`Meta líquida (50% do study) atingida! "${targetHabit.name}" marcado.`);
-          sendDesktopNotification('Meta Líquida Concluída', `O hábito "${targetHabit.name}" foi marcado automaticamente.`);
+          playBeep(1046.5, 0.5);
+          showToast(`Meta de estudo atingida! "${targetHabit.name}" marcado!`, '🎯');
+          sendDesktopNotification('Meta Diária Atingida! 🎯', `Você completou sua meta de horas líquidas e o hábito "${targetHabit.name}" foi marcado.`);
           return true;
         }
       }
@@ -1077,7 +1059,6 @@
 
     function updateLinkedHabit(habitIdValue) {
       linkedHabitId = Number(habitIdValue);
-      applyCalendarScheduleToHabits();
       checkAutoCompleteStudyHabit(selectedDayIndex);
       saveState();
     }
@@ -1089,20 +1070,28 @@
       ['focus25', 'focus50', 'break'].forEach(m => {
         const btn = document.getElementById(`btn-${m}`);
         btn.className = m === mode 
-          ? 'py-1.5 text-xs font-medium rounded-md bg-slate-700 text-zinc-100 transition'
-          : 'py-1.5 text-xs font-medium rounded-md text-zinc-500 hover:text-zinc-300 transition';
+          ? 'py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white transition'
+          : 'py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition';
       });
 
       const badge = document.getElementById('timerStatusBadge');
+      const subtext = document.getElementById('timerSubtext');
+
       if (mode === 'focus25') {
         timeLeft = 25 * 60;
         badge.textContent = 'Modo Foco (25m)';
+        badge.className = 'text-xs font-semibold px-2.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full';
+        subtext.textContent = 'Cada segundo em Foco soma nas Horas Líquidas';
       } else if (mode === 'focus50') {
         timeLeft = 50 * 60;
         badge.textContent = 'Modo Foco (50m)';
+        badge.className = 'text-xs font-semibold px-2.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full';
+        subtext.textContent = 'Bloco intensivo — contabilizando tempo líquido';
       } else {
         timeLeft = 5 * 60;
-        badge.textContent = 'Intervalo (5m)';
+        badge.textContent = 'Pausa Recuperadora';
+        badge.className = 'text-xs font-semibold px-2.5 py-0.5 bg-amber-500/20 text-amber-300 rounded-full';
+        subtext.textContent = 'Pausas não somam no contador de horas líquidas';
       }
       updateTimerDisplay();
     }
@@ -1111,7 +1100,7 @@
       const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
       const secs = (timeLeft % 60).toString().padStart(2, '0');
       document.getElementById('timerDisplay').textContent = `${mins}:${secs}`;
-      document.title = isRunning ? `(${mins}:${secs}) Painel` : 'Painel de Performance';
+      document.title = isRunning ? `(${mins}:${secs}) Painel de Hábitos` : 'Painel de Alta Performance';
     }
 
     function toggleTimer() {
@@ -1123,7 +1112,7 @@
       isRunning = true;
       const btn = document.getElementById('startPauseBtn');
       btn.textContent = '⏸ Pausar';
-      btn.className = 'flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-medium py-2.5 rounded-lg text-xs transition border border-zinc-700';
+      btn.className = 'flex-1 bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2.5 rounded-xl text-sm transition';
 
       timerInterval = setInterval(() => {
         if (timeLeft > 0) {
@@ -1131,7 +1120,10 @@
           if (timerMode === 'focus25' || timerMode === 'focus50') {
             studySeconds[selectedDayIndex]++;
             const autoChecked = checkAutoCompleteStudyHabit(selectedDayIndex);
-            if (autoChecked || studySeconds[selectedDayIndex] % 60 === 0) {
+            if (autoChecked) {
+              saveState();
+            } else if (studySeconds[selectedDayIndex] % 60 === 0) {
+              // Salva na nuvem a cada 1 minuto de foco contínuo
               saveState();
             } else if (studySeconds[selectedDayIndex] % 10 === 0) {
               saveLocalOnly();
@@ -1143,15 +1135,15 @@
           }
           updateTimerDisplay();
         } else {
-          playBeep(660, 0.5);
+          playBeep(880, 0.6);
           if (timerMode === 'focus25' || timerMode === 'focus50') {
             pomodoroCycles[selectedDayIndex]++;
             checkAutoCompleteStudyHabit(selectedDayIndex);
             saveState();
-            sendDesktopNotification('Ciclo Finalizado', 'Bloco concluído. Inicie o intervalo.');
+            sendDesktopNotification('Bloco de Foco Concluído! ✅', 'Excelente trabalho! Hora de fazer uma pausa de 5 minutos.');
             setTimerMode('break');
           } else {
-            sendDesktopNotification('Intervalo Finalizado', 'Pronto para retomar o foco.');
+            sendDesktopNotification('Fim da Pausa! 🚀', 'Hora de retomar o próximo bloco de estudo.');
             setTimerMode('focus25');
           }
         }
@@ -1163,14 +1155,15 @@
       clearInterval(timerInterval);
       const btn = document.getElementById('startPauseBtn');
       btn.textContent = '▶ Retomar';
-      btn.className = 'flex-1 bg-slate-700 hover:bg-slate-600 text-zinc-100 font-medium py-2.5 rounded-lg text-xs transition';
+      btn.className = 'flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl text-sm transition shadow-lg shadow-emerald-900/30';
       saveState();
       updateTimerDisplay();
     }
 
     function resetTimer() {
       pauseTimer();
-      document.getElementById('startPauseBtn').textContent = '▶ Iniciar Foco';
+      const btn = document.getElementById('startPauseBtn');
+      btn.textContent = '▶ Iniciar Foco';
       setTimerMode(timerMode);
     }
 
@@ -1185,6 +1178,10 @@
       const minutes = Math.floor((totalSeconds % 3600) / 60);
       return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
     }
+
+    // ==========================================
+    // GESTÃO DE HÁBITOS & DIAS PROGRAMADOS
+    // ==========================================
 
     function selectDay(index) {
       selectedDayIndex = index;
@@ -1220,11 +1217,14 @@
     function renderNewHabitDaysPicker() {
       const container = document.getElementById('newHabitDaysPicker');
       if (!container) return;
-      container.innerHTML = DAYS.map((d, idx) => `
-        <button type="button" onclick="toggleNewHabitDay(${idx})" class="px-1.5 py-0.5 rounded text-[10px] font-medium transition ${
-          newHabitSchedule[idx] ? 'bg-slate-700 text-zinc-100' : 'bg-zinc-900 text-zinc-600'
-        }">${d[0]}</button>
-      `).join('');
+      container.innerHTML = DAYS.map((d, idx) => {
+        const active = newHabitSchedule[idx];
+        return `
+          <button type="button" onclick="toggleNewHabitDay(${idx})" class="px-1.5 py-0.5 rounded text-[10px] font-semibold transition ${
+            active ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-500'
+          }">${d[0]}</button>
+        `;
+      }).join('');
     }
 
     function addHabit(event) {
@@ -1233,17 +1233,20 @@
       const name = input.value.trim();
       if (!name) return;
 
-      const scheduleToUse = newHabitSchedule.some(Boolean) ? [...newHabitSchedule] : [true, true, true, true, true, true, true];
-      habits.push({
+      const hasAtLeastOneDay = newHabitSchedule.some(Boolean);
+      const scheduleToUse = hasAtLeastOneDay ? [...newHabitSchedule] : [true, true, true, true, true, true, true];
+
+      const newHabit = {
         id: Date.now(),
-        name,
+        name: name,
         days: [false, false, false, false, false, false, false],
         scheduledDays: scheduleToUse
-      });
+      };
+      habits.push(newHabit);
       input.value = '';
       newHabitSchedule = [true, true, true, true, true, true, true];
-      applyCalendarScheduleToHabits();
       saveState();
+      showToast(`Hábito "${name}" adicionado!`, '✅');
     }
 
     function deleteHabit(habitId) {
@@ -1269,8 +1272,12 @@
       for (let i = 0; i <= selectedDayIndex; i++) {
         const activeCount = habits.filter(h => h.scheduledDays[i] || h.days[i]).length;
         if (activeCount === 0) continue;
-        if (dailyPcts[i] >= 80) currentStreak++;
-        else if (i < selectedDayIndex) currentStreak = 0;
+        const threshold = busyDays[i] ? 60 : 80;
+        if (dailyPcts[i] >= threshold) {
+          currentStreak++;
+        } else if (i < selectedDayIndex) {
+          currentStreak = 0;
+        }
       }
       return currentStreak;
     }
@@ -1279,117 +1286,42 @@
       return studySeconds.map(sec => +(sec / 3600).toFixed(2));
     }
 
-    function getDailyPlannedNetStudyHours() {
-      return DAYS.map((_, idx) => +(getEffectiveStudyGoalSeconds(idx) / 3600).toFixed(2));
-    }
+    // ==========================================
+    // RENDERIZAÇÃO DA INTERFACE
+    // ==========================================
 
     function renderDaySelector() {
       const container = document.getElementById('daySelector');
-      const dInfo = WEEK_DATES[selectedDayIndex];
-      const calToday = getDayCalData(selectedDayIndex);
-
-      document.getElementById('exactDateBadge').textContent = `${dInfo.dayLabel} • ${dInfo.shortBr}`;
-
-      const statementEl = document.getElementById('dailyCorrelationStatement');
-      const trainingEl = document.getElementById('trainingCorrelationText');
-
-      if (calToday && autoCalendarSync) {
-        if (calToday.hasStudy) {
-          const grossStr = formatHoursMinutes(calToday.grossStudySeconds);
-          const netStr = formatHoursMinutes(calToday.netStudyGoalSeconds);
-          statementEl.innerHTML = `Dia <b>${dInfo.longBr}</b>: Kaio vai estudar <b>${netStr} líquidas</b> — correlação com evento <b>"study"</b> (${grossStr} brutas na agenda, 50% líquido).`;
-        } else {
-          statementEl.innerHTML = `Dia <b>${dInfo.longBr}</b>: Sem evento <b>"study"</b> no calendário — hoje Kaio não tem meta de estudo (Folga programada).`;
-        }
-        trainingEl.innerHTML = calToday.hasTraining
-          ? `🏋️ Evento <b>"training"</b> detectado hoje (Academia ativa)`
-          : `🏋️ Sem evento <b>"training"</b> hoje (Descanso de academia)`;
+      const isBusyToday = busyDays[selectedDayIndex];
+      document.getElementById('selectedDayLabel').textContent = `${DAYS[selectedDayIndex]}${isBusyToday ? ' (⚡ Dia Corrido)' : ''}`;
+      
+      const busyBtn = document.getElementById('busyDayBtn');
+      const busyBtnText = document.getElementById('busyDayBtnText');
+      if (isBusyToday) {
+        busyBtn.className = 'text-xs font-semibold px-3 py-1.5 rounded-xl border transition flex items-center gap-1.5 bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-lg shadow-amber-950/30';
+        busyBtnText.textContent = 'Modo Dia Corrido: ON (Metas -50%)';
       } else {
-        statementEl.innerHTML = `Dia <b>${dInfo.longBr}</b>: Clique em <b>↻ Sincronizar Agenda</b> para correlacionar os eventos "study" e "training" desta data.`;
-        trainingEl.textContent = 'Agenda aguardando sincronização';
+        busyBtn.className = 'text-xs font-semibold px-3 py-1.5 rounded-xl border transition flex items-center gap-1.5 bg-slate-800/90 text-slate-400 border-slate-700 hover:border-amber-500/50';
+        busyBtnText.textContent = 'Modo Dia Corrido: OFF';
       }
 
-      container.innerHTML = WEEK_DATES.map((info, idx) => {
+      container.innerHTML = DAYS.map((day, idx) => {
         const isSelected = idx === selectedDayIndex;
-        const dCal = getDayCalData(idx);
-        const hasS = dCal && dCal.hasStudy;
-        const hasT = dCal && dCal.hasTraining;
+        const isBusy = busyDays[idx];
         return `
           <button 
             onclick="selectDay(${idx})"
-            class="px-2 py-1.5 rounded-lg text-xs font-medium transition border flex flex-col items-center justify-center ${
+            class="px-3 py-2 rounded-xl text-xs font-semibold transition border flex items-center justify-center gap-1 ${
               isSelected 
-                ? 'bg-slate-700 text-zinc-100 border-slate-500' 
-                : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-800/80'
+                ? 'bg-emerald-600 text-white border-emerald-500 shadow-lg shadow-emerald-900/30' 
+                : 'bg-slate-800/70 text-slate-400 border-slate-700/60 hover:bg-slate-800'
             }"
           >
-            <span>${info.dayLabel}</span>
-            <span class="text-[10px] text-zinc-500 font-mono">${info.shortBr}</span>
-            <span class="text-[9px] text-zinc-400 mt-0.5 h-3 flex items-center gap-0.5">
-              ${hasS ? '📚' : ''}${hasT ? '🏋️' : ''}${!hasS && !hasT && dCal ? '—' : ''}
-            </span>
+            <span>${day}</span>
+            ${isBusy ? '<span title="Dia Corrido">⚡</span>' : ''}
           </button>
         `;
       }).join('');
-    }
-
-    function renderCalendarCard() {
-      const listEl = document.getElementById('calendarEventsList');
-      const badgeEl = document.getElementById('calSyncBadge');
-      const toggleBtn = document.getElementById('autoCalToggleBtn');
-      const dInfo = WEEK_DATES[selectedDayIndex];
-
-      if (toggleBtn) {
-        toggleBtn.textContent = autoCalendarSync ? 'Ativo (Automático)' : 'Pausado (Manual)';
-        toggleBtn.className = autoCalendarSync ? 'text-zinc-200 font-semibold hover:underline' : 'text-zinc-500 font-medium hover:underline';
-      }
-
-      const dayCal = getDayCalData(selectedDayIndex);
-      if (!dayCal) {
-        badgeEl.textContent = dInfo.shortBr;
-        listEl.innerHTML = `
-          <div class="text-xs text-zinc-500 py-4 text-center border border-dashed border-zinc-800 rounded-lg">
-            Clique em <b>↻ Sincronizar Agenda</b> para ler o dia ${dInfo.shortBr}.
-          </div>
-        `;
-        return;
-      }
-
-      const studyPlanStr = dayCal.hasStudy
-        ? `Bruto ${formatHoursMinutes(dayCal.grossStudySeconds)} → Meta ${formatHoursMinutes(dayCal.netStudyGoalSeconds)}`
-        : 'Sem study';
-      badgeEl.textContent = `${dInfo.shortBr} • ${studyPlanStr}`;
-
-      const relevantEvents = (dayCal.events || []).filter(e => e.type === 'study' || e.type === 'training');
-      const otherEvents = (dayCal.events || []).filter(e => e.type === 'other');
-
-      if (relevantEvents.length === 0 && otherEvents.length === 0) {
-        listEl.innerHTML = `
-          <div class="text-xs text-zinc-500 py-4 text-center border border-dashed border-zinc-800/80 rounded-lg">
-            Nenhum evento registrado em ${dInfo.shortBr}.
-          </div>
-        `;
-        return;
-      }
-
-      const renderEvItem = (ev) => {
-        const tag = ev.type === 'study'
-          ? `<span class="px-1.5 py-0.5 text-[10px] rounded bg-slate-700 text-zinc-100 font-semibold">STUDY (50% = ${ev.netMinutes}m)</span>`
-          : (ev.type === 'training' ? '<span class="px-1.5 py-0.5 text-[10px] rounded bg-zinc-700 text-zinc-200 font-semibold">TRAINING</span>' : '');
-        return `
-          <div class="flex items-center justify-between p-2 rounded-lg bg-zinc-950 border ${ev.type !== 'other' ? 'border-slate-600/80' : 'border-zinc-800/60 opacity-55'} text-xs">
-            <div class="flex items-center gap-2 truncate pr-2">
-              ${tag}
-              <span class="font-medium text-zinc-200 truncate">${ev.title}</span>
-            </div>
-            <span class="text-[11px] text-zinc-400 font-mono shrink-0">
-              ${ev.isAllDay ? 'Dia todo' : `${ev.start} - ${ev.end}`}
-            </span>
-          </div>
-        `;
-      };
-
-      listEl.innerHTML = [...relevantEvents.map(renderEvItem), ...otherEvents.map(renderEvItem)].join('');
     }
 
     function renderGoalBar() {
@@ -1399,39 +1331,43 @@
       const linkedSelect = document.getElementById('linkedHabitSelect');
       if (linkedSelect) {
         linkedSelect.innerHTML = habits.length === 0
-          ? '<option value="0" class="bg-zinc-900">Nenhum</option>'
-          : habits.map(h => `<option value="${h.id}" class="bg-zinc-900" ${h.id === Number(linkedHabitId) ? 'selected' : ''}>${h.name}</option>`).join('');
+          ? '<option value="0" class="bg-slate-900">Nenhum</option>'
+          : habits.map(h => `<option value="${h.id}" class="bg-slate-900" ${h.id === Number(linkedHabitId) ? 'selected' : ''}>${h.name}</option>`).join('');
       }
 
-      const grossSecs = getGrossStudySeconds(selectedDayIndex);
       const goalSecs = getEffectiveStudyGoalSeconds(selectedDayIndex);
       const todaySecs = studySeconds[selectedDayIndex] || 0;
+      const rawPct = goalSecs > 0 ? Math.round((todaySecs / goalSecs) * 100) : 0;
+      const barWidth = Math.min(100, rawPct);
+
+      document.getElementById('goalProgressFraction').textContent = `${formatHoursMinutes(todaySecs)} de ${formatHoursMinutes(goalSecs)} (${DAYS[selectedDayIndex]})`;
+      
+      const pctEl = document.getElementById('goalProgressPercent');
+      pctEl.textContent = `${rawPct}%`;
+
+      const barEl = document.getElementById('goalProgressBar');
+      barEl.style.width = `${barWidth}%`;
+
       const statusBadge = document.getElementById('goalStatusBadge');
       const remainingText = document.getElementById('goalRemainingText');
-
-      if (goalSecs === 0) {
-        document.getElementById('goalProgressFraction').textContent = `${formatHoursMinutes(todaySecs)} (Sem evento "study" em ${WEEK_DATES[selectedDayIndex].shortBr})`;
-        document.getElementById('goalProgressPercent').textContent = `Folga`;
-        document.getElementById('goalProgressBar').style.width = `100%`;
-        statusBadge.textContent = 'Sem Estudo Hoje';
-        statusBadge.className = 'text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400';
-        remainingText.textContent = 'Não há bloco "study" nesta data. Meta líquida = 0h.';
-        return;
-      }
-
-      const rawPct = Math.round((todaySecs / goalSecs) * 100);
-      document.getElementById('goalProgressFraction').textContent = `${formatHoursMinutes(todaySecs)} de ${formatHoursMinutes(goalSecs)} líquidos (Bruto: ${formatHoursMinutes(grossSecs)})`;
-      document.getElementById('goalProgressPercent').textContent = `${rawPct}%`;
-      document.getElementById('goalProgressBar').style.width = `${Math.min(100, rawPct)}%`;
+      const linkedHabit = habits.find(h => h.id === Number(linkedHabitId));
+      const habitName = linkedHabit ? `"${linkedHabit.name}"` : 'o hábito vinculado';
 
       if (todaySecs >= goalSecs) {
-        statusBadge.textContent = 'Meta 50% Concluída';
-        statusBadge.className = 'text-[10px] font-medium px-2 py-0.5 rounded bg-slate-700 text-zinc-100';
-        remainingText.textContent = `Você cumpriu os ${formatHoursMinutes(goalSecs)} líquidos (metade das ${formatHoursMinutes(grossSecs)} brutas).`;
+        barEl.className = 'h-full rounded-full transition-all duration-500 bg-gradient-to-r from-emerald-500 to-teal-400';
+        pctEl.className = 'text-emerald-400 font-bold';
+        statusBadge.textContent = '✅ Meta Batida';
+        statusBadge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300';
+        remainingText.textContent = `Meta concluída! ${habitName} foi marcado automaticamente neste dia.`;
       } else {
-        statusBadge.textContent = 'Em andamento';
-        statusBadge.className = 'text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400';
-        remainingText.textContent = `Restam ${formatHoursMinutes(goalSecs - todaySecs)} líquidos para atingir metade do evento "study" (${formatHoursMinutes(grossSecs)}).`;
+        const remainingSecs = goalSecs - todaySecs;
+        barEl.className = 'h-full rounded-full transition-all duration-500 bg-gradient-to-r from-indigo-500 to-indigo-400';
+        pctEl.className = 'text-indigo-400 font-bold';
+        statusBadge.textContent = busyDays[selectedDayIndex] ? '⚡ Meta Reduzida (-50%)' : 'Em andamento';
+        statusBadge.className = busyDays[selectedDayIndex]
+          ? 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300'
+          : 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400';
+        remainingText.textContent = `Faltam ${formatHoursMinutes(remainingSecs)} para marcar ${habitName} automaticamente.`;
       }
     }
 
@@ -1442,62 +1378,55 @@
       const linkedQSelect = document.getElementById('linkedQHabitSelect');
       if (linkedQSelect) {
         linkedQSelect.innerHTML = habits.length === 0
-          ? '<option value="0" class="bg-zinc-900">Nenhum</option>'
-          : habits.map(h => `<option value="${h.id}" class="bg-zinc-900" ${h.id === Number(linkedQuestionHabitId) ? 'selected' : ''}>${h.name}</option>`).join('');
+          ? '<option value="0" class="bg-slate-900">Nenhum</option>'
+          : habits.map(h => `<option value="${h.id}" class="bg-slate-900" ${h.id === Number(linkedQuestionHabitId) ? 'selected' : ''}>${h.name}</option>`).join('');
       }
 
       const effectiveQGoal = getEffectiveQuestionGoal(selectedDayIndex);
       const solvedToday = questionsSolved[selectedDayIndex] || 0;
       const correctToday = questionsCorrect[selectedDayIndex] || 0;
       const accToday = solvedToday > 0 ? Math.round((correctToday / solvedToday) * 100) : 0;
+      const rawPct = effectiveQGoal > 0 ? Math.round((solvedToday / effectiveQGoal) * 100) : 0;
 
-      if (effectiveQGoal === 0) {
-        document.getElementById('qProgressFraction').textContent = `${solvedToday} questões feitas (Sem "study" em ${WEEK_DATES[selectedDayIndex].shortBr})`;
-        document.getElementById('qProgressPercent').textContent = `Folga`;
-        document.getElementById('qProgressBar').style.width = `100%`;
-        document.getElementById('qAccuracyBadge').textContent = solvedToday > 0 ? `Acerto: ${accToday}%` : 'Folga hoje';
-        return;
-      }
-
-      const rawPct = Math.round((solvedToday / effectiveQGoal) * 100);
-      document.getElementById('qProgressFraction').textContent = `${solvedToday} de ${effectiveQGoal} questões (${correctToday} acertos)`;
+      document.getElementById('qProgressFraction').textContent = `${solvedToday} de ${effectiveQGoal} questões (${correctToday} acertos em ${DAYS[selectedDayIndex]})`;
       document.getElementById('qProgressPercent').textContent = `${rawPct}%`;
       document.getElementById('qProgressBar').style.width = `${Math.min(100, rawPct)}%`;
-      document.getElementById('qAccuracyBadge').textContent = solvedToday > 0 ? `Acerto: ${accToday}%` : 'Sem registros';
+
+      const accBadge = document.getElementById('qAccuracyBadge');
+      accBadge.textContent = solvedToday > 0 ? `Acerto Hoje: ${accToday}%` : 'Sem questões hoje';
+      accBadge.className = accToday >= 80
+        ? 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300'
+        : (accToday >= 65 ? 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300' : 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300');
     }
 
     function renderHabitList() {
       const container = document.getElementById('habitList');
       const scheduledToday = habits.filter(h => h.scheduledDays[selectedDayIndex] || h.days[selectedDayIndex]);
       const doneToday = scheduledToday.filter(h => h.days[selectedDayIndex]).length;
-      document.getElementById('dailyProgressText').textContent = `${doneToday}/${scheduledToday.length} concluídas`;
+      document.getElementById('dailyProgressText').textContent = `${doneToday}/${scheduledToday.length} programadas hoje`;
 
       if (habits.length === 0) {
-        container.innerHTML = `<p class="text-xs text-zinc-600 text-center py-6">Nenhum hábito cadastrado.</p>`;
+        container.innerHTML = `<p class="text-sm text-slate-500 text-center py-6">Nenhum hábito cadastrado.</p>`;
         return;
       }
 
       container.innerHTML = habits.map(habit => {
         const isDone = habit.days[selectedDayIndex];
         const isScheduled = habit.scheduledDays[selectedDayIndex];
+        const isStudyLinked = habit.id === Number(linkedHabitId);
+        const isQLinked = habit.id === Number(linkedQuestionHabitId);
         const isEditingDays = editingScheduleHabitId === habit.id;
-        const isTrain = isTrainingHabit(habit);
-        const isStud = isStudyHabit(habit);
-
-        const autoTag = (autoCalendarSync && hasCalendarSyncedForWeek())
-          ? (isTrain ? '<span class="ml-1.5 text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">training</span>' : (isStud ? '<span class="ml-1.5 text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">study</span>' : ''))
-          : '';
 
         const schedulePills = isEditingDays ? `
-          <div class="mt-2.5 pt-2 border-t border-zinc-800 flex items-center justify-between gap-1">
-            <span class="text-[10px] text-zinc-500">Dias:</span>
+          <div class="mt-2.5 pt-2 border-t border-slate-800 flex items-center justify-between gap-1">
+            <span class="text-[10px] text-slate-400">Dias obrigatórios:</span>
             <div class="flex gap-1">
               ${DAYS.map((d, dIdx) => `
                 <button 
                   type="button"
                   onclick="toggleHabitScheduledDay(${habit.id}, ${dIdx})"
-                  class="px-1.5 py-0.5 rounded text-[10px] font-medium transition ${
-                    habit.scheduledDays[dIdx] ? 'bg-slate-700 text-zinc-100' : 'bg-zinc-900 text-zinc-600'
+                  class="px-1.5 py-0.5 rounded text-[10px] font-semibold transition ${
+                    habit.scheduledDays[dIdx] ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-500'
                   }"
                 >${d}</button>
               `).join('')}
@@ -1506,29 +1435,30 @@
         ` : '';
 
         return `
-          <div class="p-2.5 rounded-lg bg-zinc-950 border ${!isScheduled && !isDone ? 'border-zinc-900 opacity-45' : 'border-zinc-800/90'} transition">
+          <div class="p-3 rounded-xl bg-slate-900/60 border ${!isScheduled && !isDone ? 'border-slate-800/40 opacity-60' : 'border-slate-800'} hover:border-slate-700 transition">
             <div class="flex items-center justify-between gap-2">
-              <label class="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0">
+              <label class="flex items-center gap-3 cursor-pointer flex-1 min-w-0">
                 <input 
                   type="checkbox" 
                   class="hidden custom-checkbox" 
                   ${isDone ? 'checked' : ''} 
                   onchange="toggleHabitDay(${habit.id}, ${selectedDayIndex})"
                 >
-                <div class="w-4 h-4 shrink-0 rounded border border-zinc-600 flex items-center justify-center transition">
-                  ${isDone ? '<svg class="w-3 h-3 text-zinc-100" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>' : ''}
+                <div class="w-5 h-5 shrink-0 rounded-md border-2 border-slate-600 flex items-center justify-center transition">
+                  ${isDone ? '<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>' : ''}
                 </div>
                 <div class="truncate">
-                  <span class="text-xs font-medium ${isDone ? 'line-through text-zinc-600' : 'text-zinc-200'}">${habit.name}</span>
-                  ${!isScheduled && !isDone ? '<span class="ml-1 text-[10px] text-zinc-500">(Sem evento hoje)</span>' : ''}
-                  ${autoTag}
+                  <span class="text-sm font-medium ${isDone ? 'line-through text-slate-500' : 'text-slate-200'}">${habit.name}</span>
+                  ${!isScheduled && !isDone ? '<span class="ml-1.5 text-[10px] font-medium px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">Folga hoje</span>' : ''}
+                  ${isStudyLinked ? '<span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded">⚡ Horas</span>' : ''}
+                  ${isQLinked ? '<span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 bg-cyan-500/20 text-cyan-300 rounded">⚡ Questões</span>' : ''}
                 </div>
               </label>
               <div class="flex items-center gap-1 shrink-0">
-                <button onclick="toggleScheduleEditor(${habit.id})" class="px-2 py-0.5 rounded text-[10px] font-medium bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border border-zinc-800 transition">
-                  Dias
+                <button onclick="toggleScheduleEditor(${habit.id})" class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+                  📅 Dias
                 </button>
-                <button onclick="deleteHabit(${habit.id})" class="text-zinc-600 hover:text-zinc-300 p-1 text-xs transition">
+                <button onclick="deleteHabit(${habit.id})" class="text-slate-600 hover:text-rose-400 p-1 text-xs transition">
                   ✕
                 </button>
               </div>
@@ -1542,9 +1472,9 @@
     function renderMatrix() {
       const theadRow = document.getElementById('matrixHeaderRow');
       theadRow.innerHTML = `
-        <th class="py-2.5 pr-4">Hábito / Indicador</th>
-        ${WEEK_DATES.map(d => `<th class="py-2.5 text-center">${d.dayLabel}<br><span class="text-[9px] font-mono text-zinc-600">${d.shortBr}</span></th>`).join('')}
-        <th class="py-2.5 text-right">Desempenho</th>
+        <th class="py-3 pr-4">Hábito / Indicador</th>
+        ${DAYS.map((d, idx) => `<th class="py-3 text-center">${d}${busyDays[idx] ? '⚡' : ''}</th>`).join('')}
+        <th class="py-3 text-right">Desempenho</th>
       `;
 
       const tbody = document.getElementById('matrixBody');
@@ -1563,37 +1493,35 @@
         const dayCells = habit.days.map((done, dIdx) => {
           const isSched = habit.scheduledDays[dIdx];
           if (done) {
-            return `<td class="py-2.5 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-5 h-5 rounded mx-auto flex items-center justify-center bg-slate-600 text-zinc-100 font-bold text-[10px]">✓</button></td>`;
+            return `<td class="py-3 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-emerald-500 text-slate-950 font-bold transition">✓</button></td>`;
           } else if (isSched) {
-            return `<td class="py-2.5 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-5 h-5 rounded mx-auto flex items-center justify-center bg-zinc-900 text-zinc-400 hover:bg-zinc-800">·</button></td>`;
+            return `<td class="py-3 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-slate-800 text-slate-500 hover:bg-slate-700 transition">·</button></td>`;
           } else {
-            return `<td class="py-2.5 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-5 h-5 rounded mx-auto flex items-center justify-center text-zinc-700 font-mono text-[10px]">—</button></td>`;
+            return `<td class="py-3 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-slate-900/50 text-slate-700 hover:bg-slate-800 font-mono text-xs transition">—</button></td>`;
           }
         }).join('');
 
         return `
           <tr>
-            <td class="py-2.5 pr-4 font-medium text-zinc-300">${habit.name}</td>
+            <td class="py-3 pr-4 font-medium text-slate-200">${habit.name}</td>
             ${dayCells}
-            <td class="py-2.5 text-right font-medium text-zinc-300">${doneCount}/${schedCount} (${pct}%)</td>
+            <td class="py-3 text-right font-semibold text-emerald-400">${doneCount}/${schedCount} (${pct}%)</td>
           </tr>
         `;
       }).join('');
 
       const totalWeekSecs = studySeconds.reduce((a, b) => a + b, 0);
-      const totalPlannedNetSecs = DAYS.reduce((acc, _, idx) => acc + getEffectiveStudyGoalSeconds(idx), 0);
       const studyCells = studySeconds.map((sec, idx) => {
-        const netGoalSec = getEffectiveStudyGoalSeconds(idx);
-        if (netGoalSec === 0 && sec === 0) return `<td class="py-2.5 text-center text-[11px] text-zinc-600 font-mono">—</td>`;
-        const hit = netGoalSec > 0 && sec >= netGoalSec;
-        return `<td class="py-2.5 text-center text-[11px] ${hit ? 'text-zinc-100 font-semibold' : 'text-zinc-400'}">${formatHoursMinutes(sec)} <span class="text-[10px] text-zinc-600">/ ${formatHoursMinutes(netGoalSec)}</span></td>`;
+        const goalSecs = getEffectiveStudyGoalSeconds(idx);
+        const hitGoal = sec >= goalSecs && goalSecs > 0;
+        return `<td class="py-3 text-center text-xs font-semibold ${hitGoal ? 'text-emerald-400' : (sec > 0 ? 'text-indigo-400' : 'text-slate-600')}">${formatHoursMinutes(sec)}</td>`;
       }).join('');
 
       const studyRow = `
-        <tr class="bg-zinc-900/40">
-          <td class="py-2.5 pr-4 font-medium text-zinc-400">Estudo Líquido / Meta (50% "study")</td>
+        <tr class="bg-indigo-950/20">
+          <td class="py-3 pr-4 font-semibold text-indigo-300">⏱️ Horas Líquidas</td>
           ${studyCells}
-          <td class="py-2.5 text-right font-semibold text-zinc-200">${formatHoursMinutes(totalWeekSecs)} / ${formatHoursMinutes(totalPlannedNetSecs)}</td>
+          <td class="py-3 text-right font-bold text-indigo-400">${formatHoursMinutes(totalWeekSecs)}</td>
         </tr>
       `;
 
@@ -1605,15 +1533,15 @@
         const s = questionsSolved[idx] || 0;
         const c = questionsCorrect[idx] || 0;
         const acc = s > 0 ? Math.round((c / s) * 100) : 0;
-        if (s === 0) return `<td class="py-2.5 text-center text-[11px] text-zinc-600 font-mono">—</td>`;
-        return `<td class="py-2.5 text-center text-[11px] text-zinc-300 font-medium">${c}/${s} (${acc}%)</td>`;
+        if (s === 0) return `<td class="py-3 text-center text-xs text-slate-600">—</td>`;
+        return `<td class="py-3 text-center text-xs font-semibold ${acc >= 80 ? 'text-emerald-400' : 'text-cyan-400'}">${c}/${s} (${acc}%)</td>`;
       }).join('');
 
       const questionRow = `
-        <tr class="bg-zinc-900/40">
-          <td class="py-2.5 pr-4 font-medium text-zinc-400">Questões (Acertos/Total)</td>
+        <tr class="bg-cyan-950/20">
+          <td class="py-3 pr-4 font-semibold text-cyan-300">📝 Questões (Acertos/Total)</td>
           ${questionCells}
-          <td class="py-2.5 text-right font-semibold text-zinc-200">${totalC}/${totalQ} (${weekQAcc}%)</td>
+          <td class="py-3 text-right font-bold text-cyan-400">${totalC}/${totalQ} (${weekQAcc}%)</td>
         </tr>
       `;
 
@@ -1630,10 +1558,11 @@
       const accToday = qToday > 0 ? Math.round((cToday / qToday) * 100) : 0;
 
       document.getElementById('streakCount').textContent = `${stats.streak} ${stats.streak === 1 ? 'dia' : 'dias'}`;
+      document.getElementById('streakSubtext').textContent = busyDays[selectedDayIndex] ? 'Hoje: Meta 60% (Dia Corrido)' : 'Meta: 80% dos programados';
       document.getElementById('dailyStudyTime').textContent = formatHoursMinutes(todaySecs);
       document.getElementById('weeklyStudyTime').textContent = `Semana: ${formatHoursMinutes(stats.totalSecs)}`;
       document.getElementById('dailyQuestionsKPI').textContent = `${qToday} (${accToday}%)`;
-      document.getElementById('weeklyQuestionsKPI').textContent = `Semana: ${stats.totalQ} (${stats.weeklyQAcc}%)`;
+      document.getElementById('weeklyQuestionsKPI').textContent = `Semana: ${stats.totalQ} (${stats.weeklyQAcc}% acerto)`;
       document.getElementById('PomodoroCyclesToday').textContent = `${cyclesToday} ${cyclesToday === 1 ? 'bloco' : 'blocos'}`;
       document.getElementById('weeklyRate').textContent = `${stats.weeklyRate}%`;
       document.getElementById('totalCompleted').textContent = `${stats.totalDone} / ${stats.totalScheduled}`;
@@ -1643,36 +1572,36 @@
       const container = document.getElementById('archiveContainer');
       if (archivedWeeks.length === 0) {
         container.innerHTML = `
-          <div class="text-center py-5 text-xs text-zinc-600 border border-dashed border-zinc-800 rounded-lg">
-            Nenhuma semana arquivada.
+          <div class="text-center py-6 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">
+            Nenhuma semana arquivada ainda. Ao terminar seu domingo, clique em <b>📦 Arquivar Semana</b> no topo para salvar seu histórico.
           </div>
         `;
         return;
       }
 
       const rows = archivedWeeks.map(w => `
-        <tr class="border-b border-zinc-800/60 text-xs">
-          <td class="py-2.5 pr-4 font-medium text-zinc-200">${w.label}</td>
-          <td class="py-2.5 text-center text-zinc-300">${w.weeklyRate}% (${w.totalDone}/${w.totalScheduled})</td>
-          <td class="py-2.5 text-center text-zinc-300">${formatHoursMinutes(w.totalStudySeconds)}</td>
-          <td class="py-2.5 text-center text-zinc-300">${w.totalCorrect}/${w.totalQuestions} (${w.questionAccuracy}%)</td>
-          <td class="py-2.5 text-center text-zinc-400">${w.streak}d</td>
-          <td class="py-2.5 text-right">
-            <button onclick="deleteArchivedWeek(${w.id})" class="text-zinc-600 hover:text-zinc-300 text-xs px-2">✕</button>
+        <tr class="border-b border-slate-800/60 text-xs md:text-sm">
+          <td class="py-3 pr-4 font-semibold text-white">${w.label}</td>
+          <td class="py-3 text-center text-emerald-400 font-bold">${w.weeklyRate}% (${w.totalDone}/${w.totalScheduled})</td>
+          <td class="py-3 text-center text-indigo-400 font-semibold">${formatHoursMinutes(w.totalStudySeconds)}</td>
+          <td class="py-3 text-center text-cyan-400 font-semibold">${w.totalCorrect}/${w.totalQuestions} (${w.questionAccuracy}%)</td>
+          <td class="py-3 text-center text-amber-400 font-semibold">🔥 ${w.streak}d</td>
+          <td class="py-3 text-right">
+            <button onclick="deleteArchivedWeek(${w.id})" class="text-slate-500 hover:text-rose-400 text-xs px-2 py-1">✕</button>
           </td>
         </tr>
       `).join('');
 
       container.innerHTML = `
-        <table class="w-full text-left border-collapse min-w-[520px]">
+        <table class="w-full text-left border-collapse min-w-[550px]">
           <thead>
-            <tr class="border-b border-zinc-800 text-[10px] uppercase text-zinc-500">
-              <th class="py-2 pr-4">Período</th>
-              <th class="py-2 text-center">Hábitos</th>
-              <th class="py-2 text-center">Horas</th>
-              <th class="py-2 text-center">Questões</th>
+            <tr class="border-b border-slate-800 text-[11px] uppercase text-slate-400">
+              <th class="py-2 pr-4">Período / Semana</th>
+              <th class="py-2 text-center">Consistência Hábitos</th>
+              <th class="py-2 text-center">Horas Líquidas</th>
+              <th class="py-2 text-center">Questões & Acerto</th>
               <th class="py-2 text-center">Sequência</th>
-              <th class="py-2 text-right"></th>
+              <th class="py-2 text-right">Ação</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
@@ -1685,67 +1614,53 @@
       const dataPcts = getDailyPercentages();
       const dataQAcc = getDailyQuestionAccuracies();
       const dataHours = getDailyStudyHours();
-      const dataPlannedHours = getDailyPlannedNetStudyHours();
-      const labelsWithDates = WEEK_DATES.map(d => `${d.dayLabel} (${d.shortBr})`);
 
       if (chartInstance) {
-        chartInstance.data.labels = labelsWithDates;
         chartInstance.data.datasets[0].data = dataPcts;
         chartInstance.data.datasets[1].data = dataQAcc;
         chartInstance.data.datasets[2].data = dataHours;
-        chartInstance.data.datasets[3].data = dataPlannedHours;
         chartInstance.update();
         return;
       }
 
       chartInstance = new Chart(ctx, {
         data: {
-          labels: labelsWithDates,
+          labels: DAYS,
           datasets: [
             {
               type: 'line',
               label: 'Hábitos (%)',
               data: dataPcts,
-              borderColor: '#e4e4e7',
-              backgroundColor: 'rgba(228, 228, 231, 0.05)',
-              borderWidth: 2,
-              pointBackgroundColor: '#18191d',
-              pointBorderColor: '#e4e4e7',
-              pointRadius: 3,
-              tension: 0.3,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.12)',
+              borderWidth: 3,
+              pointBackgroundColor: '#0f172a',
+              pointBorderColor: '#10b981',
+              pointRadius: 4,
+              tension: 0.35,
               yAxisID: 'y'
             },
             {
               type: 'line',
-              label: 'Acerto (%)',
+              label: 'Taxa de Acerto (%)',
               data: dataQAcc,
-              borderColor: '#71717a',
-              borderDash: [4, 4],
-              borderWidth: 1.5,
-              pointBackgroundColor: '#18191d',
-              pointBorderColor: '#71717a',
-              pointRadius: 2.5,
-              tension: 0.3,
+              borderColor: '#06b6d4',
+              borderDash: [5, 5],
+              borderWidth: 2,
+              pointBackgroundColor: '#0f172a',
+              pointBorderColor: '#06b6d4',
+              pointRadius: 3,
+              tension: 0.35,
               yAxisID: 'y'
             },
             {
               type: 'bar',
-              label: 'Estudo Líquido Feito (h)',
+              label: 'Horas Líquidas (h)',
               data: dataHours,
-              backgroundColor: 'rgba(148, 163, 184, 0.55)',
-              borderColor: '#94a3b8',
+              backgroundColor: 'rgba(99, 102, 241, 0.5)',
+              borderColor: '#6366f1',
               borderWidth: 1,
-              borderRadius: 4,
-              yAxisID: 'y1'
-            },
-            {
-              type: 'bar',
-              label: 'Meta 50% do "study" (h)',
-              data: dataPlannedHours,
-              backgroundColor: 'rgba(63, 63, 70, 0.4)',
-              borderColor: '#52525b',
-              borderWidth: 1,
-              borderRadius: 4,
+              borderRadius: 6,
               yAxisID: 'y1'
             }
           ]
@@ -1759,20 +1674,20 @@
               position: 'left',
               beginAtZero: true,
               max: 100,
-              grid: { color: 'rgba(255, 255, 255, 0.04)' },
-              ticks: { color: '#a1a1aa', callback: v => v + '%' }
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#10b981', callback: v => v + '%' }
             },
             y1: {
               type: 'linear',
               position: 'right',
               beginAtZero: true,
-              suggestedMax: 4,
+              suggestedMax: 6,
               grid: { drawOnChartArea: false },
-              ticks: { color: '#71717a', callback: v => v + 'h' }
+              ticks: { color: '#818cf8', callback: v => v + 'h' }
             },
             x: {
               grid: { display: false },
-              ticks: { color: '#71717a', font: { size: 10 } }
+              ticks: { color: '#94a3b8' }
             }
           },
           plugins: {
@@ -1786,7 +1701,6 @@
       updateNotificationButtonUI();
       updateCloudStatusUI(gasWebAppUrl ? 'ok' : 'off');
       renderDaySelector();
-      renderCalendarCard();
       renderGoalBar();
       renderQuestionBar();
       renderHabitList();
@@ -1797,6 +1711,7 @@
       renderChart();
     }
 
+    // Inicializa interface e busca dados mais recentes da Planilha Google
     renderAll();
     if (gasWebAppUrl) {
       pullFromCloud(false);
