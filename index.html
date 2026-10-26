@@ -9,27 +9,70 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Painel Hábitos">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#0f172a" id="metaThemeColor">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    :root {
+      --bg-main: #0f172a;
+      --bg-card: rgba(30, 41, 59, 0.75);
+      --accent-primary: #10b981;
+      --accent-secondary: #6366f1;
+    }
     body {
-      background-color: #0f172a;
+      background-color: var(--bg-main);
       color: #f8fafc;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      transition: background-color 0.3s ease;
     }
     .glass-card {
-      background: rgba(30, 41, 59, 0.75);
+      background: var(--bg-card);
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: background-color 0.3s ease;
     }
     .custom-checkbox:checked + div {
-      background-color: #10b981;
-      border-color: #10b981;
+      background-color: var(--accent-primary);
+      border-color: var(--accent-primary);
+    }
+    .accent-bg {
+      background-color: var(--accent-primary);
+    }
+    .accent-bg:hover {
+      filter: brightness(1.1);
+    }
+    .accent-text {
+      color: var(--accent-primary);
+    }
+    .accent-border {
+      border-color: var(--accent-primary);
+    }
+    .secondary-bg {
+      background-color: var(--accent-secondary);
+    }
+    .secondary-text {
+      color: var(--accent-secondary);
     }
     .timer-glow {
-      text-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
+      text-shadow: 0 0 25px color-mix(in srgb, var(--accent-primary) 40%, transparent);
+    }
+    input[type="color"] {
+      -webkit-appearance: none;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 9999px;
+      cursor: pointer;
+      padding: 0;
+      background: transparent;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+    input[type="color"]::-webkit-color-swatch {
+      border: 2px solid rgba(255,255,255,0.25);
+      border-radius: 9999px;
     }
   </style>
 </head>
@@ -37,7 +80,7 @@
 
   <!-- Notificação Toast Interna -->
   <div id="toastNotification" class="fixed bottom-5 right-5 z-50 hidden transform transition-all duration-300">
-    <div class="glass-card px-4 py-3 rounded-xl shadow-2xl border border-emerald-500/40 flex items-center gap-3">
+    <div class="glass-card px-4 py-3 rounded-xl shadow-2xl border border-white/20 flex items-center gap-3">
       <span id="toastIcon" class="text-lg">✅</span>
       <span id="toastMessage" class="text-xs md:text-sm font-medium text-slate-100">Operação realizada!</span>
     </div>
@@ -45,7 +88,7 @@
 
   <div class="max-w-7xl mx-auto space-y-6">
     
-    <!-- Cabeçalho com Status da Nuvem, Alertas e Backup -->
+    <!-- Cabeçalho com Status da Nuvem, Personalização, Alertas e Backup -->
     <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
       <div>
         <div class="flex items-center gap-3">
@@ -55,12 +98,16 @@
             <span id="cloudStatusText">Nuvem Off</span>
           </span>
         </div>
-        <p class="text-slate-400 text-sm mt-1">Sincronização automática via Google Drive, métricas por Grande Área, horas líquidas e histórico semanal.</p>
+        <p class="text-slate-400 text-sm mt-1">Semana iniciando no Domingo • Ciclos ON/OFF de treino • Temas personalizáveis e Nuvem Google Drive.</p>
       </div>
       
       <div class="flex flex-wrap items-center gap-2">
         <input type="file" id="importFileInput" accept=".json,.csv" class="hidden" onchange="handleFileImport(event)">
         
+        <button onclick="toggleThemePanel()" class="px-3 py-2 text-xs font-semibold text-pink-300 bg-pink-950/40 hover:bg-pink-900/50 rounded-xl transition border border-pink-700/50 flex items-center gap-1.5">
+          <span>🎨</span> Personalizar
+        </button>
+
         <button onclick="toggleCloudConfig()" class="px-3 py-2 text-xs font-semibold text-teal-300 bg-teal-950/50 hover:bg-teal-900/60 rounded-xl transition border border-teal-700/50 flex items-center gap-1.5">
           <span>☁️</span> Nuvem (Drive)
         </button>
@@ -91,12 +138,93 @@
       </div>
     </header>
 
-    <!-- Banner Automático de Virada de Semana (Item 5) -->
+    <!-- Aba de Personalização Visual (3 Esquemas Pré-Montados + Roda de Cores) -->
+    <section id="themeConfigPanel" class="hidden glass-card p-5 rounded-2xl border border-pink-500/30 space-y-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+        <div>
+          <h2 class="text-sm md:text-base font-semibold text-white flex items-center gap-2">
+            <span>🎨</span> Personalização de Cores & Aparência
+          </h2>
+          <p class="text-xs text-slate-400">Escolha um dos 3 esquemas pré-montados ou use a roda de cores para definir tons personalizados.</p>
+        </div>
+        <button onclick="toggleThemePanel()" class="text-xs text-slate-400 hover:text-white self-end md:self-auto">Fechar ✕</button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+        <!-- 3 Esquemas Pré-Montados -->
+        <div class="space-y-2">
+          <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Esquemas Pré-Montados:</span>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <button onclick="applyThemePreset('ocean')" class="p-3 rounded-xl bg-slate-900/90 border border-slate-700 hover:border-emerald-500 transition text-left flex flex-col gap-1.5">
+              <div class="flex items-center gap-1.5">
+                <span class="w-3.5 h-3.5 rounded-full bg-[#0f172a] border border-white/30"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#10b981]"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#6366f1]"></span>
+              </div>
+              <span class="text-xs font-semibold text-white">1. Oceano & Esmeralda</span>
+              <span class="text-[10px] text-slate-400">Padrão vibrante original</span>
+            </button>
+
+            <button onclick="applyThemePreset('graphite')" class="p-3 rounded-xl bg-zinc-900/90 border border-zinc-700 hover:border-sky-400 transition text-left flex flex-col gap-1.5">
+              <div class="flex items-center gap-1.5">
+                <span class="w-3.5 h-3.5 rounded-full bg-[#121316] border border-white/30"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#38bdf8]"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#94a3b8]"></span>
+              </div>
+              <span class="text-xs font-semibold text-white">2. Grafite & Aço</span>
+              <span class="text-[10px] text-slate-400">Minimalista e sóbrio</span>
+            </button>
+
+            <button onclick="applyThemePreset('midnight')" class="p-3 rounded-xl bg-[#161324] border border-purple-900/60 hover:border-amber-400 transition text-left flex flex-col gap-1.5">
+              <div class="flex items-center gap-1.5">
+                <span class="w-3.5 h-3.5 rounded-full bg-[#0d0b14] border border-white/30"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#f59e0b]"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#a855f7]"></span>
+              </div>
+              <span class="text-xs font-semibold text-white">3. Noturno & Âmbar</span>
+              <span class="text-[10px] text-slate-400">Alto contraste quente</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Roda de Cores (Seletores Livres) -->
+        <div class="space-y-2">
+          <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Roda de Cores (Personalização Livre):</span>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 bg-slate-900/70 p-3 rounded-xl border border-slate-800">
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="color" id="pickerPrimary" value="#10b981" onchange="applyCustomWheelColors()">
+              <div>
+                <div class="text-xs font-semibold text-white">Cor Principal</div>
+                <div class="text-[10px] text-slate-400">Hábitos, checks e linha</div>
+              </div>
+            </label>
+
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="color" id="pickerSecondary" value="#6366f1" onchange="applyCustomWheelColors()">
+              <div>
+                <div class="text-xs font-semibold text-white">Cor Estudo</div>
+                <div class="text-[10px] text-slate-400">Pomodoro e barras</div>
+              </div>
+            </label>
+
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input type="color" id="pickerBg" value="#0f172a" onchange="applyCustomWheelColors()">
+              <div>
+                <div class="text-xs font-semibold text-white">Cor de Fundo</div>
+                <div class="text-[10px] text-slate-400">Plano de fundo geral</div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Banner Automático de Virada de Semana -->
     <div id="newWeekBanner" class="hidden glass-card p-4 rounded-2xl border border-amber-500/40 bg-amber-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div class="flex items-center gap-3">
         <span class="text-2xl">📅</span>
         <div>
-          <h3 class="text-xs md:text-sm font-bold text-amber-300">Uma nova semana começou!</h3>
+          <h3 class="text-xs md:text-sm font-bold text-amber-300">Uma nova semana começou (Domingo)!</h3>
           <p class="text-xs text-slate-300">Os dados na tela pertencem à semana anterior. Deseja arquivá-los no histórico e começar a nova semana limpa?</p>
         </div>
       </div>
@@ -164,7 +292,7 @@
       <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
         <div>
           <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Horas Líquidas (Dia)</span>
-          <p class="text-2xl font-bold text-indigo-400 mt-1" id="dailyStudyTime">0h 00m</p>
+          <p class="text-2xl font-bold secondary-text mt-1" id="dailyStudyTime">0h 00m</p>
           <span class="text-[11px] text-slate-500" id="weeklyStudyTime">Semana: 0h 00m</span>
         </div>
         <div class="text-2xl">⏱️</div>
@@ -182,8 +310,8 @@
       <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
         <div>
           <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Taxa da Semana</span>
-          <p class="text-2xl font-bold text-emerald-400 mt-1" id="weeklyRate">0%</p>
-          <span class="text-[11px] text-slate-500">Sobre dias programados</span>
+          <p class="text-2xl font-bold accent-text mt-1" id="weeklyRate">0%</p>
+          <span class="text-[11px] text-slate-500">Sobre dias em atividade</span>
         </div>
         <div class="text-2xl">📈</div>
       </div>
@@ -198,11 +326,11 @@
       </div>
     </section>
 
-    <!-- Seletor Global de Dia da Semana + Botão Modo Dia Corrido -->
+    <!-- Seletor Global de Dia da Semana (Iniciando no Domingo) + Botão Modo Dia Corrido -->
     <div class="glass-card p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
       <div class="flex flex-wrap items-center gap-3">
         <span class="text-sm font-medium text-slate-300">Dia em edição:</span>
-        <span id="selectedDayLabel" class="text-xs font-semibold px-2.5 py-1 bg-emerald-500/20 text-emerald-300 rounded-full">Hoje</span>
+        <span id="selectedDayLabel" class="text-xs font-semibold px-2.5 py-1 bg-slate-800 accent-text rounded-full">Hoje</span>
         
         <button id="busyDayBtn" onclick="toggleBusyDay()" class="text-xs font-semibold px-3 py-1.5 rounded-xl border transition flex items-center gap-1.5 bg-slate-800/90 text-slate-300 border-slate-700 hover:border-amber-500/50">
           <span>⚡</span> <span id="busyDayBtnText">Modo Dia Corrido: OFF</span>
@@ -232,7 +360,7 @@
           <div class="flex flex-wrap items-center gap-2 text-xs">
             <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-lg">
               <span class="text-slate-400">Padrão:</span>
-              <select id="dailyGoalSelect" onchange="updateDailyGoal(this.value)" class="bg-transparent text-indigo-300 font-semibold focus:outline-none cursor-pointer">
+              <select id="dailyGoalSelect" onchange="updateDailyGoal(this.value)" class="bg-transparent secondary-text font-semibold focus:outline-none cursor-pointer">
                 <option value="1" class="bg-slate-900">1h/dia</option>
                 <option value="2" class="bg-slate-900">2h/dia</option>
                 <option value="3" class="bg-slate-900">3h/dia</option>
@@ -244,7 +372,7 @@
             </div>
             <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-lg">
               <span class="text-slate-400">Auto:</span>
-              <select id="linkedHabitSelect" onchange="updateLinkedHabit(this.value)" class="bg-transparent text-emerald-300 font-semibold focus:outline-none cursor-pointer max-w-[130px] truncate"></select>
+              <select id="linkedHabitSelect" onchange="updateLinkedHabit(this.value)" class="bg-transparent accent-text font-semibold focus:outline-none cursor-pointer max-w-[130px] truncate"></select>
             </div>
           </div>
         </div>
@@ -252,15 +380,15 @@
         <div class="space-y-1.5">
           <div class="flex justify-between text-xs font-medium">
             <span id="goalProgressFraction" class="text-slate-300">0h 00m de 4h 00m</span>
-            <span id="goalProgressPercent" class="text-indigo-400 font-bold">0%</span>
+            <span id="goalProgressPercent" class="secondary-text font-bold">0%</span>
           </div>
           <div class="w-full h-3.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
-            <div id="goalProgressBar" class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-indigo-500 to-indigo-400" style="width: 0%"></div>
+            <div id="goalProgressBar" class="h-full rounded-full transition-all duration-500 secondary-bg" style="width: 0%"></div>
           </div>
         </div>
       </section>
 
-      <!-- Card 2: Rastreador de Questões & Taxa de Acerto por Grande Área (Itens 2 e 5) -->
+      <!-- Card 2: Rastreador de Questões & Taxa de Acerto por Grande Área -->
       <section class="glass-card p-5 rounded-2xl flex flex-col justify-between space-y-3.5">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div class="flex items-center gap-2.5">
@@ -270,7 +398,7 @@
                 <h2 class="text-sm md:text-base font-semibold text-white">Questões & Desempenho por Área</h2>
                 <span id="qAccuracyBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">Acerto: 0%</span>
               </div>
-              <p class="text-[11px] text-slate-400 mt-0.5">Separe seus blocos por Grande Área e monitore seus pontos fracos.</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">Sincroniza automaticamente com a aba <b>Desempenho_Areas</b> da planilha.</p>
             </div>
           </div>
 
@@ -289,7 +417,7 @@
             </div>
             <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-lg">
               <span class="text-slate-400">Auto:</span>
-              <select id="linkedQHabitSelect" onchange="updateLinkedQuestionHabit(this.value)" class="bg-transparent text-emerald-300 font-semibold focus:outline-none cursor-pointer max-w-[130px] truncate"></select>
+              <select id="linkedQHabitSelect" onchange="updateLinkedQuestionHabit(this.value)" class="bg-transparent accent-text font-semibold focus:outline-none cursor-pointer max-w-[130px] truncate"></select>
             </div>
           </div>
         </div>
@@ -304,10 +432,10 @@
           </div>
         </div>
 
-        <!-- Pílulas de Desempenho por Grande Área na Semana (Item 2) -->
+        <!-- Pílulas de Desempenho por Grande Área na Semana -->
         <div id="areaStatsPills" class="flex flex-wrap items-center gap-1.5 pt-0.5"></div>
 
-        <!-- Formulário com Seletor de Grande Área + Botão Desfazer (Itens 2 e 5) -->
+        <!-- Formulário com Seletor de Grande Área + Botão Desfazer -->
         <form onsubmit="addQuestionBatch(event)" class="flex flex-wrap items-center gap-2 pt-1">
           <div class="flex items-center bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1.5">
             <select id="qAreaSelect" class="bg-transparent text-xs text-cyan-300 font-semibold focus:outline-none cursor-pointer">
@@ -325,7 +453,7 @@
           </div>
           <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1.5 flex-1 min-w-[90px]">
             <span class="text-[11px] text-slate-400">Acertos:</span>
-            <input type="number" id="qCorrectInput" min="0" max="500" placeholder="16" required class="w-full bg-transparent text-xs text-emerald-300 font-semibold focus:outline-none">
+            <input type="number" id="qCorrectInput" min="0" max="500" placeholder="16" required class="w-full bg-transparent text-xs accent-text font-semibold focus:outline-none">
           </div>
           <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold px-3 py-1.5 rounded-xl text-xs transition">
             + Somar
@@ -349,11 +477,11 @@
         <div>
           <div class="flex items-center justify-between mb-3">
             <h2 class="text-lg font-semibold text-white">Cronômetro Pomodoro</h2>
-            <span id="timerStatusBadge" class="text-xs font-semibold px-2.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full">Modo Foco</span>
+            <span id="timerStatusBadge" class="text-xs font-semibold px-2.5 py-0.5 bg-slate-800 secondary-text rounded-full">Modo Foco</span>
           </div>
 
           <div class="grid grid-cols-3 gap-1.5 bg-slate-900/80 p-1 rounded-xl border border-slate-800 mb-6">
-            <button onclick="setTimerMode('focus25')" id="btn-focus25" class="py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white transition">Foco 25m</button>
+            <button onclick="setTimerMode('focus25')" id="btn-focus25" class="py-1.5 text-xs font-semibold rounded-lg secondary-bg text-white transition">Foco 25m</button>
             <button onclick="setTimerMode('focus50')" id="btn-focus50" class="py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Foco 50m</button>
             <button onclick="setTimerMode('break')" id="btn-break" class="py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Pausa 5m</button>
           </div>
@@ -364,7 +492,7 @@
           </div>
 
           <div class="flex gap-2">
-            <button onclick="toggleTimer()" id="startPauseBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl text-sm transition shadow-lg shadow-emerald-900/30">
+            <button onclick="toggleTimer()" id="startPauseBtn" class="flex-1 accent-bg text-white font-semibold py-2.5 rounded-xl text-sm transition shadow-lg">
               ▶ Iniciar Foco
             </button>
             <button onclick="resetTimer()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl text-sm transition border border-slate-700">
@@ -376,7 +504,7 @@
         <div class="pt-4 border-t border-slate-800">
           <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
             <span>Ajuste manual no dia selecionado:</span>
-            <span id="PomodoroCyclesToday" class="font-semibold text-indigo-400">0 blocos hoje</span>
+            <span id="PomodoroCyclesToday" class="font-semibold secondary-text">0 blocos hoje</span>
           </div>
           <div class="grid grid-cols-2 gap-2">
             <button onclick="adjustStudyTime(-900)" class="py-1.5 px-3 bg-slate-800/80 hover:bg-rose-950/50 hover:text-rose-300 text-slate-300 rounded-lg text-xs font-medium border border-slate-700/70 transition">
@@ -389,18 +517,19 @@
         </div>
       </div>
 
-      <!-- Coluna 2: Checklist Diário com Edição, Reordenação e Dias Programáveis (Item 1) -->
+      <!-- Coluna 2: Checklist Diário com Suporte a Dias Fixos ou Ciclo X ON / Y OFF -->
       <div class="lg:col-span-4 glass-card p-6 rounded-2xl flex flex-col justify-between space-y-4">
         <div>
           <div class="flex items-center justify-between mb-1">
             <h2 class="text-lg font-semibold text-white">Metas do Dia</h2>
-            <span class="text-xs text-emerald-400 font-semibold" id="dailyProgressText">0/0 programadas</span>
+            <span class="text-xs accent-text font-semibold" id="dailyProgressText">0/0 em atividade</span>
           </div>
-          <p class="text-[11px] text-slate-400 mb-4">Use <b>📅 Dias</b> para frequência, <b>✏️</b> para renomear e <b>↑↓</b> para ordenar.</p>
+          <p class="text-[11px] text-slate-400 mb-4">Clique em <b>📅 Dias / Ciclo</b> para escolher dias fixos ou esquema contínuo (ex: <b>2 ON / 1 OFF</b>).</p>
 
           <div id="habitList" class="space-y-2.5 max-h-72 overflow-y-auto pr-1"></div>
         </div>
 
+        <!-- Criar Novo Hábito (Com opção de Dias Fixos ou Ciclo ON/OFF) -->
         <form onsubmit="addHabit(event)" class="pt-3 border-t border-slate-800 space-y-2.5">
           <div class="flex gap-2">
             <input 
@@ -408,15 +537,42 @@
               id="newHabitInput" 
               placeholder="Novo hábito (ex: Treino, Simulado)..." 
               required
-              class="flex-1 bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              class="flex-1 bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
             >
-            <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3.5 py-2 rounded-xl text-xs transition">
+            <button type="submit" class="accent-bg text-white font-semibold px-3.5 py-2 rounded-xl text-xs transition">
               + Criar
             </button>
           </div>
-          <div class="flex items-center justify-between gap-1 text-[11px] text-slate-400">
-            <span>Dias ativos:</span>
+
+          <div class="flex items-center justify-between text-[11px] text-slate-400">
+            <span>Regra de atividade:</span>
+            <div class="flex gap-1 bg-slate-900 p-0.5 rounded-lg border border-slate-800">
+              <button type="button" id="newModeFixedBtn" onclick="setNewHabitMode('fixed')" class="px-2 py-0.5 rounded-md text-[10px] font-semibold accent-bg text-white">Dias Fixos</button>
+              <button type="button" id="newModeCycleBtn" onclick="setNewHabitMode('cycle')" class="px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-400">Ciclo ON/OFF</button>
+            </div>
+          </div>
+
+          <!-- Seletor de Dias Fixos para novo hábito -->
+          <div id="newFixedContainer" class="flex items-center justify-between gap-1 text-[11px] text-slate-400">
+            <span>Dias com atividade:</span>
             <div class="flex gap-1" id="newHabitDaysPicker"></div>
+          </div>
+
+          <!-- Seletor de Ciclo X ON / Y OFF para novo hábito -->
+          <div id="newCycleContainer" class="hidden flex items-center justify-between gap-2 bg-slate-900/70 p-2 rounded-xl border border-slate-800 text-[11px]">
+            <div class="flex items-center gap-1">
+              <input type="number" id="newCycleOn" value="2" min="1" max="30" class="w-10 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-center text-white font-bold">
+              <span class="text-emerald-400 font-semibold">ON</span>
+            </div>
+            <span class="text-slate-500">/</span>
+            <div class="flex items-center gap-1">
+              <input type="number" id="newCycleOff" value="1" min="1" max="30" class="w-10 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-center text-white font-bold">
+              <span class="text-slate-400 font-semibold">OFF</span>
+            </div>
+            <div class="flex items-center gap-1 ml-auto">
+              <span class="text-[10px] text-slate-400">Início:</span>
+              <input type="date" id="newCycleAnchor" class="bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-[10px] text-slate-200">
+            </div>
           </div>
         </form>
       </div>
@@ -424,8 +580,8 @@
       <!-- Coluna 3: Gráfico Combinado -->
       <div class="lg:col-span-4 glass-card p-6 rounded-2xl flex flex-col justify-between">
         <div>
-          <h2 class="text-lg font-semibold text-white">Curva Semanal Multidimensional</h2>
-          <p class="text-xs text-slate-400 mb-4">Verde: Hábitos (%) | Azul: Acerto Questões (%) | Barras: Estudo (h)</p>
+          <h2 class="text-lg font-semibold text-white">Curva Semanal (Dom a Sáb)</h2>
+          <p class="text-xs text-slate-400 mb-4">Linha Principal: Hábitos (%) | Tracejada: Acerto (%) | Barras: Estudo (h)</p>
         </div>
         <div class="relative h-64 md:h-72 w-full">
           <canvas id="weeklyChart"></canvas>
@@ -438,8 +594,8 @@
     <section class="glass-card p-6 rounded-2xl overflow-x-auto">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
         <div>
-          <h2 class="text-lg font-semibold text-white">Visão Panorâmica da Semana</h2>
-          <p class="text-xs text-slate-400">Legenda: <span class="text-emerald-400 font-bold">✓</span> Concluído | <span class="text-slate-400 font-bold">·</span> Pendente | <span class="text-slate-600 font-mono">—</span> Folga Programada</p>
+          <h2 class="text-lg font-semibold text-white">Visão Panorâmica da Semana (Domingo a Sábado)</h2>
+          <p class="text-xs text-slate-400">Legenda: <span class="accent-text font-bold">✓</span> Concluído | <span class="text-slate-400 font-bold">·</span> Dia em Atividade (ON) | <span class="text-slate-600 font-mono">—</span> Dia de Descanso (OFF)</p>
         </div>
       </div>
       <table class="w-full text-left border-collapse min-w-[650px]">
@@ -464,33 +620,112 @@
   </div>
 
   <script>
-    const DAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+    // SEMANA COMEÇANDO NO DOMINGO (Índice 0 = Dom, Índice 6 = Sáb)
+    const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     const AREAS = ['Clínica', 'Cirurgia', 'GO', 'Pediatria', 'Preventiva', 'Geral'];
     const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbz9fYDyV8f4LH31YsaXV5Y31uaCPuCY-OIE3dBt13a6DNVRGq7s040TCn2yGlprak73oQ/exec';
     
-    const jsDay = new Date().getDay();
-    let selectedDayIndex = jsDay === 0 ? 6 : jsDay - 1;
+    // Como getDay() do JS já retorna 0 para Domingo e 6 para Sábado, o mapeamento é direto!
+    let selectedDayIndex = new Date().getDay();
 
-    // Calcula o identificador da segunda-feira da semana atual para detectar virada de semana
-    function getCurrentWeekMondayIso() {
+    // Calcula as datas exatas de Domingo (0) a Sábado (6) da semana corrente
+    function getWeekDatesSundayToSaturday() {
       const now = new Date();
-      const d = now.getDay();
-      const diff = d === 0 ? -6 : 1 - d;
-      const mon = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff);
-      const yyyy = mon.getFullYear();
-      const mm = String(mon.getMonth() + 1).padStart(2, '0');
-      const dd = String(mon.getDate()).padStart(2, '0');
-      return `${yyyy}-${mm}-${dd}`;
+      const dayOfWeek = now.getDay(); // 0 = Dom ... 6 = Sáb
+      const sunday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek);
+
+      return DAYS.map((dayLabel, idx) => {
+        const d = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate() + idx);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return {
+          dayLabel,
+          dateObj: new Date(yyyy, d.getMonth(), d.getDate()),
+          iso: `${yyyy}-${mm}-${dd}`,
+          shortBr: `${dd}/${mm}`
+        };
+      });
     }
 
-    const CURRENT_WEEK_MONDAY_ISO = getCurrentWeekMondayIso();
+    const WEEK_DATES = getWeekDatesSundayToSaturday();
+    const CURRENT_WEEK_SUNDAY_ISO = WEEK_DATES[0].iso;
+    const TODAY_ISO = WEEK_DATES[selectedDayIndex].iso;
 
+    // Esquemas de Cores Pré-Montados
+    const THEME_PRESETS = {
+      ocean: {
+        bgMain: '#0f172a',
+        bgCard: 'rgba(30, 41, 59, 0.75)',
+        primary: '#10b981',
+        secondary: '#6366f1'
+      },
+      graphite: {
+        bgMain: '#121316',
+        bgCard: 'rgba(24, 25, 29, 0.88)',
+        primary: '#38bdf8',
+        secondary: '#94a3b8'
+      },
+      midnight: {
+        bgMain: '#0d0b14',
+        bgCard: 'rgba(26, 22, 43, 0.82)',
+        primary: '#f59e0b',
+        secondary: '#a855f7'
+      }
+    };
+
+    // Hábitos iniciais: Treino já configurado no esquema 2 dias ON para 1 dia OFF!
     const defaultHabits = [
-      { id: 1, name: 'Treino Funcional / Força', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, false, true, true, false, false] },
-      { id: 2, name: 'Bloco de Questões & Revisão Ativa', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, false] },
-      { id: 3, name: 'Hidratação (3L) + Creatina', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, true] },
-      { id: 4, name: 'Leitura / Estudo Dirigido', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, false] },
-      { id: 5, name: 'Rotina de Autocuidado & Sono (7h+)', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, true] }
+      {
+        id: 1,
+        name: 'Treino Funcional / Força',
+        days: [false, false, false, false, false, false, false],
+        scheduleMode: 'cycle',
+        cycleOn: 2,
+        cycleOff: 1,
+        cycleAnchor: TODAY_ISO,
+        scheduledDays: [true, true, false, true, true, false, true]
+      },
+      {
+        id: 2,
+        name: 'Bloco de Questões & Revisão Ativa',
+        days: [false, false, false, false, false, false, false],
+        scheduleMode: 'fixed',
+        cycleOn: 5,
+        cycleOff: 1,
+        cycleAnchor: TODAY_ISO,
+        scheduledDays: [false, true, true, true, true, true, true]
+      },
+      {
+        id: 3,
+        name: 'Hidratação (3L) + Creatina',
+        days: [false, false, false, false, false, false, false],
+        scheduleMode: 'fixed',
+        cycleOn: 1,
+        cycleOff: 0,
+        cycleAnchor: TODAY_ISO,
+        scheduledDays: [true, true, true, true, true, true, true]
+      },
+      {
+        id: 4,
+        name: 'Leitura / Estudo Dirigido',
+        days: [false, false, false, false, false, false, false],
+        scheduleMode: 'fixed',
+        cycleOn: 5,
+        cycleOff: 1,
+        cycleAnchor: TODAY_ISO,
+        scheduledDays: [false, true, true, true, true, true, true]
+      },
+      {
+        id: 5,
+        name: 'Rotina de Autocuidado & Sono (7h+)',
+        days: [false, false, false, false, false, false, false],
+        scheduleMode: 'fixed',
+        cycleOn: 1,
+        cycleOff: 0,
+        cycleAnchor: TODAY_ISO,
+        scheduledDays: [true, true, true, true, true, true, true]
+      }
     ];
 
     function safeParseJSON(key, fallback) {
@@ -514,10 +749,14 @@
     let habits = safeParseJSON('habitDashboardData', defaultHabits);
     habits.forEach(h => {
       if (!Array.isArray(h.days) || h.days.length !== 7) h.days = [false, false, false, false, false, false, false];
-      if (!Array.isArray(h.scheduledDays) || h.scheduledDays.length !== 7) {
+      if (!Array.isArray(h.scheduledDays) || h.scheduledDays.length !== 7) h.scheduledDays = [true, true, true, true, true, true, true];
+      if (!h.scheduleMode) {
         const isWorkout = h.name.toLowerCase().includes('treino');
-        h.scheduledDays = isWorkout ? [true, true, false, true, true, false, false] : [true, true, true, true, true, true, true];
+        h.scheduleMode = isWorkout ? 'cycle' : 'fixed';
       }
+      if (!h.cycleOn) h.cycleOn = 2;
+      if (!h.cycleOff) h.cycleOff = 1;
+      if (!h.cycleAnchor) h.cycleAnchor = TODAY_ISO;
     });
 
     let studySeconds = safeParseJSON('habitStudySeconds', [0, 0, 0, 0, 0, 0, 0]);
@@ -527,13 +766,15 @@
 
     let questionsSolved = safeParseJSON('habitQuestionsSolved', [0, 0, 0, 0, 0, 0, 0]);
     let questionsCorrect = safeParseJSON('habitQuestionsCorrect', [0, 0, 0, 0, 0, 0, 0]);
-    // Histórico detalhado de blocos de questões para permitir "Desfazer" e cálculo por Grande Área
     let questionLogs = safeParseJSON('habitQuestionLogs', []);
     let dailyQuestionsGoal = Number(localStorage.getItem('habitDailyQuestionsGoal')) || 30;
     let linkedQuestionHabitId = Number(localStorage.getItem('habitLinkedQuestionId')) || (habits[1] ? habits[1].id : 0);
     let busyDays = safeParseJSON('habitBusyDays', [false, false, false, false, false, false, false]);
     let archivedWeeks = safeParseJSON('habitArchivedWeeks', []);
-    let storedWeekStartIso = localStorage.getItem('habitWeekStartIso') || CURRENT_WEEK_MONDAY_ISO;
+    let storedWeekStartIso = localStorage.getItem('habitWeekStartIso') || CURRENT_WEEK_SUNDAY_ISO;
+
+    // Estado de Cores Personalizadas
+    let themeConfig = safeParseJSON('habitThemeConfig', THEME_PRESETS.ocean);
 
     let gasWebAppUrl = localStorage.getItem('habitGasWebAppUrl') || DEFAULT_GAS_URL;
     let lastCloudSync = localStorage.getItem('habitLastCloudSync') || '';
@@ -542,6 +783,7 @@
     let hasCompletedInitialPull = false;
 
     let editingScheduleHabitId = null;
+    let newHabitMode = 'fixed';
     let newHabitSchedule = [true, true, true, true, true, true, true];
     let chartInstance = null;
 
@@ -551,6 +793,85 @@
     let isRunning = false;
     let lastTickTimestamp = null;
     let toastTimeout = null;
+
+    // ==========================================
+    // CÁLCULO DE ATIVIDADE: DIAS FIXOS VS CICLO X ON / Y OFF
+    // ==========================================
+
+    function isHabitActiveOnDay(habit, dayIdx) {
+      if (habit.scheduleMode === 'cycle') {
+        const onDays = Math.max(1, Number(habit.cycleOn) || 2);
+        const offDays = Math.max(1, Number(habit.cycleOff) || 1);
+        const period = onDays + offDays;
+        
+        const anchorStr = habit.cycleAnchor || TODAY_ISO;
+        const parts = anchorStr.split('-').map(Number);
+        const anchorDate = new Date(parts[0], parts[1] - 1, parts[2]);
+        const targetDate = WEEK_DATES[dayIdx].dateObj;
+
+        const diffDays = Math.round((targetDate - anchorDate) / 86400000);
+        const mod = ((diffDays % period) + period) % period;
+        return mod < onDays;
+      }
+      return Boolean(habit.scheduledDays && habit.scheduledDays[dayIdx]);
+    }
+
+    // ==========================================
+    // SISTEMA DE PERSONALIZAÇÃO & RODA DE CORES
+    // ==========================================
+
+    function toggleThemePanel() {
+      const panel = document.getElementById('themeConfigPanel');
+      panel.classList.toggle('hidden');
+    }
+
+    function applyThemeVariables() {
+      const root = document.documentElement;
+      root.style.setProperty('--bg-main', themeConfig.bgMain);
+      root.style.setProperty('--bg-card', themeConfig.bgCard);
+      root.style.setProperty('--accent-primary', themeConfig.primary);
+      root.style.setProperty('--accent-secondary', themeConfig.secondary);
+
+      const metaTheme = document.getElementById('metaThemeColor');
+      if (metaTheme) metaTheme.setAttribute('content', themeConfig.bgMain);
+
+      const pPrimary = document.getElementById('pickerPrimary');
+      const pSecondary = document.getElementById('pickerSecondary');
+      const pBg = document.getElementById('pickerBg');
+      if (pPrimary) pPrimary.value = themeConfig.primary;
+      if (pSecondary) pSecondary.value = themeConfig.secondary;
+      if (pBg) pBg.value = themeConfig.bgMain;
+
+      if (chartInstance) {
+        chartInstance.data.datasets[0].borderColor = themeConfig.primary;
+        chartInstance.data.datasets[0].pointBorderColor = themeConfig.primary;
+        chartInstance.data.datasets[2].borderColor = themeConfig.secondary;
+        chartInstance.data.datasets[2].backgroundColor = themeConfig.secondary + '88';
+        chartInstance.update();
+      }
+    }
+
+    function applyThemePreset(presetKey) {
+      if (!THEME_PRESETS[presetKey]) return;
+      themeConfig = { ...THEME_PRESETS[presetKey] };
+      applyThemeVariables();
+      saveState();
+      showToast('Esquema de cores atualizado!', '🎨');
+    }
+
+    function applyCustomWheelColors() {
+      const primary = document.getElementById('pickerPrimary').value;
+      const secondary = document.getElementById('pickerSecondary').value;
+      const bgMain = document.getElementById('pickerBg').value;
+      themeConfig = {
+        bgMain: bgMain,
+        bgCard: 'rgba(30, 41, 59, 0.72)',
+        primary: primary,
+        secondary: secondary
+      };
+      applyThemeVariables();
+      saveState();
+    }
 
     function showToast(message, icon = '✅') {
       const toast = document.getElementById('toastNotification');
@@ -565,24 +886,30 @@
 
     function checkNewWeekRollover() {
       const hasAnyProgress = studySeconds.some(s => s > 0) || questionsSolved.some(q => q > 0) || habits.some(h => h.days.some(Boolean));
-      if (storedWeekStartIso && storedWeekStartIso !== CURRENT_WEEK_MONDAY_ISO && hasAnyProgress) {
+      if (storedWeekStartIso && storedWeekStartIso !== CURRENT_WEEK_SUNDAY_ISO && hasAnyProgress) {
         document.getElementById('newWeekBanner').classList.remove('hidden');
       } else {
-        storedWeekStartIso = CURRENT_WEEK_MONDAY_ISO;
-        localStorage.setItem('habitWeekStartIso', CURRENT_WEEK_MONDAY_ISO);
+        storedWeekStartIso = CURRENT_WEEK_SUNDAY_ISO;
+        localStorage.setItem('habitWeekStartIso', CURRENT_WEEK_SUNDAY_ISO);
       }
     }
 
     function dismissNewWeekBanner() {
-      storedWeekStartIso = CURRENT_WEEK_MONDAY_ISO;
-      localStorage.setItem('habitWeekStartIso', CURRENT_WEEK_MONDAY_ISO);
+      storedWeekStartIso = CURRENT_WEEK_SUNDAY_ISO;
+      localStorage.setItem('habitWeekStartIso', CURRENT_WEEK_SUNDAY_ISO);
       document.getElementById('newWeekBanner').classList.add('hidden');
       saveState();
     }
 
     function buildFullPayload() {
+      // Inclui effectiveScheduledDays para que a planilha Google saiba exatamente os dias ON do ciclo
+      const enrichedHabits = habits.map(h => ({
+        ...h,
+        effectiveScheduledDays: DAYS.map((_, dIdx) => isHabitActiveOnDay(h, dIdx))
+      }));
+
       return {
-        version: 4,
+        version: 5,
         weekStartIso: storedWeekStartIso,
         updatedAt: new Date().toISOString(),
         dailyGoalHours,
@@ -595,7 +922,8 @@
         questionsCorrect,
         questionLogs,
         busyDays,
-        habits,
+        themeConfig,
+        habits: enrichedHabits,
         archivedWeeks
       };
     }
@@ -605,7 +933,11 @@
       habits = data.habits.map(h => ({
         ...h,
         days: Array.isArray(h.days) && h.days.length === 7 ? h.days.map(Boolean) : [false,false,false,false,false,false,false],
-        scheduledDays: Array.isArray(h.scheduledDays) && h.scheduledDays.length === 7 ? h.scheduledDays.map(Boolean) : [true,true,true,true,true,true,true]
+        scheduledDays: Array.isArray(h.scheduledDays) && h.scheduledDays.length === 7 ? h.scheduledDays.map(Boolean) : [true,true,true,true,true,true,true],
+        scheduleMode: h.scheduleMode || 'fixed',
+        cycleOn: Number(h.cycleOn) || 2,
+        cycleOff: Number(h.cycleOff) || 1,
+        cycleAnchor: h.cycleAnchor || TODAY_ISO
       }));
       if (Array.isArray(data.studySeconds) && data.studySeconds.length === 7) studySeconds = data.studySeconds.map(v => Math.max(0, Number(v) || 0));
       if (Array.isArray(data.pomodoroCycles) && data.pomodoroCycles.length === 7) pomodoroCycles = data.pomodoroCycles.map(v => Math.max(0, Number(v) || 0));
@@ -619,6 +951,10 @@
       if (data.dailyQuestionsGoal) dailyQuestionsGoal = Number(data.dailyQuestionsGoal);
       if (data.linkedQuestionHabitId !== undefined) linkedQuestionHabitId = Number(data.linkedQuestionHabitId);
       if (data.weekStartIso) storedWeekStartIso = data.weekStartIso;
+      if (data.themeConfig && data.themeConfig.primary) {
+        themeConfig = data.themeConfig;
+        applyThemeVariables();
+      }
       return true;
     }
 
@@ -636,6 +972,7 @@
       localStorage.setItem('habitBusyDays', JSON.stringify(busyDays));
       localStorage.setItem('habitArchivedWeeks', JSON.stringify(archivedWeeks));
       localStorage.setItem('habitWeekStartIso', storedWeekStartIso);
+      localStorage.setItem('habitThemeConfig', JSON.stringify(themeConfig));
     }
 
     function saveState(skipCloud = false) {
@@ -732,7 +1069,7 @@
           lastCloudSync = `${new Date().toLocaleDateString('pt-BR')} às ${timeStr}`;
           localStorage.setItem('habitLastCloudSync', lastCloudSync);
           updateCloudStatusUI('ok', `Salvo (${timeStr})`);
-          if (showNotification) showToast('Dados enviados para a Planilha Google com sucesso!', '☁️');
+          if (showNotification) showToast('Planilha e aba Desempenho_Areas atualizadas!', '☁️');
         } else {
           throw new Error(resData.message || 'Resposta inesperada');
         }
@@ -868,7 +1205,6 @@
         showToast(`Meta de ${goalQ} questões batida! "${targetHabit.name}" marcado!`, '📝');
         return true;
       } else if (currentQ < goalQ && targetHabit.days[dayIdx]) {
-        // Se desfez ou zerou questões e caiu abaixo da meta, desmarca automaticamente
         targetHabit.days[dayIdx] = false;
         return true;
       }
@@ -912,7 +1248,6 @@
     }
 
     function undoLastQuestionBatch() {
-      // Procura o último lançamento feito no dia atualmente selecionado
       let lastLogIndex = -1;
       for (let i = questionLogs.length - 1; i >= 0; i--) {
         if (questionLogs[i].dayIdx === selectedDayIndex) {
@@ -987,7 +1322,8 @@
       let totalDone = 0;
       habits.forEach(h => {
         DAYS.forEach((_, dIdx) => {
-          if (h.scheduledDays[dIdx] || h.days[dIdx]) {
+          const active = isHabitActiveOnDay(h, dIdx);
+          if (active || h.days[dIdx]) {
             totalScheduled++;
             if (h.days[dIdx]) totalDone++;
           }
@@ -1004,7 +1340,7 @@
 
     function archiveAndResetWeek() {
       const stats = getWeeklyStatsSummary();
-      const defaultLabel = `Semana encerrada em ${new Date().toLocaleDateString('pt-BR')}`;
+      const defaultLabel = `Semana ${WEEK_DATES[0].shortBr} a ${WEEK_DATES[6].shortBr}`;
       const weekLabel = prompt('Digite um nome ou período para arquivar esta semana no histórico:', defaultLabel);
       if (weekLabel === null) return;
 
@@ -1029,7 +1365,7 @@
       questionsCorrect = [0, 0, 0, 0, 0, 0, 0];
       questionLogs = [];
       busyDays = [false, false, false, false, false, false, false];
-      storedWeekStartIso = CURRENT_WEEK_MONDAY_ISO;
+      storedWeekStartIso = CURRENT_WEEK_SUNDAY_ISO;
       document.getElementById('newWeekBanner').classList.add('hidden');
 
       saveState();
@@ -1045,7 +1381,7 @@
         questionsCorrect = [0, 0, 0, 0, 0, 0, 0];
         questionLogs = [];
         busyDays = [false, false, false, false, false, false, false];
-        storedWeekStartIso = CURRENT_WEEK_MONDAY_ISO;
+        storedWeekStartIso = CURRENT_WEEK_SUNDAY_ISO;
         document.getElementById('newWeekBanner').classList.add('hidden');
         saveState();
         showToast('Semana atual reiniciada!', '🔄');
@@ -1092,10 +1428,11 @@
       rows.push(['Tipo', 'ID', 'Item', ...DAYS, 'Acumulado_Semana', 'Dias_Programados']);
 
       habits.forEach(h => {
-        const schedCount = h.scheduledDays.filter(Boolean).length;
+        const effSched = DAYS.map((_, idx) => isHabitActiveOnDay(h, idx));
+        const schedCount = effSched.filter(Boolean).length;
         const doneCount = h.days.filter(Boolean).length;
-        const dayValues = h.days.map((d, idx) => d ? '1' : (h.scheduledDays[idx] ? '0' : '-'));
-        const schedMask = h.scheduledDays.map(s => s ? '1' : '0').join('');
+        const dayValues = h.days.map((d, idx) => d ? '1' : (effSched[idx] ? '0' : '-'));
+        const schedMask = effSched.map(s => s ? '1' : '0').join('');
         rows.push(['HABITO', h.id, escapeCSV(h.name), ...dayValues, `${doneCount}/${schedCount}`, `"${schedMask}"`]);
       });
 
@@ -1177,7 +1514,7 @@
                 const scheduledDays = maskStr.length === 7 
                   ? maskStr.split('').map(c => c === '1')
                   : rawSlice.map(val => val !== '-');
-                importedHabits.push({ id, name, days, scheduledDays });
+                importedHabits.push({ id, name, days, scheduledDays, scheduleMode: 'fixed', cycleOn: 2, cycleOff: 1, cycleAnchor: TODAY_ISO });
               } else if (type === 'ESTUDO_SEGUNDOS') {
                 studySeconds = cols.slice(3, 10).map(v => Number(v) || 0);
               } else if (type === 'QUESTOES_FEITAS') {
@@ -1256,7 +1593,7 @@
       ['focus25', 'focus50', 'break'].forEach(m => {
         const btn = document.getElementById(`btn-${m}`);
         btn.className = m === mode 
-          ? 'py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white transition'
+          ? 'py-1.5 text-xs font-semibold rounded-lg secondary-bg text-white transition'
           : 'py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition';
       });
 
@@ -1266,17 +1603,14 @@
       if (mode === 'focus25') {
         timeLeft = 25 * 60;
         badge.textContent = 'Modo Foco (25m)';
-        badge.className = 'text-xs font-semibold px-2.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full';
         subtext.textContent = 'Cada segundo em Foco soma nas Horas Líquidas';
       } else if (mode === 'focus50') {
         timeLeft = 50 * 60;
         badge.textContent = 'Modo Foco (50m)';
-        badge.className = 'text-xs font-semibold px-2.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full';
         subtext.textContent = 'Bloco intensivo — contabilizando tempo líquido';
       } else {
         timeLeft = 5 * 60;
         badge.textContent = 'Pausa Recuperadora';
-        badge.className = 'text-xs font-semibold px-2.5 py-0.5 bg-amber-500/20 text-amber-300 rounded-full';
         subtext.textContent = 'Pausas não somam no contador de horas líquidas';
       }
       updateTimerDisplay();
@@ -1356,7 +1690,7 @@
       clearInterval(timerInterval);
       const btn = document.getElementById('startPauseBtn');
       btn.textContent = '▶ Retomar';
-      btn.className = 'flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl text-sm transition shadow-lg shadow-emerald-900/30';
+      btn.className = 'flex-1 accent-bg text-white font-semibold py-2.5 rounded-xl text-sm transition shadow-lg';
       saveState();
       updateTimerDisplay();
     }
@@ -1391,7 +1725,7 @@
     }
 
     // ==========================================
-    // GESTÃO DE HÁBITOS: EDITAR, MOVER & DIAS (Item 1)
+    // GESTÃO DE HÁBITOS: EDITAR, MOVER & CICLOS ON/OFF
     // ==========================================
 
     function selectDay(index) {
@@ -1432,11 +1766,51 @@
       renderHabitList();
     }
 
+    function setHabitScheduleMode(habitId, mode) {
+      const habit = habits.find(h => h.id === habitId);
+      if (!habit) return;
+      habit.scheduleMode = mode;
+      if (!habit.cycleAnchor) habit.cycleAnchor = WEEK_DATES[selectedDayIndex].iso;
+      saveState();
+    }
+
+    function updateHabitCycleParams(habitId, field, value) {
+      const habit = habits.find(h => h.id === habitId);
+      if (!habit) return;
+      if (field === 'cycleOn') habit.cycleOn = Math.max(1, Number(value) || 1);
+      if (field === 'cycleOff') habit.cycleOff = Math.max(1, Number(value) || 1);
+      if (field === 'cycleAnchor') habit.cycleAnchor = value || TODAY_ISO;
+      saveState();
+    }
+
     function toggleHabitScheduledDay(habitId, dayIdx) {
       const habit = habits.find(h => h.id === habitId);
       if (habit) {
+        habit.scheduleMode = 'fixed';
         habit.scheduledDays[dayIdx] = !habit.scheduledDays[dayIdx];
         saveState();
+      }
+    }
+
+    function setNewHabitMode(mode) {
+      newHabitMode = mode;
+      const fixedBtn = document.getElementById('newModeFixedBtn');
+      const cycleBtn = document.getElementById('newModeCycleBtn');
+      const fixedCont = document.getElementById('newFixedContainer');
+      const cycleCont = document.getElementById('newCycleContainer');
+
+      if (mode === 'fixed') {
+        fixedBtn.className = 'px-2 py-0.5 rounded-md text-[10px] font-semibold accent-bg text-white';
+        cycleBtn.className = 'px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-400';
+        fixedCont.classList.remove('hidden');
+        cycleCont.classList.add('hidden');
+      } else {
+        cycleBtn.className = 'px-2 py-0.5 rounded-md text-[10px] font-semibold accent-bg text-white';
+        fixedBtn.className = 'px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-400';
+        fixedCont.classList.add('hidden');
+        cycleCont.classList.remove('hidden');
+        const anchorInput = document.getElementById('newCycleAnchor');
+        if (anchorInput && !anchorInput.value) anchorInput.value = WEEK_DATES[selectedDayIndex].iso;
       }
     }
 
@@ -1452,7 +1826,7 @@
         const active = newHabitSchedule[idx];
         return `
           <button type="button" onclick="toggleNewHabitDay(${idx})" class="px-1.5 py-0.5 rounded text-[10px] font-semibold transition ${
-            active ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-500'
+            active ? 'accent-bg text-white' : 'bg-slate-800 text-slate-500'
           }">${d[0]}</button>
         `;
       }).join('');
@@ -1466,16 +1840,24 @@
 
       const hasAtLeastOneDay = newHabitSchedule.some(Boolean);
       const scheduleToUse = hasAtLeastOneDay ? [...newHabitSchedule] : [true, true, true, true, true, true, true];
+      const cOn = Math.max(1, Number(document.getElementById('newCycleOn').value) || 2);
+      const cOff = Math.max(1, Number(document.getElementById('newCycleOff').value) || 1);
+      const cAnchor = document.getElementById('newCycleAnchor').value || WEEK_DATES[selectedDayIndex].iso;
 
       const newHabit = {
         id: Date.now(),
         name: name,
         days: [false, false, false, false, false, false, false],
+        scheduleMode: newHabitMode,
+        cycleOn: cOn,
+        cycleOff: cOff,
+        cycleAnchor: cAnchor,
         scheduledDays: scheduleToUse
       };
       habits.push(newHabit);
       input.value = '';
       newHabitSchedule = [true, true, true, true, true, true, true];
+      setNewHabitMode('fixed');
       saveState();
       showToast(`Hábito "${name}" adicionado!`, '✅');
     }
@@ -1490,7 +1872,7 @@
     function getDailyPercentages() {
       if (habits.length === 0) return [0, 0, 0, 0, 0, 0, 0];
       return DAYS.map((_, dayIdx) => {
-        const activeHabits = habits.filter(h => h.scheduledDays[dayIdx] || h.days[dayIdx]);
+        const activeHabits = habits.filter(h => isHabitActiveOnDay(h, dayIdx) || h.days[dayIdx]);
         if (activeHabits.length === 0) return 100;
         const completed = activeHabits.filter(h => h.days[dayIdx]).length;
         return Math.round((completed / activeHabits.length) * 100);
@@ -1501,7 +1883,7 @@
       const dailyPcts = getDailyPercentages();
       let currentStreak = 0;
       for (let i = 0; i <= selectedDayIndex; i++) {
-        const activeCount = habits.filter(h => h.scheduledDays[i] || h.days[i]).length;
+        const activeCount = habits.filter(h => isHabitActiveOnDay(h, i) || h.days[i]).length;
         if (activeCount === 0) continue;
         const threshold = busyDays[i] ? 60 : 80;
         if (dailyPcts[i] >= threshold) {
@@ -1524,7 +1906,8 @@
     function renderDaySelector() {
       const container = document.getElementById('daySelector');
       const isBusyToday = busyDays[selectedDayIndex];
-      document.getElementById('selectedDayLabel').textContent = `${DAYS[selectedDayIndex]}${isBusyToday ? ' (⚡ Dia Corrido)' : ''}`;
+      const dInfo = WEEK_DATES[selectedDayIndex];
+      document.getElementById('selectedDayLabel').textContent = `${dInfo.dayLabel} (${dInfo.shortBr})${isBusyToday ? ' ⚡' : ''}`;
       
       const busyBtn = document.getElementById('busyDayBtn');
       const busyBtnText = document.getElementById('busyDayBtnText');
@@ -1536,20 +1919,23 @@
         busyBtnText.textContent = 'Modo Dia Corrido: OFF';
       }
 
-      container.innerHTML = DAYS.map((day, idx) => {
+      container.innerHTML = WEEK_DATES.map((info, idx) => {
         const isSelected = idx === selectedDayIndex;
         const isBusy = busyDays[idx];
         return `
           <button 
             onclick="selectDay(${idx})"
-            class="px-3 py-2 rounded-xl text-xs font-semibold transition border flex items-center justify-center gap-1 ${
+            class="px-2.5 py-1.5 rounded-xl text-xs font-semibold transition border flex flex-col items-center justify-center ${
               isSelected 
-                ? 'bg-emerald-600 text-white border-emerald-500 shadow-lg shadow-emerald-900/30' 
+                ? 'accent-bg text-white border-transparent shadow-lg' 
                 : 'bg-slate-800/70 text-slate-400 border-slate-700/60 hover:bg-slate-800'
             }"
           >
-            <span>${day}</span>
-            ${isBusy ? '<span title="Dia Corrido">⚡</span>' : ''}
+            <div class="flex items-center gap-0.5">
+              <span>${info.dayLabel}</span>
+              ${isBusy ? '<span title="Dia Corrido">⚡</span>' : ''}
+            </div>
+            <span class="text-[9px] opacity-75 font-mono">${info.shortBr}</span>
           </button>
         `;
       }).join('');
@@ -1585,15 +1971,15 @@
       const habitName = linkedHabit ? `"${linkedHabit.name}"` : 'o hábito vinculado';
 
       if (todaySecs >= goalSecs) {
-        barEl.className = 'h-full rounded-full transition-all duration-500 bg-gradient-to-r from-emerald-500 to-teal-400';
-        pctEl.className = 'text-emerald-400 font-bold';
+        barEl.className = 'h-full rounded-full transition-all duration-500 accent-bg';
+        pctEl.className = 'accent-text font-bold';
         statusBadge.textContent = '✅ Meta Batida';
         statusBadge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300';
         remainingText.textContent = `Meta concluída! ${habitName} foi marcado automaticamente neste dia.`;
       } else {
         const remainingSecs = goalSecs - todaySecs;
-        barEl.className = 'h-full rounded-full transition-all duration-500 bg-gradient-to-r from-indigo-500 to-indigo-400';
-        pctEl.className = 'text-indigo-400 font-bold';
+        barEl.className = 'h-full rounded-full transition-all duration-500 secondary-bg';
+        pctEl.className = 'secondary-text font-bold';
         statusBadge.textContent = busyDays[selectedDayIndex] ? '⚡ Meta Reduzida (-50%)' : 'Em andamento';
         statusBadge.className = busyDays[selectedDayIndex]
           ? 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300'
@@ -1629,7 +2015,6 @@
         ? 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300'
         : (accToday >= 65 ? 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300' : 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300');
 
-      // Renderiza pílulas de desempenho por Grande Área na semana
       const pillsContainer = document.getElementById('areaStatsPills');
       const areaStats = getAreaStatsForWeek();
       const activeAreas = AREAS.filter(a => areaStats[a].solved > 0);
@@ -1642,7 +2027,7 @@
           const pct = Math.round((st.correct / st.solved) * 100);
           const colorClass = pct >= 80
             ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-            : (pct >= 65 ? 'bg-amber-500/15 text-amber-300 border-amber-500/30' : 'bg-rose-500/15 text-rose-300 border-rose-500/30');
+            : (pct >= 70 ? 'bg-amber-500/15 text-amber-300 border-amber-500/30' : 'bg-rose-500/15 text-rose-300 border-rose-500/30');
           return `
             <span class="text-[10px] font-semibold px-2 py-0.5 rounded-lg border ${colorClass}">
               ${area}: ${st.correct}/${st.solved} (${pct}%)
@@ -1654,9 +2039,9 @@
 
     function renderHabitList() {
       const container = document.getElementById('habitList');
-      const scheduledToday = habits.filter(h => h.scheduledDays[selectedDayIndex] || h.days[selectedDayIndex]);
+      const scheduledToday = habits.filter(h => isHabitActiveOnDay(h, selectedDayIndex) || h.days[selectedDayIndex]);
       const doneToday = scheduledToday.filter(h => h.days[selectedDayIndex]).length;
-      document.getElementById('dailyProgressText').textContent = `${doneToday}/${scheduledToday.length} programadas hoje`;
+      document.getElementById('dailyProgressText').textContent = `${doneToday}/${scheduledToday.length} em atividade hoje`;
 
       if (habits.length === 0) {
         container.innerHTML = `<p class="text-sm text-slate-500 text-center py-6">Nenhum hábito cadastrado.</p>`;
@@ -1665,25 +2050,54 @@
 
       container.innerHTML = habits.map((habit, idx) => {
         const isDone = habit.days[selectedDayIndex];
-        const isScheduled = habit.scheduledDays[selectedDayIndex];
+        const isScheduled = isHabitActiveOnDay(habit, selectedDayIndex);
         const isStudyLinked = habit.id === Number(linkedHabitId);
         const isQLinked = habit.id === Number(linkedQuestionHabitId);
         const isEditingDays = editingScheduleHabitId === habit.id;
+        const isCycle = habit.scheduleMode === 'cycle';
 
-        const schedulePills = isEditingDays ? `
-          <div class="mt-2.5 pt-2 border-t border-slate-800 flex items-center justify-between gap-1">
-            <span class="text-[10px] text-slate-400">Dias obrigatórios:</span>
-            <div class="flex gap-1">
-              ${DAYS.map((d, dIdx) => `
-                <button 
-                  type="button"
-                  onclick="toggleHabitScheduledDay(${habit.id}, ${dIdx})"
-                  class="px-1.5 py-0.5 rounded text-[10px] font-semibold transition ${
-                    habit.scheduledDays[dIdx] ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-500'
-                  }"
-                >${d}</button>
-              `).join('')}
+        const editorDrawer = isEditingDays ? `
+          <div class="mt-3 pt-2.5 border-t border-slate-800 space-y-2.5 text-[11px]">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400">Modo de frequência:</span>
+              <div class="flex gap-1 bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+                <button type="button" onclick="setHabitScheduleMode(${habit.id}, 'fixed')" class="px-2 py-0.5 rounded text-[10px] font-semibold ${!isCycle ? 'accent-bg text-white' : 'text-slate-400'}">Dias Fixos</button>
+                <button type="button" onclick="setHabitScheduleMode(${habit.id}, 'cycle')" class="px-2 py-0.5 rounded text-[10px] font-semibold ${isCycle ? 'accent-bg text-white' : 'text-slate-400'}">Ciclo ON / OFF</button>
+              </div>
             </div>
+
+            ${!isCycle ? `
+              <div class="flex items-center justify-between gap-1">
+                <span class="text-[10px] text-slate-400">Dias em atividade:</span>
+                <div class="flex gap-1">
+                  ${DAYS.map((d, dIdx) => `
+                    <button 
+                      type="button"
+                      onclick="toggleHabitScheduledDay(${habit.id}, ${dIdx})"
+                      class="px-1.5 py-0.5 rounded text-[10px] font-semibold transition ${
+                        habit.scheduledDays[dIdx] ? 'accent-bg text-white' : 'bg-slate-800 text-slate-500'
+                      }"
+                    >${d}</button>
+                  `).join('')}
+                </div>
+              </div>
+            ` : `
+              <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-950/80 p-2 rounded-lg border border-slate-800">
+                <div class="flex items-center gap-1">
+                  <input type="number" min="1" max="30" value="${habit.cycleOn || 2}" onchange="updateHabitCycleParams(${habit.id}, 'cycleOn', this.value)" class="w-10 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-center text-white font-bold">
+                  <span class="accent-text font-semibold text-[10px]">dias ON</span>
+                </div>
+                <span class="text-slate-600">/</span>
+                <div class="flex items-center gap-1">
+                  <input type="number" min="1" max="30" value="${habit.cycleOff || 1}" onchange="updateHabitCycleParams(${habit.id}, 'cycleOff', this.value)" class="w-10 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-center text-white font-bold">
+                  <span class="text-slate-400 font-semibold text-[10px]">dias OFF</span>
+                </div>
+                <div class="flex items-center gap-1 ml-auto">
+                  <span class="text-[10px] text-slate-400">Dia 1 ON:</span>
+                  <input type="date" value="${habit.cycleAnchor || TODAY_ISO}" onchange="updateHabitCycleParams(${habit.id}, 'cycleAnchor', this.value)" class="bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-[10px] text-slate-200">
+                </div>
+              </div>
+            `}
           </div>
         ` : '';
 
@@ -1702,7 +2116,8 @@
                 </div>
                 <div class="truncate">
                   <span class="text-sm font-medium ${isDone ? 'line-through text-slate-500' : 'text-slate-200'}">${escapeHtml(habit.name)}</span>
-                  ${!isScheduled && !isDone ? '<span class="ml-1.5 text-[10px] font-medium px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">Folga hoje</span>' : ''}
+                  ${isCycle ? `<span class="ml-1.5 text-[10px] font-semibold px-1.5 py-0.5 bg-slate-800 text-amber-300 rounded">${habit.cycleOn} ON / ${habit.cycleOff} OFF</span>` : ''}
+                  ${!isScheduled && !isDone ? '<span class="ml-1 text-[10px] font-medium px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">Descanso (OFF)</span>' : ''}
                   ${isStudyLinked ? '<span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded">⚡ Horas</span>' : ''}
                   ${isQLinked ? '<span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 bg-cyan-500/20 text-cyan-300 rounded">⚡ Questões</span>' : ''}
                 </div>
@@ -1711,7 +2126,7 @@
                 <button onclick="moveHabit(${idx}, -1)" class="px-1.5 py-1 rounded text-[10px] bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition" title="Subir hábito">↑</button>
                 <button onclick="moveHabit(${idx}, 1)" class="px-1.5 py-1 rounded text-[10px] bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition" title="Descer hábito">↓</button>
                 <button onclick="renameHabit(${habit.id})" class="px-1.5 py-1 rounded text-[10px] bg-slate-800/80 hover:bg-slate-700 text-slate-300 transition" title="Renomear hábito">✏️</button>
-                <button onclick="toggleScheduleEditor(${habit.id})" class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition" title="Dias da semana">
+                <button onclick="toggleScheduleEditor(${habit.id})" class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition" title="Configurar dias fixos ou ciclo ON/OFF">
                   📅 Dias
                 </button>
                 <button onclick="deleteHabit(${habit.id})" class="text-slate-600 hover:text-rose-400 p-1 text-xs transition" title="Excluir hábito">
@@ -1719,7 +2134,7 @@
                 </button>
               </div>
             </div>
-            ${schedulePills}
+            ${editorDrawer}
           </div>
         `;
       }).join('');
@@ -1729,7 +2144,7 @@
       const theadRow = document.getElementById('matrixHeaderRow');
       theadRow.innerHTML = `
         <th class="py-3 pr-4">Hábito / Indicador</th>
-        ${DAYS.map((d, idx) => `<th class="py-3 text-center">${d}${busyDays[idx] ? '⚡' : ''}</th>`).join('')}
+        ${WEEK_DATES.map((d, idx) => `<th class="py-3 text-center">${d.dayLabel}${busyDays[idx] ? '⚡' : ''}<br><span class="text-[9px] font-mono text-slate-500">${d.shortBr}</span></th>`).join('')}
         <th class="py-3 text-right">Desempenho</th>
       `;
 
@@ -1739,29 +2154,33 @@
         let schedCount = 0;
         let doneCount = 0;
         habit.days.forEach((done, idx) => {
-          if (habit.scheduledDays[idx] || done) {
+          const isSched = isHabitActiveOnDay(habit, idx);
+          if (isSched || done) {
             schedCount++;
             if (done) doneCount++;
           }
         });
         const pct = schedCount > 0 ? Math.round((doneCount / schedCount) * 100) : 100;
+        const ruleBadge = habit.scheduleMode === 'cycle'
+          ? `<span class="ml-1.5 text-[10px] font-semibold px-1.5 py-0.5 bg-slate-800 text-amber-300 rounded">${habit.cycleOn}x${habit.cycleOff}</span>`
+          : '';
         
         const dayCells = habit.days.map((done, dIdx) => {
-          const isSched = habit.scheduledDays[dIdx];
+          const isSched = isHabitActiveOnDay(habit, dIdx);
           if (done) {
-            return `<td class="py-3 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-emerald-500 text-slate-950 font-bold transition">✓</button></td>`;
+            return `<td class="py-3 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center accent-bg text-slate-950 font-bold transition">✓</button></td>`;
           } else if (isSched) {
-            return `<td class="py-3 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-slate-800 text-slate-500 hover:bg-slate-700 transition">·</button></td>`;
+            return `<td class="py-3 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" title="Dia em atividade (ON)" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-slate-800 text-slate-400 hover:bg-slate-700 transition">·</button></td>`;
           } else {
-            return `<td class="py-3 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-slate-900/50 text-slate-700 hover:bg-slate-800 font-mono text-xs transition">—</button></td>`;
+            return `<td class="py-3 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" title="Dia sem atividade / Descanso (OFF)" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-slate-900/50 text-slate-700 hover:bg-slate-800 font-mono text-xs transition">—</button></td>`;
           }
         }).join('');
 
         return `
           <tr>
-            <td class="py-3 pr-4 font-medium text-slate-200">${escapeHtml(habit.name)}</td>
+            <td class="py-3 pr-4 font-medium text-slate-200">${escapeHtml(habit.name)}${ruleBadge}</td>
             ${dayCells}
-            <td class="py-3 text-right font-semibold text-emerald-400">${doneCount}/${schedCount} (${pct}%)</td>
+            <td class="py-3 text-right font-semibold accent-text">${doneCount}/${schedCount} (${pct}%)</td>
           </tr>
         `;
       }).join('');
@@ -1770,14 +2189,14 @@
       const studyCells = studySeconds.map((sec, idx) => {
         const goalSecs = getEffectiveStudyGoalSeconds(idx);
         const hitGoal = sec >= goalSecs && goalSecs > 0;
-        return `<td class="py-3 text-center text-xs font-semibold ${hitGoal ? 'text-emerald-400' : (sec > 0 ? 'text-indigo-400' : 'text-slate-600')}">${formatHoursMinutes(sec)}</td>`;
+        return `<td class="py-3 text-center text-xs font-semibold ${hitGoal ? 'accent-text' : (sec > 0 ? 'secondary-text' : 'text-slate-600')}">${formatHoursMinutes(sec)}</td>`;
       }).join('');
 
       const studyRow = `
         <tr class="bg-indigo-950/20">
-          <td class="py-3 pr-4 font-semibold text-indigo-300">⏱️ Horas Líquidas</td>
+          <td class="py-3 pr-4 font-semibold secondary-text">⏱️ Horas Líquidas</td>
           ${studyCells}
-          <td class="py-3 text-right font-bold text-indigo-400">${formatHoursMinutes(totalWeekSecs)}</td>
+          <td class="py-3 text-right font-bold secondary-text">${formatHoursMinutes(totalWeekSecs)}</td>
         </tr>
       `;
 
@@ -1790,7 +2209,7 @@
         const c = questionsCorrect[idx] || 0;
         const acc = s > 0 ? Math.round((c / s) * 100) : 0;
         if (s === 0) return `<td class="py-3 text-center text-xs text-slate-600">—</td>`;
-        return `<td class="py-3 text-center text-xs font-semibold ${acc >= 80 ? 'text-emerald-400' : 'text-cyan-400'}">${c}/${s} (${acc}%)</td>`;
+        return `<td class="py-3 text-center text-xs font-semibold ${acc >= 80 ? 'accent-text' : 'text-cyan-400'}">${c}/${s} (${acc}%)</td>`;
       }).join('');
 
       const questionRow = `
@@ -1814,7 +2233,7 @@
       const accToday = qToday > 0 ? Math.round((cToday / qToday) * 100) : 0;
 
       document.getElementById('streakCount').textContent = `${stats.streak} ${stats.streak === 1 ? 'dia' : 'dias'}`;
-      document.getElementById('streakSubtext').textContent = busyDays[selectedDayIndex] ? 'Hoje: Meta 60% (Dia Corrido)' : 'Meta: 80% dos programados';
+      document.getElementById('streakSubtext').textContent = busyDays[selectedDayIndex] ? 'Hoje: Meta 60% (Dia Corrido)' : 'Meta: 80% dos ativos';
       document.getElementById('dailyStudyTime').textContent = formatHoursMinutes(todaySecs);
       document.getElementById('weeklyStudyTime').textContent = `Semana: ${formatHoursMinutes(stats.totalSecs)}`;
       document.getElementById('dailyQuestionsKPI').textContent = `${qToday} (${accToday}%)`;
@@ -1829,7 +2248,7 @@
       if (archivedWeeks.length === 0) {
         container.innerHTML = `
           <div class="text-center py-6 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">
-            Nenhuma semana arquivada ainda. Ao terminar seu domingo, clique em <b>📦 Arquivar Semana</b> no topo para salvar seu histórico.
+            Nenhuma semana arquivada ainda. Ao terminar seu sábado, clique em <b>📦 Arquivar Semana</b> no topo para salvar seu histórico.
           </div>
         `;
         return;
@@ -1838,8 +2257,8 @@
       const rows = archivedWeeks.map(w => `
         <tr class="border-b border-slate-800/60 text-xs md:text-sm">
           <td class="py-3 pr-4 font-semibold text-white">${escapeHtml(w.label)}</td>
-          <td class="py-3 text-center text-emerald-400 font-bold">${w.weeklyRate}% (${w.totalDone}/${w.totalScheduled})</td>
-          <td class="py-3 text-center text-indigo-400 font-semibold">${formatHoursMinutes(w.totalStudySeconds)}</td>
+          <td class="py-3 text-center accent-text font-bold">${w.weeklyRate}% (${w.totalDone}/${w.totalScheduled})</td>
+          <td class="py-3 text-center secondary-text font-semibold">${formatHoursMinutes(w.totalStudySeconds)}</td>
           <td class="py-3 text-center text-cyan-400 font-semibold">${w.totalCorrect}/${w.totalQuestions} (${w.questionAccuracy}%)</td>
           <td class="py-3 text-center text-amber-400 font-semibold">🔥 ${w.streak}d</td>
           <td class="py-3 text-right">
@@ -1872,9 +2291,14 @@
       const dataHours = getDailyStudyHours();
 
       if (chartInstance) {
+        chartInstance.data.labels = DAYS;
         chartInstance.data.datasets[0].data = dataPcts;
+        chartInstance.data.datasets[0].borderColor = themeConfig.primary;
+        chartInstance.data.datasets[0].pointBorderColor = themeConfig.primary;
         chartInstance.data.datasets[1].data = dataQAcc;
         chartInstance.data.datasets[2].data = dataHours;
+        chartInstance.data.datasets[2].borderColor = themeConfig.secondary;
+        chartInstance.data.datasets[2].backgroundColor = themeConfig.secondary + '88';
         chartInstance.update();
         return;
       }
@@ -1887,11 +2311,11 @@
               type: 'line',
               label: 'Hábitos (%)',
               data: dataPcts,
-              borderColor: '#10b981',
-              backgroundColor: 'rgba(16, 185, 129, 0.12)',
+              borderColor: themeConfig.primary,
+              backgroundColor: 'rgba(16, 185, 129, 0.10)',
               borderWidth: 3,
               pointBackgroundColor: '#0f172a',
-              pointBorderColor: '#10b981',
+              pointBorderColor: themeConfig.primary,
               pointRadius: 4,
               tension: 0.35,
               yAxisID: 'y'
@@ -1913,8 +2337,8 @@
               type: 'bar',
               label: 'Horas Líquidas (h)',
               data: dataHours,
-              backgroundColor: 'rgba(99, 102, 241, 0.5)',
-              borderColor: '#6366f1',
+              backgroundColor: themeConfig.secondary + '88',
+              borderColor: themeConfig.secondary,
               borderWidth: 1,
               borderRadius: 6,
               yAxisID: 'y1'
@@ -1931,7 +2355,7 @@
               beginAtZero: true,
               max: 100,
               grid: { color: 'rgba(255, 255, 255, 0.05)' },
-              ticks: { color: '#10b981', callback: v => v + '%' }
+              ticks: { color: '#94a3b8', callback: v => v + '%' }
             },
             y1: {
               type: 'linear',
@@ -1939,7 +2363,7 @@
               beginAtZero: true,
               suggestedMax: 6,
               grid: { drawOnChartArea: false },
-              ticks: { color: '#818cf8', callback: v => v + 'h' }
+              ticks: { color: '#94a3b8', callback: v => v + 'h' }
             },
             x: {
               grid: { display: false },
@@ -1967,6 +2391,7 @@
       renderChart();
     }
 
+    applyThemeVariables();
     checkNewWeekRollover();
     renderAll();
     if (gasWebAppUrl) {
