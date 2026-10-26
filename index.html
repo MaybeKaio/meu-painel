@@ -98,7 +98,7 @@
             <span id="cloudStatusText">Nuvem Off</span>
           </span>
         </div>
-        <p class="text-slate-400 text-sm mt-1">Semana iniciando no Domingo • Ciclos ON/OFF de treino • Temas personalizáveis e Nuvem Google Drive.</p>
+        <p class="text-slate-400 text-sm mt-1">Semana Dom-Sáb • Áreas customizáveis (Residência & Concursos) • Recomendador de Estudo & Caderno de Erros.</p>
       </div>
       
       <div class="flex flex-wrap items-center gap-2">
@@ -151,7 +151,6 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-        <!-- 3 Esquemas Pré-Montados -->
         <div class="space-y-2">
           <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Esquemas Pré-Montados:</span>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -187,7 +186,6 @@
           </div>
         </div>
 
-        <!-- Roda de Cores (Seletores Livres) -->
         <div class="space-y-2">
           <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Roda de Cores (Personalização Livre):</span>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 bg-slate-900/70 p-3 rounded-xl border border-slate-800">
@@ -225,7 +223,7 @@
         <span class="text-2xl">📅</span>
         <div>
           <h3 class="text-xs md:text-sm font-bold text-amber-300">Uma nova semana começou (Domingo)!</h3>
-          <p class="text-xs text-slate-300">Os dados na tela pertencem à semana anterior. Deseja arquivá-los no histórico e começar a nova semana limpa?</p>
+          <p class="text-xs text-slate-300">Os dados na tela pertencem à semana anterior. Deseja arquivá-los no histórico e começar a nova semana limpa? (Seus erros não revisados serão mantidos).</p>
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
@@ -326,6 +324,27 @@
       </div>
     </section>
 
+    <!-- ITEM 3: Banner de Recomendação Algorítmica Baseada em Dados e Evidências -->
+    <section class="glass-card p-4 rounded-2xl border border-cyan-500/25 flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div class="flex items-start md:items-center gap-3">
+        <div class="text-2xl mt-0.5 md:mt-0">🧠</div>
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-cyan-300">Algoritmo de Prioridade do Dia</span>
+            <span id="recBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">Analisando histórico...</span>
+          </div>
+          <p id="recDescription" class="text-xs text-slate-300 mt-1">
+            Registre seus blocos de questões para o algoritmo identificar seus pontos cegos e matérias negligenciadas.
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button id="recActionBtn" onclick="selectRecommendedArea()" class="hidden px-3 py-1.5 rounded-xl text-xs font-semibold bg-cyan-600 hover:bg-cyan-500 text-white transition">
+          🎯 Selecionar Área Agora
+        </button>
+      </div>
+    </section>
+
     <!-- Seletor Global de Dia da Semana (Iniciando no Domingo) + Botão Modo Dia Corrido -->
     <div class="glass-card p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
       <div class="flex flex-wrap items-center gap-3">
@@ -340,7 +359,7 @@
       <div class="grid grid-cols-7 gap-1.5 w-full md:w-auto" id="daySelector"></div>
     </div>
 
-    <!-- Barras Duplas: Meta de Horas Líquidas + Rastreador de Questões por Grande Área -->
+    <!-- Barras Duplas: Meta de Horas Líquidas + Rastreador de Questões Customizável -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       
       <!-- Card 1: Barra de Meta de Horas Líquidas -->
@@ -388,37 +407,55 @@
         </div>
       </section>
 
-      <!-- Card 2: Rastreador de Questões & Taxa de Acerto por Grande Área -->
+      <!-- Card 2: Rastreador de Questões, Áreas Customizáveis & Caderno de Erros -->
       <section class="glass-card p-5 rounded-2xl flex flex-col justify-between space-y-3.5">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div class="flex items-center gap-2.5">
             <span class="text-xl">📝</span>
             <div>
               <div class="flex items-center gap-2">
-                <h2 class="text-sm md:text-base font-semibold text-white">Questões & Desempenho por Área</h2>
+                <h2 class="text-sm md:text-base font-semibold text-white">Questões & Matérias (Residência / Concursos)</h2>
                 <span id="qAccuracyBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">Acerto: 0%</span>
               </div>
-              <p class="text-[11px] text-slate-400 mt-0.5">Sincroniza automaticamente com a aba <b>Desempenho_Areas</b> da planilha.</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">Clique em <b>⚙️ Áreas</b> para criar ou renomear matérias de concursos ou residência.</p>
             </div>
           </div>
 
-          <div class="flex flex-wrap items-center gap-2 text-xs">
-            <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-lg">
+          <div class="flex flex-wrap items-center gap-1.5 text-xs">
+            <button type="button" onclick="toggleAreaManager()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-semibold border border-slate-700 transition" title="Criar, renomear ou remover matérias/áreas">
+              ⚙️ Áreas
+            </button>
+            <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-800 px-2 py-1 rounded-lg">
               <span class="text-slate-400">Meta:</span>
               <select id="dailyQGoalSelect" onchange="updateDailyQuestionGoal(this.value)" class="bg-transparent text-cyan-300 font-semibold focus:outline-none cursor-pointer">
-                <option value="10" class="bg-slate-900">10/dia</option>
-                <option value="15" class="bg-slate-900">15/dia</option>
-                <option value="20" class="bg-slate-900">20/dia</option>
-                <option value="30" class="bg-slate-900">30/dia</option>
-                <option value="40" class="bg-slate-900">40/dia</option>
-                <option value="50" class="bg-slate-900">50/dia</option>
-                <option value="80" class="bg-slate-900">80/dia</option>
+                <option value="10" class="bg-slate-900">10/d</option>
+                <option value="15" class="bg-slate-900">15/d</option>
+                <option value="20" class="bg-slate-900">20/d</option>
+                <option value="30" class="bg-slate-900">30/d</option>
+                <option value="40" class="bg-slate-900">40/d</option>
+                <option value="50" class="bg-slate-900">50/d</option>
+                <option value="80" class="bg-slate-900">80/d</option>
               </select>
             </div>
-            <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-800 px-2.5 py-1 rounded-lg">
+            <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-800 px-2 py-1 rounded-lg">
               <span class="text-slate-400">Auto:</span>
-              <select id="linkedQHabitSelect" onchange="updateLinkedQuestionHabit(this.value)" class="bg-transparent accent-text font-semibold focus:outline-none cursor-pointer max-w-[130px] truncate"></select>
+              <select id="linkedQHabitSelect" onchange="updateLinkedQuestionHabit(this.value)" class="bg-transparent accent-text font-semibold focus:outline-none cursor-pointer max-w-[110px] truncate"></select>
             </div>
+          </div>
+        </div>
+
+        <!-- Gaveta Gerenciadora de Áreas Customizáveis (Para Residência + Concursos) -->
+        <div id="areaManagerPanel" class="hidden p-3.5 rounded-xl bg-slate-950/90 border border-cyan-500/30 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-cyan-300">⚙️ Gerenciar Áreas / Disciplinas (Concursos & Residência)</span>
+            <button type="button" onclick="toggleAreaManager()" class="text-xs text-slate-400 hover:text-white">Fechar ✕</button>
+          </div>
+          <div id="customAreasList" class="flex flex-wrap gap-1.5"></div>
+          <div class="flex gap-2 pt-1">
+            <input type="text" id="newAreaInput" placeholder="Nova matéria (ex: Português, SUS, Raciocínio Lógico)..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+            <button type="button" onclick="addCustomArea()" class="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg text-xs transition">
+              + Adicionar Área
+            </button>
           </div>
         </div>
 
@@ -432,38 +469,43 @@
           </div>
         </div>
 
-        <!-- Pílulas de Desempenho por Grande Área na Semana -->
+        <!-- Pílulas de Desempenho por Área na Semana -->
         <div id="areaStatsPills" class="flex flex-wrap items-center gap-1.5 pt-0.5"></div>
 
-        <!-- Formulário com Seletor de Grande Área + Botão Desfazer -->
-        <form onsubmit="addQuestionBatch(event)" class="flex flex-wrap items-center gap-2 pt-1">
-          <div class="flex items-center bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1.5">
-            <select id="qAreaSelect" class="bg-transparent text-xs text-cyan-300 font-semibold focus:outline-none cursor-pointer">
-              <option value="Clínica" class="bg-slate-900">🩺 Clínica</option>
-              <option value="Cirurgia" class="bg-slate-900">🔪 Cirurgia</option>
-              <option value="GO" class="bg-slate-900">🤰 GO</option>
-              <option value="Pediatria" class="bg-slate-900">👶 Pediatria</option>
-              <option value="Preventiva" class="bg-slate-900">🏥 Preventiva</option>
-              <option value="Geral" class="bg-slate-900">📚 Geral / Outros</option>
-            </select>
+        <!-- Formulário com Seletor de Área Dinâmico + Campo Rápido do Caderno de Erros -->
+        <form onsubmit="addQuestionBatch(event)" class="space-y-2 pt-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="flex items-center bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1.5">
+              <select id="qAreaSelect" class="bg-transparent text-xs text-cyan-300 font-semibold focus:outline-none cursor-pointer max-w-[140px] truncate"></select>
+            </div>
+            <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1.5 flex-1 min-w-[85px]">
+              <span class="text-[11px] text-slate-400">Feitas:</span>
+              <input type="number" id="qSolvedInput" min="1" max="500" placeholder="20" required class="w-full bg-transparent text-xs text-white font-semibold focus:outline-none">
+            </div>
+            <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1.5 flex-1 min-w-[85px]">
+              <span class="text-[11px] text-slate-400">Acertos:</span>
+              <input type="number" id="qCorrectInput" min="0" max="500" placeholder="16" required class="w-full bg-transparent text-xs accent-text font-semibold focus:outline-none">
+            </div>
           </div>
-          <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1.5 flex-1 min-w-[90px]">
-            <span class="text-[11px] text-slate-400">Feitas:</span>
-            <input type="number" id="qSolvedInput" min="1" max="500" placeholder="20" required class="w-full bg-transparent text-xs text-white font-semibold focus:outline-none">
+
+          <!-- Linha 2: Input Rápido do Caderno de Erros (Item 4) + Botões de Ação -->
+          <div class="flex flex-wrap items-center gap-2">
+            <input 
+              type="text" 
+              id="qErrorTopicInput" 
+              placeholder="📓 Tema que errou / revisar no Sábado (opcional)..." 
+              class="flex-1 min-w-[180px] bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+            >
+            <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold px-3.5 py-1.5 rounded-xl text-xs transition">
+              + Somar
+            </button>
+            <button type="button" onclick="undoLastQuestionBatch()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-amber-950/60 text-slate-300 hover:text-amber-300 rounded-xl text-xs transition border border-slate-700" title="Desfazer apenas o último bloco lançado neste dia">
+              ↩️ Desfazer
+            </button>
+            <button type="button" onclick="clearTodayQuestions()" class="px-2 py-1.5 bg-slate-800 hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 rounded-xl text-xs transition border border-slate-700" title="Zerar todas as questões do dia selecionado">
+              Zerar
+            </button>
           </div>
-          <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1.5 flex-1 min-w-[90px]">
-            <span class="text-[11px] text-slate-400">Acertos:</span>
-            <input type="number" id="qCorrectInput" min="0" max="500" placeholder="16" required class="w-full bg-transparent text-xs accent-text font-semibold focus:outline-none">
-          </div>
-          <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold px-3 py-1.5 rounded-xl text-xs transition">
-            + Somar
-          </button>
-          <button type="button" onclick="undoLastQuestionBatch()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-amber-950/60 text-slate-300 hover:text-amber-300 rounded-xl text-xs transition border border-slate-700" title="Desfazer apenas o último bloco lançado neste dia">
-            ↩️ Desfazer
-          </button>
-          <button type="button" onclick="clearTodayQuestions()" class="px-2 py-1.5 bg-slate-800 hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 rounded-xl text-xs transition border border-slate-700" title="Zerar todas as questões do dia selecionado">
-            Zerar
-          </button>
         </form>
       </section>
 
@@ -524,12 +566,11 @@
             <h2 class="text-lg font-semibold text-white">Metas do Dia</h2>
             <span class="text-xs accent-text font-semibold" id="dailyProgressText">0/0 em atividade</span>
           </div>
-          <p class="text-[11px] text-slate-400 mb-4">Clique em <b>📅 Dias / Ciclo</b> para escolher dias fixos ou esquema contínuo (ex: <b>2 ON / 1 OFF</b>).</p>
+          <p class="text-[11px] text-slate-400 mb-4">Clique em <b>📅 Dias</b> para escolher dias fixos ou esquema contínuo (ex: <b>2 ON / 1 OFF</b>).</p>
 
           <div id="habitList" class="space-y-2.5 max-h-72 overflow-y-auto pr-1"></div>
         </div>
 
-        <!-- Criar Novo Hábito (Com opção de Dias Fixos ou Ciclo ON/OFF) -->
         <form onsubmit="addHabit(event)" class="pt-3 border-t border-slate-800 space-y-2.5">
           <div class="flex gap-2">
             <input 
@@ -552,13 +593,11 @@
             </div>
           </div>
 
-          <!-- Seletor de Dias Fixos para novo hábito -->
           <div id="newFixedContainer" class="flex items-center justify-between gap-1 text-[11px] text-slate-400">
             <span>Dias com atividade:</span>
             <div class="flex gap-1" id="newHabitDaysPicker"></div>
           </div>
 
-          <!-- Seletor de Ciclo X ON / Y OFF para novo hábito -->
           <div id="newCycleContainer" class="hidden flex items-center justify-between gap-2 bg-slate-900/70 p-2 rounded-xl border border-slate-800 text-[11px]">
             <div class="flex items-center gap-1">
               <input type="number" id="newCycleOn" value="2" min="1" max="30" class="w-10 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-center text-white font-bold">
@@ -589,6 +628,30 @@
       </div>
 
     </div>
+
+    <!-- ITEM 4: Caderno de Erros & Fila Prática de Revisão -->
+    <section class="glass-card p-6 rounded-2xl space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <div class="flex items-center gap-2.5">
+            <h2 class="text-lg font-semibold text-white">📓 Fila de Revisão & Caderno de Erros</h2>
+            <span id="errorQueueCountBadge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300">0 pendentes</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-0.5">Tópicos anotados durante os blocos de questões (salvos na aba <b>Caderno_Erros</b> da planilha). Marque o check ao revisar no fim de semana.</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="addStandaloneErrorTopic()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-xl text-xs font-semibold border border-slate-700 transition">
+            + Anotar Tópico Avulso
+          </button>
+          <button onclick="clearReviewedErrors()" class="px-3 py-1.5 bg-slate-900 hover:bg-rose-950/50 text-slate-400 hover:text-rose-300 rounded-xl text-xs font-medium border border-slate-800 transition">
+            Limpar Revisados
+          </button>
+        </div>
+      </div>
+
+      <div id="errorNotebookContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5"></div>
+    </section>
 
     <!-- Matriz Completa da Semana -->
     <section class="glass-card p-6 rounded-2xl overflow-x-auto">
@@ -622,26 +685,24 @@
   <script>
     // SEMANA COMEÇANDO NO DOMINGO (Índice 0 = Dom, Índice 6 = Sáb)
     const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-    const AREAS = ['Clínica', 'Cirurgia', 'GO', 'Pediatria', 'Preventiva', 'Geral'];
+    const DEFAULT_AREAS = ['Clínica', 'Cirurgia', 'GO', 'Pediatria', 'Preventiva', 'Português (Concurso)', 'SUS / Legislação', 'Geral'];
     const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbz9fYDyV8f4LH31YsaXV5Y31uaCPuCY-OIE3dBt13a6DNVRGq7s040TCn2yGlprak73oQ/exec';
     
-    // Como getDay() do JS já retorna 0 para Domingo e 6 para Sábado, o mapeamento é direto!
     let selectedDayIndex = new Date().getDay();
 
-    // Calcula as datas exatas de Domingo (0) a Sábado (6) da semana corrente
     function getWeekDatesSundayToSaturday() {
       const now = new Date();
-      const dayOfWeek = now.getDay(); // 0 = Dom ... 6 = Sáb
-      const sunday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek);
+      const dayOfWeek = now.getDay();
+      const sunday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek, 12, 0, 0);
 
       return DAYS.map((dayLabel, idx) => {
-        const d = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate() + idx);
+        const d = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate() + idx, 12, 0, 0);
         const yyyy = d.getFullYear();
         const mm = String(d.getMonth() + 1).padStart(2, '0');
         const dd = String(d.getDate()).padStart(2, '0');
         return {
           dayLabel,
-          dateObj: new Date(yyyy, d.getMonth(), d.getDate()),
+          dateObj: d,
           iso: `${yyyy}-${mm}-${dd}`,
           shortBr: `${dd}/${mm}`
         };
@@ -652,7 +713,6 @@
     const CURRENT_WEEK_SUNDAY_ISO = WEEK_DATES[0].iso;
     const TODAY_ISO = WEEK_DATES[selectedDayIndex].iso;
 
-    // Esquemas de Cores Pré-Montados
     const THEME_PRESETS = {
       ocean: {
         bgMain: '#0f172a',
@@ -674,7 +734,6 @@
       }
     };
 
-    // Hábitos iniciais: Treino já configurado no esquema 2 dias ON para 1 dia OFF!
     const defaultHabits = [
       {
         id: 1,
@@ -746,6 +805,23 @@
         .replace(/'/g, '&#039;');
     }
 
+    // Converte Hex para RGBA com segurança para nunca quebrar o Chart.js
+    function hexToRgba(hex, alpha = 0.5) {
+      let c = String(hex || '#6366f1').replace('#', '').trim();
+      if (c.length === 3) c = c.split('').map(x => x + x).join('');
+      const num = parseInt(c, 16);
+      if (isNaN(num)) return `rgba(99, 102, 241, ${alpha})`;
+      const r = (num >> 16) & 255;
+      const g = (num >> 8) & 255;
+      const b = num & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    let customAreas = safeParseJSON('habitCustomAreas', DEFAULT_AREAS);
+    if (!Array.isArray(customAreas) || customAreas.length === 0) {
+      customAreas = [...DEFAULT_AREAS];
+    }
+
     let habits = safeParseJSON('habitDashboardData', defaultHabits);
     habits.forEach(h => {
       if (!Array.isArray(h.days) || h.days.length !== 7) h.days = [false, false, false, false, false, false, false];
@@ -767,13 +843,13 @@
     let questionsSolved = safeParseJSON('habitQuestionsSolved', [0, 0, 0, 0, 0, 0, 0]);
     let questionsCorrect = safeParseJSON('habitQuestionsCorrect', [0, 0, 0, 0, 0, 0, 0]);
     let questionLogs = safeParseJSON('habitQuestionLogs', []);
+    let errorNotebook = safeParseJSON('habitErrorNotebook', []);
     let dailyQuestionsGoal = Number(localStorage.getItem('habitDailyQuestionsGoal')) || 30;
     let linkedQuestionHabitId = Number(localStorage.getItem('habitLinkedQuestionId')) || (habits[1] ? habits[1].id : 0);
     let busyDays = safeParseJSON('habitBusyDays', [false, false, false, false, false, false, false]);
     let archivedWeeks = safeParseJSON('habitArchivedWeeks', []);
     let storedWeekStartIso = localStorage.getItem('habitWeekStartIso') || CURRENT_WEEK_SUNDAY_ISO;
 
-    // Estado de Cores Personalizadas
     let themeConfig = safeParseJSON('habitThemeConfig', THEME_PRESETS.ocean);
 
     let gasWebAppUrl = localStorage.getItem('habitGasWebAppUrl') || DEFAULT_GAS_URL;
@@ -785,6 +861,7 @@
     let editingScheduleHabitId = null;
     let newHabitMode = 'fixed';
     let newHabitSchedule = [true, true, true, true, true, true, true];
+    let currentRecommendedArea = null;
     let chartInstance = null;
 
     let timerMode = 'focus25';
@@ -795,7 +872,7 @@
     let toastTimeout = null;
 
     // ==========================================
-    // CÁLCULO DE ATIVIDADE: DIAS FIXOS VS CICLO X ON / Y OFF
+    // CÁLCULO DE ATIVIDADE: DIAS FIXOS VS CICLO X ON / Y OFF (Sem bug de fuso)
     // ==========================================
 
     function isHabitActiveOnDay(habit, dayIdx) {
@@ -806,14 +883,238 @@
         
         const anchorStr = habit.cycleAnchor || TODAY_ISO;
         const parts = anchorStr.split('-').map(Number);
-        const anchorDate = new Date(parts[0], parts[1] - 1, parts[2]);
+        const anchorDate = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
         const targetDate = WEEK_DATES[dayIdx].dateObj;
 
-        const diffDays = Math.round((targetDate - anchorDate) / 86400000);
+        const diffDays = Math.round((targetDate.getTime() - anchorDate.getTime()) / 86400000);
         const mod = ((diffDays % period) + period) % period;
         return mod < onDays;
       }
       return Boolean(habit.scheduledDays && habit.scheduledDays[dayIdx]);
+    }
+
+    // ==========================================
+    // GERENCIADOR DE ÁREAS CUSTOMIZÁVEIS (RESIDÊNCIA & CONCURSOS)
+    // ==========================================
+
+    function toggleAreaManager() {
+      const panel = document.getElementById('areaManagerPanel');
+      panel.classList.toggle('hidden');
+      renderCustomAreasManager();
+    }
+
+    function addCustomArea() {
+      const input = document.getElementById('newAreaInput');
+      const name = (input.value || '').trim();
+      if (!name) return;
+      if (customAreas.some(a => a.toLowerCase() === name.toLowerCase())) {
+        showToast('Essa área/matéria já existe na lista.', '⚠️');
+        return;
+      }
+      customAreas.push(name);
+      input.value = '';
+      saveState();
+      showToast(`Matéria "${name}" adicionada!`, '📚');
+    }
+
+    function renameCustomArea(index) {
+      const oldName = customAreas[index];
+      if (!oldName) return;
+      const newName = prompt(`Renomear a área "${oldName}" para:`, oldName);
+      if (newName === null) return;
+      const trimmed = newName.trim();
+      if (!trimmed || trimmed === oldName) return;
+
+      customAreas[index] = trimmed;
+      // Atualiza também os registros existentes para não perder o histórico da matéria
+      questionLogs.forEach(log => {
+        if (log.area === oldName) log.area = trimmed;
+      });
+      errorNotebook.forEach(item => {
+        if (item.area === oldName) item.area = trimmed;
+      });
+      saveState();
+      showToast(`Área renomeada para "${trimmed}"!`, '✏️');
+    }
+
+    function deleteCustomArea(index) {
+      if (customAreas.length <= 1) {
+        showToast('Mantenha pelo menos 1 área cadastrada.', '⚠️');
+        return;
+      }
+      const target = customAreas[index];
+      if (confirm(`Remover a área "${target}" da lista de seleção?`)) {
+        customAreas.splice(index, 1);
+        saveState();
+      }
+    }
+
+    function renderCustomAreasManager() {
+      const listEl = document.getElementById('customAreasList');
+      if (!listEl) return;
+      listEl.innerHTML = customAreas.map((area, idx) => `
+        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-200">
+          <span>${escapeHtml(area)}</span>
+          <button type="button" onclick="renameCustomArea(${idx})" class="text-slate-400 hover:text-cyan-300 text-[10px] ml-1" title="Renomear área">✏️</button>
+          <button type="button" onclick="deleteCustomArea(${idx})" class="text-slate-500 hover:text-rose-400 text-[10px]" title="Remover área">✕</button>
+        </div>
+      `).join('');
+    }
+
+    // ==========================================
+    // ITEM 3: RECOMENDADOR ALGORÍTMICO POR DADOS
+    // ==========================================
+
+    function renderRecommendationBanner() {
+      const badgeEl = document.getElementById('recBadge');
+      const descEl = document.getElementById('recDescription');
+      const btnEl = document.getElementById('recActionBtn');
+
+      const areaStats = getAreaStatsForWeek();
+      const practicedAreas = customAreas.filter(a => areaStats[a] && areaStats[a].solved > 0);
+      const untouchedAreas = customAreas.filter(a => !areaStats[a] || areaStats[a].solved === 0);
+
+      // 1. Procura a matéria com menor taxa de acerto (< 70%)
+      let weakestArea = null;
+      let lowestAcc = 101;
+      practicedAreas.forEach(a => {
+        const st = areaStats[a];
+        const acc = Math.round((st.correct / st.solved) * 100);
+        if (acc < lowestAcc) {
+          lowestAcc = acc;
+          weakestArea = { name: a, acc, solved: st.solved, correct: st.correct };
+        }
+      });
+
+      const pendingErrors = errorNotebook.filter(e => !e.reviewed).length;
+
+      if (weakestArea && weakestArea.acc < 70) {
+        currentRecommendedArea = weakestArea.name;
+        badgeEl.textContent = `🔴 Ponto Crítico Detectado (${weakestArea.acc}%)`;
+        badgeEl.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30';
+        descEl.innerHTML = `Sua menor precisão na semana está em <b>${escapeHtml(weakestArea.name)}</b> (${weakestArea.correct}/${weakestArea.solved} — <b>${weakestArea.acc}%</b>). Atacar essa matéria hoje trará o maior ganho líquido na sua nota.`;
+        btnEl.classList.remove('hidden');
+        btnEl.textContent = `🎯 Focar em ${weakestArea.name}`;
+      } else if (untouchedAreas.length > 0 && practicedAreas.length > 0) {
+        const suggested = untouchedAreas[0];
+        currentRecommendedArea = suggested;
+        badgeEl.textContent = `🟡 Matéria Negligenciada na Semana`;
+        badgeEl.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30';
+        descEl.innerHTML = `Suas matérias praticadas estão com ótimo desempenho (≥ 70%), mas você ainda está com <b>0 questões</b> em <b>${escapeHtml(suggested)}</b> nesta semana.`;
+        btnEl.classList.remove('hidden');
+        btnEl.textContent = `🎯 Iniciar ${suggested}`;
+      } else if (weakestArea) {
+        currentRecommendedArea = weakestArea.name;
+        badgeEl.textContent = `🟢 Desempenho Sólido`;
+        badgeEl.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+        descEl.innerHTML = `Todas as áreas praticadas estão acima de 70%! Para elevar ainda mais o teto, refine <b>${escapeHtml(weakestArea.name)}</b> (${weakestArea.acc}%)${pendingErrors > 0 ? ` ou revise seus <b>${pendingErrors} tópicos pendentes</b> no Caderno de Erros abaixo.` : '.'}`;
+        btnEl.classList.remove('hidden');
+        btnEl.textContent = `🎯 Selecionar ${weakestArea.name}`;
+      } else {
+        currentRecommendedArea = customAreas[0] || 'Clínica';
+        badgeEl.textContent = `⚪ Aguardando Primeiros Blocos`;
+        badgeEl.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400';
+        descEl.innerHTML = `Comece registrando sua primeira bateria de questões da semana para ativar o diagnóstico de precisão e esquecimento por matéria.`;
+        btnEl.classList.add('hidden');
+      }
+    }
+
+    function selectRecommendedArea() {
+      if (!currentRecommendedArea) return;
+      const selectEl = document.getElementById('qAreaSelect');
+      if (selectEl) {
+        selectEl.value = currentRecommendedArea;
+        document.getElementById('qSolvedInput').focus();
+        showToast(`Matéria "${currentRecommendedArea}" selecionada para o bloco!`, '🎯');
+      }
+    }
+
+    // ==========================================
+    // ITEM 4: CADERNO DE ERROS & FILA DE REVISÃO
+    // ==========================================
+
+    function addStandaloneErrorTopic() {
+      const areaSelect = document.getElementById('qAreaSelect');
+      const defaultArea = areaSelect && areaSelect.value ? areaSelect.value : (customAreas[0] || 'Geral');
+      const topic = prompt(`Digite o tema/conceito que você errou ou precisa revisar (Área atual: ${defaultArea}):`);
+      if (!topic || !topic.trim()) return;
+
+      errorNotebook.unshift({
+        id: Date.now(),
+        dateStr: WEEK_DATES[selectedDayIndex].shortBr,
+        area: defaultArea,
+        topic: topic.trim(),
+        batchScore: 'Anotação direta',
+        reviewed: false
+      });
+      saveState();
+      showToast('Tópico adicionado à Fila de Revisão e Planilha!', '📓');
+    }
+
+    function toggleErrorReviewed(id) {
+      const item = errorNotebook.find(e => e.id === id);
+      if (item) {
+        item.reviewed = !item.reviewed;
+        saveState();
+      }
+    }
+
+    function deleteErrorItem(id) {
+      errorNotebook = errorNotebook.filter(e => e.id !== id);
+      saveState();
+    }
+
+    function clearReviewedErrors() {
+      const revCount = errorNotebook.filter(e => e.reviewed).length;
+      if (revCount === 0) {
+        showToast('Não há itens marcados como revisados para limpar.', '⚠️');
+        return;
+      }
+      if (confirm(`Remover os ${revCount} tópicos já revisados da lista?`)) {
+        errorNotebook = errorNotebook.filter(e => !e.reviewed);
+        saveState();
+        showToast('Tópicos revisados removidos!', '🧹');
+      }
+    }
+
+    function renderErrorNotebook() {
+      const container = document.getElementById('errorNotebookContainer');
+      const badge = document.getElementById('errorQueueCountBadge');
+      if (!container || !badge) return;
+
+      const pendingCount = errorNotebook.filter(e => !e.reviewed).length;
+      badge.textContent = `${pendingCount} ${pendingCount === 1 ? 'pendente' : 'pendentes'}`;
+      badge.className = pendingCount > 0
+        ? 'text-xs font-semibold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30'
+        : 'text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300';
+
+      if (errorNotebook.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full text-center py-5 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">
+            Nenhum erro na fila. Digite o tema que errou ao registrar um bloco de questões ou clique em <b>+ Anotar Tópico Avulso</b>.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = errorNotebook.map(item => `
+        <div class="p-3 rounded-xl bg-slate-900/75 border ${item.reviewed ? 'border-slate-800/50 opacity-55' : 'border-rose-500/30'} flex items-start justify-between gap-2.5 transition">
+          <label class="flex items-start gap-2.5 cursor-pointer flex-1 min-w-0">
+            <input type="checkbox" class="hidden custom-checkbox" ${item.reviewed ? 'checked' : ''} onchange="toggleErrorReviewed(${item.id})">
+            <div class="w-4 h-4 mt-0.5 shrink-0 rounded border border-slate-600 flex items-center justify-center transition">
+              ${item.reviewed ? '<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>' : ''}
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800/60">${escapeHtml(item.area)}</span>
+                <span class="text-[10px] text-slate-500 font-mono">${escapeHtml(item.dateStr)} • ${escapeHtml(item.batchScore)}</span>
+              </div>
+              <p class="text-xs font-medium break-words ${item.reviewed ? 'line-through text-slate-500' : 'text-slate-100'}">${escapeHtml(item.topic)}</p>
+            </div>
+          </label>
+          <button onclick="deleteErrorItem(${item.id})" class="text-slate-600 hover:text-rose-400 text-xs px-1" title="Excluir tópico">✕</button>
+        </div>
+      `).join('');
     }
 
     // ==========================================
@@ -846,7 +1147,7 @@
         chartInstance.data.datasets[0].borderColor = themeConfig.primary;
         chartInstance.data.datasets[0].pointBorderColor = themeConfig.primary;
         chartInstance.data.datasets[2].borderColor = themeConfig.secondary;
-        chartInstance.data.datasets[2].backgroundColor = themeConfig.secondary + '88';
+        chartInstance.data.datasets[2].backgroundColor = hexToRgba(themeConfig.secondary, 0.55);
         chartInstance.update();
       }
     }
@@ -902,14 +1203,13 @@
     }
 
     function buildFullPayload() {
-      // Inclui effectiveScheduledDays para que a planilha Google saiba exatamente os dias ON do ciclo
       const enrichedHabits = habits.map(h => ({
         ...h,
         effectiveScheduledDays: DAYS.map((_, dIdx) => isHabitActiveOnDay(h, dIdx))
       }));
 
       return {
-        version: 5,
+        version: 6,
         weekStartIso: storedWeekStartIso,
         updatedAt: new Date().toISOString(),
         dailyGoalHours,
@@ -920,7 +1220,9 @@
         pomodoroCycles,
         questionsSolved,
         questionsCorrect,
+        customAreas,
         questionLogs,
+        errorNotebook,
         busyDays,
         themeConfig,
         habits: enrichedHabits,
@@ -943,7 +1245,9 @@
       if (Array.isArray(data.pomodoroCycles) && data.pomodoroCycles.length === 7) pomodoroCycles = data.pomodoroCycles.map(v => Math.max(0, Number(v) || 0));
       if (Array.isArray(data.questionsSolved) && data.questionsSolved.length === 7) questionsSolved = data.questionsSolved.map(v => Math.max(0, Number(v) || 0));
       if (Array.isArray(data.questionsCorrect) && data.questionsCorrect.length === 7) questionsCorrect = data.questionsCorrect.map(v => Math.max(0, Number(v) || 0));
+      if (Array.isArray(data.customAreas) && data.customAreas.length > 0) customAreas = data.customAreas;
       if (Array.isArray(data.questionLogs)) questionLogs = data.questionLogs;
+      if (Array.isArray(data.errorNotebook)) errorNotebook = data.errorNotebook;
       if (Array.isArray(data.busyDays) && data.busyDays.length === 7) busyDays = data.busyDays.map(Boolean);
       if (Array.isArray(data.archivedWeeks)) archivedWeeks = data.archivedWeeks;
       if (data.dailyGoalHours) dailyGoalHours = Number(data.dailyGoalHours);
@@ -966,7 +1270,9 @@
       localStorage.setItem('habitLinkedId', String(linkedHabitId));
       localStorage.setItem('habitQuestionsSolved', JSON.stringify(questionsSolved));
       localStorage.setItem('habitQuestionsCorrect', JSON.stringify(questionsCorrect));
+      localStorage.setItem('habitCustomAreas', JSON.stringify(customAreas));
       localStorage.setItem('habitQuestionLogs', JSON.stringify(questionLogs));
+      localStorage.setItem('habitErrorNotebook', JSON.stringify(errorNotebook));
       localStorage.setItem('habitDailyQuestionsGoal', String(dailyQuestionsGoal));
       localStorage.setItem('habitLinkedQuestionId', String(linkedQuestionHabitId));
       localStorage.setItem('habitBusyDays', JSON.stringify(busyDays));
@@ -1069,7 +1375,7 @@
           lastCloudSync = `${new Date().toLocaleDateString('pt-BR')} às ${timeStr}`;
           localStorage.setItem('habitLastCloudSync', lastCloudSync);
           updateCloudStatusUI('ok', `Salvo (${timeStr})`);
-          if (showNotification) showToast('Planilha e aba Desempenho_Areas atualizadas!', '☁️');
+          if (showNotification) showToast('Planilha, Áreas e Caderno de Erros atualizados!', '☁️');
         } else {
           throw new Error(resData.message || 'Resposta inesperada');
         }
@@ -1189,7 +1495,7 @@
     }
 
     // ==========================================
-    // RASTREADOR DE QUESTÕES, GRANDE ÁREA E DESFAZER
+    // RASTREADOR DE QUESTÕES, ÁREAS E CADERNO DE ERROS
     // ==========================================
 
     function checkAutoCompleteQuestionHabit(dayIdx) {
@@ -1216,10 +1522,12 @@
       const areaEl = document.getElementById('qAreaSelect');
       const solvedEl = document.getElementById('qSolvedInput');
       const correctEl = document.getElementById('qCorrectInput');
+      const errorTopicEl = document.getElementById('qErrorTopicInput');
       
-      const area = areaEl ? areaEl.value : 'Geral';
+      const area = areaEl && areaEl.value ? areaEl.value : (customAreas[0] || 'Geral');
       const solved = Math.max(0, Number(solvedEl.value) || 0);
       const correct = Math.max(0, Number(correctEl.value) || 0);
+      const errorTopic = errorTopicEl ? errorTopicEl.value.trim() : '';
 
       if (solved === 0) return;
       if (correct > solved) {
@@ -1230,21 +1538,36 @@
       questionsSolved[selectedDayIndex] = (questionsSolved[selectedDayIndex] || 0) + solved;
       questionsCorrect[selectedDayIndex] = (questionsCorrect[selectedDayIndex] || 0) + correct;
 
+      const batchId = Date.now();
+      const batchAcc = Math.round((correct / solved) * 100);
+
       questionLogs.push({
-        id: Date.now(),
+        id: batchId,
         dayIdx: selectedDayIndex,
         area: area,
         solved: solved,
         correct: correct
       });
 
+      if (errorTopic) {
+        errorNotebook.unshift({
+          id: batchId + 1,
+          logId: batchId,
+          dateStr: WEEK_DATES[selectedDayIndex].shortBr,
+          area: area,
+          topic: errorTopic,
+          batchScore: `${correct}/${solved} (${batchAcc}%)`,
+          reviewed: false
+        });
+      }
+
       solvedEl.value = '';
       correctEl.value = '';
+      if (errorTopicEl) errorTopicEl.value = '';
 
       checkAutoCompleteQuestionHabit(selectedDayIndex);
       saveState();
-      const batchAcc = Math.round((correct / solved) * 100);
-      showToast(`+${solved} questões em ${area} (${batchAcc}% de acerto)!`, '📝');
+      showToast(`+${solved} questões em ${area} (${batchAcc}%)${errorTopic ? ' + Erro salvo na fila!' : '!'}`, '📝');
     }
 
     function undoLastQuestionBatch() {
@@ -1264,6 +1587,8 @@
       const removed = questionLogs.splice(lastLogIndex, 1)[0];
       questionsSolved[selectedDayIndex] = Math.max(0, (questionsSolved[selectedDayIndex] || 0) - removed.solved);
       questionsCorrect[selectedDayIndex] = Math.max(0, (questionsCorrect[selectedDayIndex] || 0) - removed.correct);
+      // Se esse bloco gerou uma anotação no caderno de erros, remove também
+      errorNotebook = errorNotebook.filter(item => item.logId !== removed.id);
 
       checkAutoCompleteQuestionHabit(selectedDayIndex);
       saveState();
@@ -1304,9 +1629,10 @@
 
     function getAreaStatsForWeek() {
       const map = {};
-      AREAS.forEach(a => { map[a] = { solved: 0, correct: 0 }; });
+      customAreas.forEach(a => { map[a] = { solved: 0, correct: 0 }; });
       questionLogs.forEach(log => {
-        const area = map[log.area] ? log.area : 'Geral';
+        const area = log.area || 'Geral';
+        if (!map[area]) map[area] = { solved: 0, correct: 0 };
         map[area].solved += (Number(log.solved) || 0);
         map[area].correct += (Number(log.correct) || 0);
       });
@@ -1364,12 +1690,14 @@
       questionsSolved = [0, 0, 0, 0, 0, 0, 0];
       questionsCorrect = [0, 0, 0, 0, 0, 0, 0];
       questionLogs = [];
+      // Preserva no Caderno de Erros os tópicos que ainda NÃO foram revisados!
+      errorNotebook = errorNotebook.filter(item => !item.reviewed);
       busyDays = [false, false, false, false, false, false, false];
       storedWeekStartIso = CURRENT_WEEK_SUNDAY_ISO;
       document.getElementById('newWeekBanner').classList.add('hidden');
 
       saveState();
-      showToast('Semana arquivada e sincronizada!', '📦');
+      showToast('Semana arquivada! Erros pendentes mantidos para revisão.', '📦');
     }
 
     function resetWeekOnly() {
@@ -1447,12 +1775,16 @@
       rows.push(['DIA_CORRIDO', '0', '"Modo Dia Corrido"', ...busyDays.map(b => b ? '1' : '0'), '', '']);
 
       const areaMap = getAreaStatsForWeek();
-      AREAS.forEach(area => {
+      Object.keys(areaMap).forEach(area => {
         const st = areaMap[area];
         if (st.solved > 0) {
           const acc = Math.round((st.correct / st.solved) * 100);
           rows.push(['AREA_QUESTOES', '0', escapeCSV(area), st.solved, st.correct, `${acc}%`, '', '', '', '', '', '']);
         }
+      });
+
+      errorNotebook.forEach(err => {
+        rows.push(['CADERNO_ERRO', err.id, escapeCSV(err.area), escapeCSV(err.topic), escapeCSV(err.dateStr), err.reviewed ? '1' : '0', '', '', '', '', '', '']);
       });
 
       const csvContent = '\uFEFF' + rows.map(r => r.join(',')).join('\r\n');
@@ -1501,6 +1833,8 @@
             const cleanContent = content.replace(/^\uFEFF/, '');
             const lines = cleanContent.split(/\r?\n/).filter(l => l.trim() !== '');
             const importedHabits = [];
+            const importedLogs = [];
+            const importedErrors = [];
 
             for (let i = 1; i < lines.length; i++) {
               const cols = parseCSVLine(lines[i]);
@@ -1523,9 +1857,30 @@
                 questionsCorrect = cols.slice(3, 10).map(v => Number(v) || 0);
               } else if (type === 'DIA_CORRIDO') {
                 busyDays = cols.slice(3, 10).map(v => v === '1');
+              } else if (type === 'AREA_QUESTOES') {
+                const areaName = cols[2] || 'Geral';
+                if (!customAreas.includes(areaName)) customAreas.push(areaName);
+                importedLogs.push({
+                  id: Date.now() + i,
+                  dayIdx: selectedDayIndex,
+                  area: areaName,
+                  solved: Number(cols[3]) || 0,
+                  correct: Number(cols[4]) || 0
+                });
+              } else if (type === 'CADERNO_ERRO') {
+                importedErrors.push({
+                  id: Number(cols[1]) || Date.now() + i,
+                  area: cols[2] || 'Geral',
+                  topic: cols[3] || '',
+                  dateStr: cols[4] || TODAY_ISO,
+                  batchScore: 'Importado',
+                  reviewed: cols[5] === '1'
+                });
               }
             }
             if (importedHabits.length > 0) habits = importedHabits;
+            if (importedLogs.length > 0) questionLogs = importedLogs;
+            if (importedErrors.length > 0) errorNotebook = importedErrors;
             saveState();
             showToast('Planilha CSV importada com sucesso!', '🎉');
           }
@@ -1999,6 +2354,18 @@
           : habits.map(h => `<option value="${h.id}" class="bg-slate-900" ${h.id === Number(linkedQuestionHabitId) ? 'selected' : ''}>${escapeHtml(h.name)}</option>`).join('');
       }
 
+      // Popula o seletor dinâmico de áreas (incluindo matérias de concursos)
+      const areaSelect = document.getElementById('qAreaSelect');
+      if (areaSelect) {
+        const previousVal = areaSelect.value;
+        areaSelect.innerHTML = customAreas.map(a => `<option value="${escapeHtml(a)}" class="bg-slate-900">${escapeHtml(a)}</option>`).join('');
+        if (customAreas.includes(previousVal)) {
+          areaSelect.value = previousVal;
+        }
+      }
+
+      renderCustomAreasManager();
+
       const effectiveQGoal = getEffectiveQuestionGoal(selectedDayIndex);
       const solvedToday = questionsSolved[selectedDayIndex] || 0;
       const correctToday = questionsCorrect[selectedDayIndex] || 0;
@@ -2017,12 +2384,12 @@
 
       const pillsContainer = document.getElementById('areaStatsPills');
       const areaStats = getAreaStatsForWeek();
-      const activeAreas = AREAS.filter(a => areaStats[a].solved > 0);
+      const allAreaKeys = Object.keys(areaStats).filter(a => areaStats[a].solved > 0);
 
-      if (activeAreas.length === 0) {
+      if (allAreaKeys.length === 0) {
         pillsContainer.innerHTML = `<span class="text-[10px] text-slate-500">Nenhuma questão por área registrada nesta semana.</span>`;
       } else {
-        pillsContainer.innerHTML = activeAreas.map(area => {
+        pillsContainer.innerHTML = allAreaKeys.map(area => {
           const st = areaStats[area];
           const pct = Math.round((st.correct / st.solved) * 100);
           const colorClass = pct >= 80
@@ -2030,7 +2397,7 @@
             : (pct >= 70 ? 'bg-amber-500/15 text-amber-300 border-amber-500/30' : 'bg-rose-500/15 text-rose-300 border-rose-500/30');
           return `
             <span class="text-[10px] font-semibold px-2 py-0.5 rounded-lg border ${colorClass}">
-              ${area}: ${st.correct}/${st.solved} (${pct}%)
+              ${escapeHtml(area)}: ${st.correct}/${st.solved} (${pct}%)
             </span>
           `;
         }).join('');
@@ -2298,7 +2665,7 @@
         chartInstance.data.datasets[1].data = dataQAcc;
         chartInstance.data.datasets[2].data = dataHours;
         chartInstance.data.datasets[2].borderColor = themeConfig.secondary;
-        chartInstance.data.datasets[2].backgroundColor = themeConfig.secondary + '88';
+        chartInstance.data.datasets[2].backgroundColor = hexToRgba(themeConfig.secondary, 0.55);
         chartInstance.update();
         return;
       }
@@ -2337,7 +2704,7 @@
               type: 'bar',
               label: 'Horas Líquidas (h)',
               data: dataHours,
-              backgroundColor: themeConfig.secondary + '88',
+              backgroundColor: hexToRgba(themeConfig.secondary, 0.55),
               borderColor: themeConfig.secondary,
               borderWidth: 1,
               borderRadius: 6,
@@ -2381,10 +2748,12 @@
       updateNotificationButtonUI();
       updateCloudStatusUI(gasWebAppUrl ? 'ok' : 'off');
       renderDaySelector();
+      renderRecommendationBanner();
       renderGoalBar();
       renderQuestionBar();
       renderHabitList();
       renderNewHabitDaysPicker();
+      renderErrorNotebook();
       renderMatrix();
       renderKPIs();
       renderArchives();
