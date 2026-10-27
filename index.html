@@ -1,475 +1,1116 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Painel de Performance</title>
-  
-  <!-- Configurações de Web App para abrir em Tela Cheia no Celular -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Performance">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#121316">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="PerfStudio" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#0b0f19" id="metaThemeColor" />
 
+  <title>Performance Studio • Hábitos, Horas & Questões</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
   <style>
+    :root {
+      --bg-main: #0b0f19;
+      --bg-card: #111827;
+      --border-card: #1f2937;
+      --accent-primary: #10b981;
+      --accent-secondary: #6366f1;
+    }
     body {
-      background-color: #121316;
-      color: #e4e4e7;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-main);
+      color: #f1f5f9;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    body.surface-oled {
+      --bg-main: #000000;
+      --bg-card: #090d16;
+      --border-card: #1e293b;
+    }
+    body.surface-midnight {
+      --bg-main: #0f172a;
+      --bg-card: #1e293b;
+      --border-card: #334155;
+    }
+    body.surface-light {
+      --bg-main: #f8fafc;
+      --bg-card: #ffffff;
+      --border-card: #cbd5e1;
+      color: #0f172a;
     }
     .glass-card {
-      background: #18191d;
-      border: 1px solid #27282f;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 0.85rem;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    body.surface-light .text-white { color: #0f172a !important; }
+    body.surface-light .text-slate-200, body.surface-light .text-slate-300 { color: #334155 !important; }
+    body.surface-light .bg-slate-900, body.surface-light .bg-slate-900\/80, body.surface-light .bg-slate-900\/90, body.surface-light .bg-slate-950 {
+      background-color: #f1f5f9 !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
     }
     .custom-checkbox:checked + div {
-      background-color: #52637a;
-      border-color: #64748b;
+      background-color: var(--accent-primary);
+      border-color: var(--accent-primary);
     }
-    .timer-sober {
-      letter-spacing: -0.03em;
+    .accent-bg { background-color: var(--accent-primary); }
+    .accent-bg:hover { filter: brightness(1.1); }
+    .accent-text { color: var(--accent-primary); }
+    .secondary-bg { background-color: var(--accent-secondary); }
+    .secondary-text { color: var(--accent-secondary); }
+
+    .tab-btn {
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s ease;
     }
+    .tab-btn.active {
+      border-bottom: 2px solid var(--accent-primary);
+      color: var(--accent-primary);
+      font-weight: 600;
+    }
+    .metric-val {
+      font-family: 'JetBrains Mono', monospace;
+      transition: filter 0.2s ease;
+    }
+    .privacy-blur .metric-val, .privacy-blur .private-text {
+      filter: blur(7px);
+      user-select: none;
+    }
+    .timer-glow {
+      text-shadow: 0 0 25px color-mix(in srgb, var(--accent-primary) 35%, transparent);
+    }
+    input[type="color"] {
+      -webkit-appearance: none;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 9999px;
+      cursor: pointer;
+      padding: 0;
+      background: transparent;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    input[type="color"]::-webkit-color-swatch {
+      border: 2px solid rgba(255,255,255,0.25);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
   </style>
 </head>
-<body class="min-h-screen p-4 md:p-8">
+<body class="min-h-screen pb-16">
 
   <!-- Notificação Toast Interna -->
   <div id="toastNotification" class="fixed bottom-5 right-5 z-50 hidden transform transition-all duration-300">
-    <div class="glass-card px-4 py-3 rounded-xl shadow-2xl border border-zinc-600 flex items-center gap-3">
-      <span id="toastIcon" class="text-base">✓</span>
-      <span id="toastMessage" class="text-xs md:text-sm font-medium text-zinc-200">Operação realizada.</span>
+    <div class="glass-card px-4 py-3 rounded-xl shadow-2xl border border-emerald-500/40 flex items-center gap-3">
+      <span id="toastIcon" class="text-lg">✅</span>
+      <span id="toastMessage" class="text-xs md:text-sm font-medium text-slate-100">Operação realizada!</span>
     </div>
   </div>
 
-  <div class="max-w-7xl mx-auto space-y-5">
-    
-    <!-- Cabeçalho Sóbrio -->
-    <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-zinc-800">
-      <div>
-        <div class="flex items-center gap-3">
-          <h1 class="text-xl md:text-2xl font-semibold tracking-tight text-zinc-100">Painel de Hábitos & Estudo</h1>
-          <span id="cloudStatusPill" onclick="toggleCloudConfig()" class="cursor-pointer text-[11px] font-medium px-2.5 py-0.5 rounded-md bg-zinc-900 text-zinc-400 border border-zinc-800 hover:border-zinc-600 transition flex items-center gap-1.5" title="Configurar sincronização com Google Drive e Google Calendar">
-            <span id="cloudStatusDot" class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
-            <span id="cloudStatusText">Nuvem Off</span>
-          </span>
+  <!-- TOP STICKY HEADER (ESTILO FINCONTROL STUDIO) -->
+  <header class="sticky top-0 z-30 backdrop-blur-md bg-slate-900/90 border-b border-slate-800 px-4 py-3">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center accent-text font-bold font-mono text-sm">
+          ⚡
         </div>
-        <p class="text-zinc-500 text-xs mt-1">Guiado pelos eventos <b>"study"</b> e <b>"training"</b> do seu Google Calendar.</p>
-      </div>
-      
-      <div class="flex flex-wrap items-center gap-2">
-        <input type="file" id="importFileInput" accept=".json,.csv" class="hidden" onchange="handleFileImport(event)">
-        
-        <button onclick="pullFromCloud(true)" class="px-3 py-1.5 text-xs font-medium text-zinc-200 bg-slate-800 hover:bg-slate-700 rounded-lg transition border border-slate-700" title="Sincronizar eventos study e training do Google Calendar">
-          ↻ Sincronizar Agenda
-        </button>
-
-        <button onclick="toggleCloudConfig()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-800">
-          Nuvem (Drive)
-        </button>
-
-        <button id="notifBtn" onclick="requestDesktopNotifications()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-800">
-          <span id="notifBtnText">Alertas</span>
-        </button>
-
-        <button onclick="exportJSON()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-800">
-          JSON
-        </button>
-
-        <button onclick="exportCSV()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-800">
-          CSV
-        </button>
-
-        <button onclick="document.getElementById('importFileInput').click()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-800">
-          Importar
-        </button>
-
-        <button onclick="archiveAndResetWeek()" class="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-lg transition border border-zinc-700">
-          Arquivar Semana
-        </button>
-
-        <button onclick="resetWeekOnly()" class="px-2.5 py-1.5 text-xs font-medium text-zinc-500 bg-zinc-900 hover:text-zinc-300 rounded-lg transition border border-zinc-800" title="Zerar semana atual sem arquivar">
-          ↺
-        </button>
-      </div>
-    </header>
-
-    <!-- Gaveta de Configuração da Sincronização Google Drive -->
-    <section id="cloudConfigPanel" class="hidden glass-card p-5 rounded-xl border border-zinc-700 space-y-4">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
         <div>
-          <h2 class="text-sm font-semibold text-zinc-200">Sincronização — Google Planilhas + Google Calendar</h2>
-          <p class="text-xs text-zinc-500">Insira a URL do seu App da Web terminada em /exec.</p>
+          <div class="flex items-center gap-2">
+            <h1 class="font-bold text-base sm:text-lg leading-tight text-white" id="brandTitle">Performance Studio</h1>
+            <span id="cloudStatusPill" onclick="switchTab('studio'); switchStudioSubTab('sub-cloud');" class="cursor-pointer text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700 hover:border-slate-500 transition flex items-center gap-1.5" title="Status da Planilha Google">
+              <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-slate-500"></span>
+              <span id="cloudStatusText">Local</span>
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400">Semana Dom-Sáb • Ciclos ON/OFF • Residência & Concursos</p>
         </div>
-        <button onclick="toggleCloudConfig()" class="text-xs text-zinc-400 hover:text-white self-end md:self-auto">Fechar ✕</button>
       </div>
 
-      <div class="flex flex-col sm:flex-row gap-2">
-        <input 
-          type="url" 
-          id="gasUrlInput" 
-          placeholder="https://script.google.com/macros/s/.../exec" 
-          class="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-slate-500"
-        >
-        <button onclick="saveGasUrl()" class="bg-slate-700 hover:bg-slate-600 text-zinc-100 font-medium px-4 py-2 rounded-lg text-xs transition">
-          Salvar & Conectar
+      <!-- Controles Rápidos Globais -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <button id="busyDayBtn" onclick="toggleBusyDay()" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition flex items-center gap-1 bg-slate-800/90 text-slate-300 border-slate-700 hover:border-amber-500/50" title="Reduz metas do dia selecionado pela metade">
+          <span>⚡</span> <span id="busyDayBtnText">Dia Corrido: OFF</span>
+        </button>
+
+        <button onclick="togglePrivacy()" class="text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 transition" title="Modo Biblioteca (Borrar Métricas e Erros)">
+          👁️
+        </button>
+
+        <button id="notifBtn" onclick="requestDesktopNotifications()" class="text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-amber-300 transition" title="Alertas na Área de Trabalho">
+          🔔 <span id="notifBtnText" class="hidden sm:inline">Alertas</span>
+        </button>
+
+        <button onclick="pullFromCloud(true)" class="text-xs px-2.5 py-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 transition flex items-center gap-1 font-medium">
+          🔄 <span class="hidden md:inline">Sincronizar</span>
         </button>
       </div>
+    </div>
 
-      <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-zinc-800/80 text-xs">
-        <div class="flex flex-wrap items-center gap-2">
-          <button onclick="pullFromCloud(true)" class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg border border-zinc-800 transition">
-            Puxar Planilha e Agenda agora
-          </button>
-          <button onclick="pushToCloud(true)" class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg border border-zinc-800 transition">
-            Forçar envio para a Planilha
-          </button>
-          <button onclick="disconnectCloud()" class="px-3 py-1.5 bg-zinc-950 hover:bg-zinc-900 text-zinc-500 hover:text-zinc-300 rounded-lg border border-zinc-800 transition">
-            Desconectar
-          </button>
+    <!-- NAVEGAÇÃO DE ABAS -->
+    <nav class="max-w-7xl mx-auto mt-3 flex gap-1 overflow-x-auto border-b border-slate-800/80 text-xs sm:text-sm">
+      <button onclick="switchTab('today')" id="tab-today" class="tab-btn active px-3 py-2 whitespace-nowrap">📊 Hoje, Pomodoro & Hábitos</button>
+      <button onclick="switchTab('questions')" id="tab-questions" class="tab-btn px-3 py-2 whitespace-nowrap">📝 Questões, Áreas & Caderno de Erros</button>
+      <button onclick="switchTab('goals')" id="tab-goals" class="tab-btn px-3 py-2 whitespace-nowrap">🎯 Caixinhas & Metas de Longo Prazo</button>
+      <button onclick="switchTab('week')" id="tab-week" class="tab-btn px-3 py-2 whitespace-nowrap">📅 Matriz da Semana & Histórico</button>
+      <button onclick="switchTab('studio')" id="tab-studio" class="tab-btn px-3 py-2 whitespace-nowrap">⚙️ Estúdio de Personalização</button>
+    </nav>
+  </header>
+
+  <!-- CONTAINER PRINCIPAL -->
+  <main class="max-w-7xl mx-auto px-4 pt-5 space-y-6">
+
+    <!-- Banner Automático de Virada de Semana -->
+    <div id="newWeekBanner" class="hidden glass-card p-4 border border-amber-500/40 bg-amber-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">📅</span>
+        <div>
+          <h3 class="text-xs md:text-sm font-bold text-amber-300">Uma nova semana começou (Domingo)!</h3>
+          <p class="text-xs text-slate-300">Deseja arquivar os números da semana anterior no histórico e iniciar a semana limpa? (Suas Caixinhas de Longo Prazo e Erros não revisados serão mantidos).</p>
         </div>
-        <span id="lastSyncTimestamp" class="text-[11px] text-zinc-500">Última sincronização: Nunca</span>
       </div>
-    </section>
-
-    <!-- Cards de Resumo (5 KPIs Sóbrios) -->
-    <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-      <div class="glass-card p-4 rounded-xl">
-        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Sequência Ativa</span>
-        <p class="text-xl md:text-2xl font-semibold text-zinc-100 mt-1" id="streakCount">0 dias</p>
-        <span class="text-[11px] text-zinc-500" id="streakSubtext">Meta: 80% do dia</span>
+      <div class="flex items-center gap-2 shrink-0">
+        <button onclick="archiveAndResetWeek()" class="px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white font-semibold rounded-xl text-xs transition">
+          📦 Arquivar e Iniciar Nova
+        </button>
+        <button onclick="dismissNewWeekBanner()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs transition border border-slate-700">
+          Manter
+        </button>
       </div>
+    </div>
 
-      <div class="glass-card p-4 rounded-xl">
-        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Horas Líquidas (Dia)</span>
-        <p class="text-xl md:text-2xl font-semibold text-slate-300 mt-1" id="dailyStudyTime">0h 00m</p>
-        <span class="text-[11px] text-zinc-500" id="weeklyStudyTime">Semana: 0h 00m</span>
+    <!-- BARRA GLOBAL DE SELEÇÃO DO DIA (DOM A SÁB) -->
+    <div class="glass-card p-3.5 flex flex-col md:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-medium text-slate-400">Dia Selecionado:</span>
+        <span id="selectedDayLabel" class="text-xs font-bold font-mono px-2.5 py-1 bg-slate-800 accent-text rounded-lg">Hoje</span>
       </div>
-
-      <div class="glass-card p-4 rounded-xl">
-        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Questões & Acerto</span>
-        <p class="text-xl md:text-2xl font-semibold text-zinc-200 mt-1" id="dailyQuestionsKPI">0 (0%)</p>
-        <span class="text-[11px] text-zinc-500" id="weeklyQuestionsKPI">Semana: 0 (0%)</span>
-      </div>
-
-      <div class="glass-card p-4 rounded-xl">
-        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Taxa da Semana</span>
-        <p class="text-xl md:text-2xl font-semibold text-zinc-100 mt-1" id="weeklyRate">0%</p>
-        <span class="text-[11px] text-zinc-500">Sobre dias planejados</span>
-      </div>
-
-      <div class="glass-card p-4 rounded-xl col-span-2 sm:col-span-1">
-        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Check-ins</span>
-        <p class="text-xl md:text-2xl font-semibold text-zinc-300 mt-1" id="totalCompleted">0 / 0</p>
-        <span class="text-[11px] text-zinc-500">Total concluído</span>
-      </div>
-    </section>
-
-    <!-- Seletor Global de Dia da Semana -->
-    <div class="glass-card p-3.5 rounded-xl flex flex-col md:flex-row items-center justify-between gap-3">
-      <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-between md:justify-start">
-        <div class="flex items-center gap-2">
-          <span class="text-xs font-medium text-zinc-400">Dia em visualização:</span>
-          <span id="selectedDayLabel" class="text-xs font-semibold px-2.5 py-0.5 bg-zinc-800 text-zinc-200 rounded-md">Hoje</span>
-        </div>
-        <span id="dayScheduleBadges" class="flex items-center gap-1.5 text-[11px]"></span>
-      </div>
-
       <div class="grid grid-cols-7 gap-1.5 w-full md:w-auto" id="daySelector"></div>
     </div>
 
-    <!-- Linha Tripla: Blocos da Agenda ("study" & "training") + Meta de Horas + Meta de Questões -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+    <!-- ==================== ABA 1: HOJE, POMODORO & HÁBITOS ==================== -->
+    <section id="view-today" class="space-y-6">
 
-      <!-- Card 1: Blocos "study" e "training" no Google Calendar - 4 colunas -->
-      <section class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between space-y-3">
-        <div>
-          <div class="flex items-center justify-between mb-1">
-            <h2 class="text-sm font-semibold text-zinc-200">Blocos na Agenda Hoje</h2>
-            <span id="calSyncBadge" class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">Google Calendar</span>
+      <!-- 5 KPIs Rápidos com JetBrains Mono -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+        <div class="glass-card p-4 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Sequência Ativa</span>
+            <p class="text-xl sm:text-2xl font-bold text-amber-400 mt-1 metric-val" id="streakCount">0 dias</p>
+            <span class="text-[10px] text-slate-500" id="streakSubtext">Meta: 80% do dia</span>
           </div>
-          <p class="text-[11px] text-zinc-500 mb-3">Detecta seus eventos <b>"study"</b> (define a meta de horas) e <b>"training"</b> (ativa o treino do dia).</p>
-
-          <!-- Lista de Eventos do Dia -->
-          <div id="calendarEventsList" class="space-y-1.5 max-h-40 overflow-y-auto pr-1"></div>
+          <div class="text-2xl">🔥</div>
         </div>
 
-        <div class="pt-2 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-zinc-500">
-          <span>Sincronizar metas com a agenda:</span>
-          <button onclick="toggleAutoCalendarSync()" id="autoCalToggleBtn" class="text-zinc-200 font-semibold hover:underline">
-            Ativo (Automático)
-          </button>
-        </div>
-      </section>
-
-      <!-- Card 2: Barra de Meta de Horas Líquidas (Guiada pelo evento "study") - 4 colunas -->
-      <section class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between space-y-4">
-        <div class="flex flex-col justify-between gap-2">
-          <div class="flex items-center justify-between">
-            <h2 class="text-sm font-semibold text-zinc-200">Meta de Estudo ("study")</h2>
-            <span id="goalStatusBadge" class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">Em andamento</span>
+        <div class="glass-card p-4 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Horas Líquidas (Dia)</span>
+            <p class="text-xl sm:text-2xl font-bold secondary-text mt-1 metric-val" id="dailyStudyTime">0h 00m</p>
+            <span class="text-[10px] text-slate-500 metric-val" id="weeklyStudyTime">Semana: 0h 00m</span>
           </div>
-          <p class="text-[11px] text-zinc-500" id="goalRemainingText">A meta do dia acompanha a duração do seu evento "study".</p>
+          <div class="text-2xl">⏱️</div>
+        </div>
 
-          <div class="flex flex-wrap items-center gap-2 text-xs pt-1">
-            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg" title="Meta usada apenas se a sincronização da agenda estiver desligada">
-              <span class="text-zinc-500">Padrão s/ agenda:</span>
-              <select id="dailyGoalSelect" onchange="updateDailyGoal(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer">
-                <option value="1" class="bg-zinc-900">1h</option>
-                <option value="2" class="bg-zinc-900">2h</option>
-                <option value="3" class="bg-zinc-900">3h</option>
-                <option value="4" class="bg-zinc-900">4h</option>
-                <option value="5" class="bg-zinc-900">5h</option>
-                <option value="6" class="bg-zinc-900">6h</option>
+        <div class="glass-card p-4 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Questões & Acerto</span>
+            <p class="text-xl sm:text-2xl font-bold text-cyan-400 mt-1 metric-val" id="dailyQuestionsKPI">0 (0%)</p>
+            <span class="text-[10px] text-slate-500 metric-val" id="weeklyQuestionsKPI">Semana: 0 (0%)</span>
+          </div>
+          <div class="text-2xl">📝</div>
+        </div>
+
+        <div class="glass-card p-4 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Taxa da Semana</span>
+            <p class="text-xl sm:text-2xl font-bold accent-text mt-1 metric-val" id="weeklyRate">0%</p>
+            <span class="text-[10px] text-slate-500">Dias em atividade</span>
+          </div>
+          <div class="text-2xl">📈</div>
+        </div>
+
+        <div class="glass-card p-4 flex items-center justify-between col-span-2 sm:col-span-1">
+          <div>
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Check-ins</span>
+            <p class="text-xl sm:text-2xl font-bold text-sky-400 mt-1 metric-val" id="totalCompleted">0 / 0</p>
+            <span class="text-[10px] text-slate-500">Metas na semana</span>
+          </div>
+          <div class="text-2xl">✅</div>
+        </div>
+      </div>
+
+      <!-- Algoritmo de Prioridade do Dia -->
+      <div class="glass-card p-4 border border-cyan-500/25 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div class="flex items-start md:items-center gap-3">
+          <div class="text-2xl">🧠</div>
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-cyan-300">Algoritmo de Prioridade do Dia</span>
+              <span id="recBadge" class="text-[10px] font-semibold font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">Analisando...</span>
+            </div>
+            <p id="recDescription" class="text-xs text-slate-300 mt-1 private-text">
+              Analisando seu histórico de questões por matéria...
+            </p>
+          </div>
+        </div>
+        <button id="recActionBtn" onclick="selectRecommendedArea()" class="hidden px-3.5 py-2 rounded-xl text-xs font-semibold bg-cyan-600 hover:bg-cyan-500 text-white transition shrink-0">
+          🎯 Resolver Agora
+        </button>
+      </div>
+
+      <!-- Barra de Progresso de Horas Líquidas do Dia -->
+      <div class="glass-card p-5 space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5">
+            <span class="text-xl">🎯</span>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-sm font-bold text-white">Meta Diária de Horas Líquidas</h2>
+                <span id="goalStatusBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">Em andamento</span>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-0.5" id="goalRemainingText">Marca o hábito vinculado automaticamente ao atingir 100%.</p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg">
+              <span class="text-slate-400">Meta:</span>
+              <select id="dailyGoalSelect" onchange="updateDailyGoal(this.value)" class="bg-transparent secondary-text font-mono font-bold focus:outline-none cursor-pointer">
+                <option value="1" class="bg-slate-900">1h/dia</option>
+                <option value="2" class="bg-slate-900">2h/dia</option>
+                <option value="3" class="bg-slate-900">3h/dia</option>
+                <option value="4" class="bg-slate-900">4h/dia</option>
+                <option value="5" class="bg-slate-900">5h/dia</option>
+                <option value="6" class="bg-slate-900">6h/dia</option>
+                <option value="8" class="bg-slate-900">8h/dia</option>
               </select>
             </div>
-            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg flex-1 min-w-[120px]">
-              <span class="text-zinc-500">Auto:</span>
-              <select id="linkedHabitSelect" onchange="updateLinkedHabit(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer w-full truncate"></select>
+            <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg">
+              <span class="text-slate-400">Auto-check:</span>
+              <select id="linkedHabitSelect" onchange="updateLinkedHabit(this.value)" class="bg-transparent accent-text font-semibold focus:outline-none cursor-pointer max-w-[140px] truncate"></select>
             </div>
           </div>
         </div>
 
         <div class="space-y-1.5">
-          <div class="flex justify-between text-xs">
-            <span id="goalProgressFraction" class="text-zinc-400">0h 00m de 0h 00m</span>
-            <span id="goalProgressPercent" class="text-zinc-200 font-semibold">0%</span>
+          <div class="flex justify-between text-xs font-mono">
+            <span id="goalProgressFraction" class="text-slate-300 metric-val">0h 00m de 4h 00m</span>
+            <span id="goalProgressPercent" class="secondary-text font-bold metric-val">0%</span>
           </div>
-          <div class="w-full h-2.5 bg-zinc-950 rounded-full overflow-hidden border border-zinc-800">
-            <div id="goalProgressBar" class="h-full rounded-full transition-all duration-500 bg-slate-500" style="width: 0%"></div>
+          <div class="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
+            <div id="goalProgressBar" class="h-full rounded-full transition-all duration-500 secondary-bg" style="width: 0%"></div>
           </div>
         </div>
-      </section>
+      </div>
 
-      <!-- Card 3: Rastreador de Questões & Taxa de Acerto - 4 colunas -->
-      <section class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between space-y-3">
-        <div>
-          <div class="flex items-center justify-between">
-            <h2 class="text-sm font-semibold text-zinc-200">Questões & Taxa de Acerto</h2>
-            <span id="qAccuracyBadge" class="text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-300">Acerto: 0%</span>
-          </div>
-
-          <div class="flex flex-wrap items-center gap-2 text-xs mt-2">
-            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg">
-              <span class="text-zinc-500">Meta (dias c/ study):</span>
-              <select id="dailyQGoalSelect" onchange="updateDailyQuestionGoal(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer">
-                <option value="10" class="bg-zinc-900">10</option>
-                <option value="15" class="bg-zinc-900">15</option>
-                <option value="20" class="bg-zinc-900">20</option>
-                <option value="30" class="bg-zinc-900">30</option>
-                <option value="40" class="bg-zinc-900">40</option>
-                <option value="50" class="bg-zinc-900">50</option>
-              </select>
+      <!-- Grid Principal da Aba 1: Pomodoro + Checklist de Hábitos + Curva Rápida -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Cronômetro Pomodoro (4 Colunas) -->
+        <div class="lg:col-span-4 glass-card p-6 flex flex-col justify-between space-y-5">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-base font-bold text-white">Cronômetro Pomodoro</h2>
+              <span id="timerStatusBadge" class="text-[11px] font-mono font-semibold px-2.5 py-0.5 bg-slate-800 secondary-text rounded-full">Foco 25m</span>
             </div>
-            <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-lg flex-1 min-w-[110px]">
-              <span class="text-zinc-500">Auto:</span>
-              <select id="linkedQHabitSelect" onchange="updateLinkedQuestionHabit(this.value)" class="bg-transparent text-zinc-300 font-medium focus:outline-none cursor-pointer w-full truncate"></select>
+
+            <div class="grid grid-cols-3 gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800 mb-5">
+              <button onclick="setTimerMode('focus25')" id="btn-focus25" class="py-1.5 text-xs font-semibold rounded-lg secondary-bg text-white transition">Foco 25m</button>
+              <button onclick="setTimerMode('focus50')" id="btn-focus50" class="py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Foco 50m</button>
+              <button onclick="setTimerMode('break')" id="btn-break" class="py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Pausa 5m</button>
+            </div>
+
+            <div class="text-center py-7 bg-slate-900/70 rounded-2xl border border-slate-800/80 mb-5">
+              <div id="timerDisplay" class="text-6xl font-extrabold tracking-tight text-white font-mono timer-glow">25:00</div>
+              <p class="text-[11px] text-slate-400 mt-2" id="timerSubtext">Blindado contra bloqueio de tela e troca de aba</p>
+            </div>
+
+            <div class="flex gap-2">
+              <button onclick="toggleTimer()" id="startPauseBtn" class="flex-1 accent-bg text-slate-950 font-bold py-2.5 rounded-xl text-sm transition shadow-lg">
+                ▶ Iniciar Foco
+              </button>
+              <button onclick="resetTimer()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono rounded-xl text-sm transition border border-slate-700">
+                ↺
+              </button>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-800">
+            <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+              <span>Ajuste rápido no dia:</span>
+              <span id="PomodoroCyclesToday" class="font-mono font-semibold secondary-text">0 blocos</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 font-mono">
+              <button onclick="adjustStudyTime(-900)" class="py-1.5 px-3 bg-slate-800/80 hover:bg-rose-950/50 hover:text-rose-300 text-slate-300 rounded-lg text-xs font-semibold border border-slate-700/70 transition">
+                - 15 min
+              </button>
+              <button onclick="adjustStudyTime(900)" class="py-1.5 px-3 bg-slate-800/80 hover:bg-indigo-950/60 hover:text-indigo-300 text-slate-300 rounded-lg text-xs font-semibold border border-slate-700/70 transition">
+                + 15 min
+              </button>
             </div>
           </div>
         </div>
 
-        <div class="space-y-1.5">
-          <div class="flex justify-between text-xs">
-            <span id="qProgressFraction" class="text-zinc-400">0 de 30 questões</span>
-            <span id="qProgressPercent" class="text-zinc-200 font-semibold">0%</span>
+        <!-- Checklist Diário com Ciclos ON/OFF (4 Colunas) -->
+        <div class="lg:col-span-4 glass-card p-6 flex flex-col justify-between space-y-4">
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <h2 class="text-base font-bold text-white">Hábitos & Rotina do Dia</h2>
+              <span class="text-xs font-mono accent-text font-bold" id="dailyProgressText">0/0 ativos</span>
+            </div>
+            <p class="text-[11px] text-slate-400 mb-3">Clique em <b>📅 Dias</b> para alternar entre dias fixos ou ciclo (ex: <b>2 ON / 1 OFF</b>).</p>
+
+            <div id="habitList" class="space-y-2.5 max-h-72 overflow-y-auto pr-1"></div>
           </div>
-          <div class="w-full h-2.5 bg-zinc-950 rounded-full overflow-hidden border border-zinc-800">
-            <div id="qProgressBar" class="h-full rounded-full transition-all duration-500 bg-zinc-400" style="width: 0%"></div>
+
+          <form onsubmit="addHabit(event)" class="pt-3 border-t border-slate-800 space-y-2.5">
+            <div class="flex gap-2">
+              <input 
+                type="text" 
+                id="newHabitInput" 
+                placeholder="Novo hábito (ex: Treino, Simulado)..." 
+                required
+                class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
+              >
+              <button type="submit" class="accent-bg text-slate-950 font-bold px-3.5 py-2 rounded-xl text-xs transition">
+                + Criar
+              </button>
+            </div>
+
+            <div class="flex items-center justify-between text-[11px] text-slate-400">
+              <span>Frequência:</span>
+              <div class="flex gap-1 bg-slate-900 p-0.5 rounded-lg border border-slate-800">
+                <button type="button" id="newModeFixedBtn" onclick="setNewHabitMode('fixed')" class="px-2 py-0.5 rounded-md text-[10px] font-semibold accent-bg text-slate-950">Dias Fixos</button>
+                <button type="button" id="newModeCycleBtn" onclick="setNewHabitMode('cycle')" class="px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-400">Ciclo ON/OFF</button>
+              </div>
+            </div>
+
+            <div id="newFixedContainer" class="flex items-center justify-between gap-1 text-[11px] text-slate-400">
+              <span>Dias ativos:</span>
+              <div class="flex gap-1" id="newHabitDaysPicker"></div>
+            </div>
+
+            <div id="newCycleContainer" class="hidden flex items-center justify-between gap-2 bg-slate-900 p-2 rounded-xl border border-slate-800 text-[11px]">
+              <div class="flex items-center gap-1">
+                <input type="number" id="newCycleOn" value="2" min="1" max="30" class="w-10 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-center text-white font-mono font-bold">
+                <span class="accent-text font-semibold">ON</span>
+              </div>
+              <span class="text-slate-500">/</span>
+              <div class="flex items-center gap-1">
+                <input type="number" id="newCycleOff" value="1" min="1" max="30" class="w-10 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-center text-white font-mono font-bold">
+                <span class="text-slate-400 font-semibold">OFF</span>
+              </div>
+              <div class="flex items-center gap-1 ml-auto">
+                <span class="text-[10px] text-slate-400">Início:</span>
+                <input type="date" id="newCycleAnchor" class="bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-[10px] text-slate-200 font-mono">
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Curva Semanal Multidimensional (4 Colunas) -->
+        <div class="lg:col-span-4 glass-card p-6 flex flex-col justify-between">
+          <div>
+            <h2 class="text-base font-bold text-white">Curva da Semana (Dom a Sáb)</h2>
+            <p class="text-[11px] text-slate-400 mb-4">Linha: Hábitos (%) | Tracejada: Acerto (%) | Barras: Estudo (h)</p>
+          </div>
+          <div class="relative h-64 md:h-72 w-full">
+            <canvas id="weeklyChart"></canvas>
           </div>
         </div>
 
-        <form onsubmit="addQuestionBatch(event)" class="flex flex-wrap items-center gap-1.5 pt-1">
-          <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 rounded-lg px-2 py-1 flex-1 min-w-[75px]">
-            <span class="text-[10px] text-zinc-500">Feitas:</span>
-            <input type="number" id="qSolvedInput" min="1" max="500" placeholder="20" required class="w-full bg-transparent text-xs text-zinc-200 font-medium focus:outline-none">
-          </div>
-          <div class="flex items-center gap-1 bg-zinc-950 border border-zinc-800 rounded-lg px-2 py-1 flex-1 min-w-[75px]">
-            <span class="text-[10px] text-zinc-500">Certas:</span>
-            <input type="number" id="qCorrectInput" min="0" max="500" placeholder="16" required class="w-full bg-transparent text-xs text-zinc-200 font-medium focus:outline-none">
-          </div>
-          <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-zinc-100 font-medium px-2.5 py-1 rounded-lg text-xs transition">
-            + Somar
-          </button>
-          <button type="button" onclick="clearTodayQuestions()" class="px-2 py-1 bg-zinc-900 hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 rounded-lg text-xs transition border border-zinc-800">
-            ↺
-          </button>
-        </form>
-      </section>
-
-    </div>
-
-    <!-- Área Principal: Pomodoro + Checklist + Gráfico -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-      
-      <!-- Coluna 1: Cronômetro Pomodoro -->
-      <div class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between space-y-5">
-        <div>
-          <div class="flex items-center justify-between mb-3">
-            <h2 class="text-sm font-semibold text-zinc-200">Cronômetro Pomodoro</h2>
-            <span id="timerStatusBadge" class="text-[11px] font-medium px-2 py-0.5 bg-zinc-800 text-zinc-300 rounded">Modo Foco</span>
-          </div>
-
-          <div class="grid grid-cols-3 gap-1 bg-zinc-950 p-1 rounded-lg border border-zinc-800 mb-5">
-            <button onclick="setTimerMode('focus25')" id="btn-focus25" class="py-1.5 text-xs font-medium rounded-md bg-slate-700 text-zinc-100 transition">Foco 25m</button>
-            <button onclick="setTimerMode('focus50')" id="btn-focus50" class="py-1.5 text-xs font-medium rounded-md text-zinc-500 hover:text-zinc-300 transition">Foco 50m</button>
-            <button onclick="setTimerMode('break')" id="btn-break" class="py-1.5 text-xs font-medium rounded-md text-zinc-500 hover:text-zinc-300 transition">Pausa 5m</button>
-          </div>
-
-          <div class="text-center py-7 bg-zinc-950 rounded-xl border border-zinc-800/80 mb-5">
-            <div id="timerDisplay" class="text-5xl md:text-6xl font-bold text-zinc-100 font-mono timer-sober">25:00</div>
-            <p class="text-[11px] text-zinc-500 mt-2" id="timerSubtext">Tempo em Foco contabilizado nas Horas Líquidas</p>
-          </div>
-
-          <div class="flex gap-2">
-            <button onclick="toggleTimer()" id="startPauseBtn" class="flex-1 bg-slate-700 hover:bg-slate-600 text-zinc-100 font-medium py-2.5 rounded-lg text-xs transition">
-              ▶ Iniciar Foco
-            </button>
-            <button onclick="resetTimer()" class="px-3.5 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 rounded-lg text-xs transition border border-zinc-800">
-              ↺
-            </button>
-          </div>
-        </div>
-
-        <div class="pt-4 border-t border-zinc-800/80">
-          <div class="flex items-center justify-between text-[11px] text-zinc-500 mb-2">
-            <span>Ajuste manual de tempo:</span>
-            <span id="PomodoroCyclesToday" class="font-medium text-zinc-400">0 blocos hoje</span>
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <button onclick="adjustStudyTime(-900)" class="py-1.5 px-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 rounded-lg text-xs border border-zinc-800 transition">
-              - 15 min
-            </button>
-            <button onclick="adjustStudyTime(900)" class="py-1.5 px-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg text-xs border border-zinc-800 transition">
-              + 15 min
-            </button>
-          </div>
-        </div>
       </div>
-
-      <!-- Coluna 2: Checklist Diário -->
-      <div class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between space-y-4">
-        <div>
-          <div class="flex items-center justify-between mb-1">
-            <h2 class="text-sm font-semibold text-zinc-200">Metas do Dia</h2>
-            <span class="text-xs text-zinc-400 font-medium" id="dailyProgressText">0/0 programadas</span>
-          </div>
-          <p class="text-[11px] text-zinc-500 mb-3">Treino e Estudo ajustam seus dias automaticamente conforme os eventos <b>training</b> e <b>study</b>.</p>
-
-          <div id="habitList" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
-        </div>
-
-        <form onsubmit="addHabit(event)" class="pt-3 border-t border-zinc-800/80 space-y-2.5">
-          <div class="flex gap-2">
-            <input 
-              type="text" 
-              id="newHabitInput" 
-              placeholder="Novo hábito..." 
-              required
-              class="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-slate-500"
-            >
-            <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-zinc-100 font-medium px-3.5 py-2 rounded-lg text-xs transition">
-              + Criar
-            </button>
-          </div>
-          <div class="flex items-center justify-between gap-1 text-[11px] text-zinc-500">
-            <span>Dias ativos:</span>
-            <div class="flex gap-1" id="newHabitDaysPicker"></div>
-          </div>
-        </form>
-      </div>
-
-      <!-- Coluna 3: Gráfico Combinado -->
-      <div class="lg:col-span-4 glass-card p-5 rounded-xl flex flex-col justify-between">
-        <div>
-          <h2 class="text-sm font-semibold text-zinc-200">Evolução Semanal</h2>
-          <p class="text-[11px] text-zinc-500 mb-4">Linha clara: Hábitos (%) | Tracejada: Acerto (%) | Barras: Estudo Feito vs Planejado (h)</p>
-        </div>
-        <div class="relative h-64 md:h-72 w-full">
-          <canvas id="weeklyChart"></canvas>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Matriz Completa da Semana -->
-    <section class="glass-card p-5 rounded-xl overflow-x-auto">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-        <div>
-          <h2 class="text-sm font-semibold text-zinc-200">Quadro Semanal</h2>
-          <p class="text-[11px] text-zinc-500">Legenda: <span class="text-zinc-200 font-bold">✓</span> Concluído | <span class="text-zinc-500 font-bold">·</span> Planejado | <span class="text-zinc-600 font-mono">—</span> Folga (Sem evento na agenda)</p>
-        </div>
-      </div>
-      <table class="w-full text-left border-collapse min-w-[620px]">
-        <thead>
-          <tr class="border-b border-zinc-800 text-[11px] uppercase text-zinc-500" id="matrixHeaderRow"></tr>
-        </thead>
-        <tbody id="matrixBody" class="divide-y divide-zinc-800/60 text-xs"></tbody>
-      </table>
     </section>
 
-    <!-- Histórico de Semanas Arquivadas -->
-    <section class="glass-card p-5 rounded-xl overflow-x-auto">
-      <div class="mb-3">
-        <h2 class="text-sm font-semibold text-zinc-200">Histórico de Semanas Arquivadas</h2>
-        <p class="text-[11px] text-zinc-500">Registros anteriores salvos localmente e na planilha.</p>
+    <!-- ==================== ABA 2: QUESTÕES, ÁREAS & CADERNO DE ERROS ==================== -->
+    <section id="view-questions" class="hidden space-y-6">
+
+      <!-- ATALHOS RÁPIDOS DE 1-TOQUE (INSPIRADO NO FINCONTROL STUDIO) -->
+      <div class="glass-card p-4">
+        <div class="flex justify-between items-center mb-2.5">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">⚡ Baterias Rápidas de Questões (1-Toque)</span>
+          <button onclick="promptNewQuickQButton()" class="text-[11px] accent-text font-semibold hover:underline">➕ Criar Atalho Rápido</button>
+        </div>
+        <div class="flex flex-wrap gap-2" id="quickQButtonsContainer"></div>
       </div>
-      <div id="archiveContainer"></div>
+
+      <!-- Grid Lado a Lado: Registro de Questões (7 Colunas) + Gráfico de Rosca por Área (5 Colunas) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Card de Registro de Questões e Áreas Customizáveis (7 Colunas) -->
+        <div class="lg:col-span-7 glass-card p-5 flex flex-col justify-between space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+              <span class="text-xl">📝</span>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h2 class="text-base font-bold text-white">Lançamento de Questões por Área</h2>
+                  <span id="qAccuracyBadge" class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">Acerto: 0%</span>
+                </div>
+                <p class="text-xs text-slate-400 mt-0.5">Registre seus blocos de Residência ou Concursos e anote os temas que errou.</p>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-1.5 text-xs">
+              <button type="button" onclick="toggleAreaManager()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-semibold border border-slate-700 transition">
+                ⚙️ Gerenciar Áreas
+              </button>
+              <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2 py-1 rounded-lg">
+                <span class="text-slate-400">Meta:</span>
+                <select id="dailyQGoalSelect" onchange="updateDailyQuestionGoal(this.value)" class="bg-transparent text-cyan-300 font-mono font-bold focus:outline-none cursor-pointer">
+                  <option value="10" class="bg-slate-900">10/d</option>
+                  <option value="15" class="bg-slate-900">15/d</option>
+                  <option value="20" class="bg-slate-900">20/d</option>
+                  <option value="30" class="bg-slate-900">30/d</option>
+                  <option value="40" class="bg-slate-900">40/d</option>
+                  <option value="50" class="bg-slate-900">50/d</option>
+                  <option value="80" class="bg-slate-900">80/d</option>
+                </select>
+              </div>
+              <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2 py-1 rounded-lg">
+                <span class="text-slate-400">Auto:</span>
+                <select id="linkedQHabitSelect" onchange="updateLinkedQuestionHabit(this.value)" class="bg-transparent accent-text font-semibold focus:outline-none cursor-pointer max-w-[110px] truncate"></select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gaveta Gerenciadora de Áreas Customizáveis -->
+          <div id="areaManagerPanel" class="hidden p-3.5 rounded-xl bg-slate-950/90 border border-cyan-500/30 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-cyan-300">⚙️ Criar, Renomear ou Excluir Áreas (Residência & Concursos)</span>
+              <button type="button" onclick="toggleAreaManager()" class="text-xs text-slate-400 hover:text-white">Fechar ✕</button>
+            </div>
+            <div id="customAreasList" class="flex flex-wrap gap-1.5"></div>
+            <div class="flex gap-2 pt-1">
+              <input type="text" id="newAreaInput" placeholder="Nova área (ex: Português, SUS, Raciocínio Lógico, Neurocirurgia)..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none">
+              <button type="button" onclick="addCustomArea()" class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg text-xs transition">
+                + Adicionar
+              </button>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-xs font-mono">
+              <span id="qProgressFraction" class="text-slate-300 metric-val">0 de 30 questões</span>
+              <span id="qProgressPercent" class="text-cyan-400 font-bold metric-val">0%</span>
+            </div>
+            <div class="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
+              <div id="qProgressBar" class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-cyan-500 to-sky-400" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Pílulas de Desempenho por Área na Semana -->
+          <div id="areaStatsPills" class="flex flex-wrap items-center gap-1.5 pt-0.5 private-text"></div>
+
+          <!-- Formulário de Registro -->
+          <form onsubmit="addQuestionBatch(event)" class="space-y-2.5 pt-2 border-t border-slate-800/80">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div class="flex flex-col">
+                <label class="text-[10px] text-slate-400 mb-1">Área / Disciplina</label>
+                <select id="qAreaSelect" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-cyan-300 font-semibold focus:outline-none cursor-pointer"></select>
+              </div>
+              <div class="flex flex-col">
+                <label class="text-[10px] text-slate-400 mb-1">Questões Feitas</label>
+                <input type="number" id="qSolvedInput" min="1" max="500" placeholder="Ex: 20" required oninput="autoPreviewAccuracy()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono font-bold focus:outline-none">
+              </div>
+              <div class="flex flex-col">
+                <label class="text-[10px] text-slate-400 mb-1 flex justify-between">
+                  <span>Acertos</span>
+                  <span id="liveBatchAccPreview" class="font-mono text-emerald-400"></span>
+                </label>
+                <input type="number" id="qCorrectInput" min="0" max="500" placeholder="Ex: 16" required oninput="autoPreviewAccuracy()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs accent-text font-mono font-bold focus:outline-none">
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 pt-1">
+              <input 
+                type="text" 
+                id="qErrorTopicInput" 
+                placeholder="📓 Tema que errou / revisar no fim de semana (opcional)..." 
+                class="flex-1 min-w-[200px] bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
+              >
+              <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-4 py-2 rounded-xl text-xs transition">
+                + Somar Bloco
+              </button>
+              <button type="button" onclick="undoLastQuestionBatch()" class="px-3 py-2 bg-slate-800 hover:bg-amber-950/60 text-slate-300 hover:text-amber-300 rounded-xl text-xs transition border border-slate-700">
+                ↩️ Desfazer
+              </button>
+              <button type="button" onclick="clearTodayQuestions()" class="px-2.5 py-2 bg-slate-800 hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 rounded-xl text-xs transition border border-slate-700">
+                Zerar
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Gráfico de Rosca: Divisão de Questões por Área (5 Colunas) -->
+        <div class="lg:col-span-5 glass-card p-5 flex flex-col justify-between">
+          <div>
+            <h3 class="text-base font-bold text-white">🍩 Distribuição de Questões por Matéria</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Proporção do volume de questões acumulado na semana entre suas áreas.</p>
+          </div>
+          <div class="relative h-64 w-full flex items-center justify-center my-2">
+            <canvas id="areaDoughnutChart"></canvas>
+          </div>
+          <div class="text-[11px] text-slate-400 text-center border-t border-slate-800 pt-2" id="doughnutFooterText">
+            Total na semana: 0 questões
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Caderno de Erros & Fila de Revisão -->
+      <div class="glass-card p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2.5">
+              <h2 class="text-base font-bold text-white">📓 Fila de Revisão & Caderno de Erros</h2>
+              <span id="errorQueueCountBadge" class="text-xs font-mono font-semibold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300">0 pendentes</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">Sincronizado automaticamente com a aba <b>Caderno_Erros</b> da sua planilha. Tópicos não revisados permanecem salvos na virada de semana.</p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="addStandaloneErrorTopic()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-xl text-xs font-semibold border border-slate-700 transition">
+              + Anotar Tópico Avulso
+            </button>
+            <button onclick="clearReviewedErrors()" class="px-3 py-1.5 bg-slate-900 hover:bg-rose-950/50 text-slate-400 hover:text-rose-300 rounded-xl text-xs font-medium border border-slate-800 transition">
+              🧹 Limpar Revisados
+            </button>
+          </div>
+        </div>
+
+        <div id="errorNotebookContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 private-text"></div>
+      </div>
+
     </section>
 
-  </div>
+    <!-- ==================== ABA 3: CAIXINHAS & METAS ACUMULATIVAS DE LONGO PRAZO ==================== -->
+    <section id="view-goals" class="hidden space-y-6">
+      <div class="glass-card p-6 space-y-5">
+        <div class="flex flex-wrap justify-between items-center gap-3">
+          <div>
+            <h2 class="text-lg font-bold text-white">🎯 Bolsões & Metas Acumulativas de Longo Prazo</h2>
+            <p class="text-xs text-slate-400 mt-1">Diferente do quadro semanal, estas caixinhas <b>não zeram no domingo</b>. Elas acumulam sua jornada até a aprovação na Residência, Concursos e metas físicas.</p>
+          </div>
+          <button onclick="openNewStudyBankPrompt()" class="text-xs px-3.5 py-2 rounded-xl accent-bg text-slate-950 font-bold transition">
+            ➕ Nova Meta de Longo Prazo
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="studyBanksGrid"></div>
+      </div>
+    </section>
+
+    <!-- ==================== ABA 4: MATRIZ DA SEMANA & HISTÓRICO ==================== -->
+    <section id="view-week" class="hidden space-y-6">
+
+      <!-- Matriz Completa da Semana -->
+      <div class="glass-card p-6 overflow-x-auto">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+          <div>
+            <h2 class="text-base font-bold text-white">Visão Panorâmica da Semana (Domingo a Sábado)</h2>
+            <p class="text-xs text-slate-400">Legenda: <span class="accent-text font-bold">✓</span> Concluído | <span class="text-slate-400 font-bold">·</span> Dia em Atividade (ON) | <span class="text-slate-600 font-mono">—</span> Dia de Descanso (OFF)</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="archiveAndResetWeek()" class="px-3 py-1.5 text-xs font-semibold text-purple-200 bg-purple-900/60 hover:bg-purple-800/80 rounded-xl transition border border-purple-600/60">
+              📦 Arquivar Semana
+            </button>
+          </div>
+        </div>
+        <table class="w-full text-left border-collapse min-w-[650px]">
+          <thead>
+            <tr class="border-b border-slate-800 text-xs uppercase text-slate-400" id="matrixHeaderRow"></tr>
+          </thead>
+          <tbody id="matrixBody" class="divide-y divide-slate-800/60 text-sm"></tbody>
+        </table>
+      </div>
+
+      <!-- Histórico de Semanas Arquivadas -->
+      <div class="glass-card p-6 overflow-x-auto">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-base font-bold text-white">📦 Histórico de Semanas Arquivadas</h2>
+            <p class="text-xs text-slate-400">Evolução comparativa de consistência, horas líquidas e precisão ao longo das semanas.</p>
+          </div>
+        </div>
+        <div id="archiveContainer"></div>
+      </div>
+
+    </section>
+
+    <!-- ==================== ABA 5: ESTÚDIO DE PERSONALIZAÇÃO & BACKUP ==================== -->
+    <section id="view-studio" class="hidden space-y-6">
+
+      <!-- Sub-navegação do Estúdio -->
+      <div class="flex flex-wrap gap-2 border-b border-slate-800 pb-3 text-xs">
+        <button onclick="switchStudioSubTab('sub-appearance')" id="btn-sub-appearance" class="px-3.5 py-2 rounded-xl accent-bg text-slate-950 font-bold">🎨 1. Temas, Superfície & Roda de Cores</button>
+        <button onclick="switchStudioSubTab('sub-shortcuts')" id="btn-sub-shortcuts" class="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300">⚡ 2. Atalhos Rápidos & Áreas</button>
+        <button onclick="switchStudioSubTab('sub-cloud')" id="btn-sub-cloud" class="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300">☁️ 3. Planilha Google & Backups</button>
+      </div>
+
+      <!-- SUB-PAINEL 1: APARÊNCIA, SUPERFÍCIE (OLED/CLARO) & RODA DE CORES -->
+      <div id="sub-appearance" class="glass-card p-6 space-y-6">
+        <div>
+          <h3 class="text-base font-bold text-white">🎨 Estúdio de Cores, Modo de Superfície & Identidade</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Personalize os tons de destaque na roda cromática ou ative o modo OLED Puro para economizar bateria no celular/tablet.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div>
+            <label class="text-slate-400 font-medium">Modo de Superfície (Fundo)</label>
+            <select id="cfgSurfaceSelect" onchange="changeSurfaceMode(this.value)" class="w-full mt-1.5 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
+              <option value="dark">🌑 Dark Studio (Padrão)</option>
+              <option value="oled">🖤 OLED Puro (#000000 - Economia Bateria)</option>
+              <option value="midnight">🌌 Midnight Slate</option>
+              <option value="light">☀️ Modo Claro Executivo (Leitura Diurna)</option>
+            </select>
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="text-slate-400 font-medium">Título Personalizado do Painel</label>
+            <input type="text" id="cfgBrandTitle" oninput="updateBrandTitle(this.value)" placeholder="Performance Studio" class="w-full mt-1.5 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-slate-800">
+          <!-- 3 Esquemas Pré-Montados -->
+          <div class="space-y-2">
+            <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">3 Esquemas de Destaques Pré-Montados:</span>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <button onclick="applyThemePreset('ocean')" class="p-3 rounded-xl bg-slate-900 border border-slate-700 hover:border-emerald-500 transition text-left flex flex-col gap-1.5">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-3.5 h-3.5 rounded-full bg-[#10b981]"></span>
+                  <span class="w-3.5 h-3.5 rounded-full bg-[#6366f1]"></span>
+                </div>
+                <span class="text-xs font-semibold text-white">1. Esmeralda & Índigo</span>
+                <span class="text-[10px] text-slate-400">Original vibrante</span>
+              </button>
+
+              <button onclick="applyThemePreset('graphite')" class="p-3 rounded-xl bg-slate-900 border border-slate-700 hover:border-sky-400 transition text-left flex flex-col gap-1.5">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-3.5 h-3.5 rounded-full bg-[#38bdf8]"></span>
+                  <span class="w-3.5 h-3.5 rounded-full bg-[#94a3b8]"></span>
+                </div>
+                <span class="text-xs font-semibold text-white">2. Ciano & Aço</span>
+                <span class="text-[10px] text-slate-400">Minimalista e frio</span>
+              </button>
+
+              <button onclick="applyThemePreset('midnight')" class="p-3 rounded-xl bg-slate-900 border border-slate-700 hover:border-amber-400 transition text-left flex flex-col gap-1.5">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-3.5 h-3.5 rounded-full bg-[#f59e0b]"></span>
+                  <span class="w-3.5 h-3.5 rounded-full bg-[#a855f7]"></span>
+                </div>
+                <span class="text-xs font-semibold text-white">3. Âmbar & Violeta</span>
+                <span class="text-[10px] text-slate-400">Contraste quente</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Roda de Cores -->
+          <div class="space-y-2">
+            <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Roda de Cores (Toque para Escolher):</span>
+            <div class="grid grid-cols-2 gap-3 bg-slate-900/70 p-3.5 rounded-xl border border-slate-800">
+              <label class="flex items-center gap-2.5 cursor-pointer">
+                <input type="color" id="pickerPrimary" value="#10b981" onchange="applyCustomWheelColors()">
+                <div>
+                  <div class="text-xs font-semibold text-white">Destaque Primário</div>
+                  <div class="text-[10px] text-slate-400">Checks, botões e linha</div>
+                </div>
+              </label>
+
+              <label class="flex items-center gap-2.5 cursor-pointer">
+                <input type="color" id="pickerSecondary" value="#6366f1" onchange="applyCustomWheelColors()">
+                <div>
+                  <div class="text-xs font-semibold text-white">Destaque Estudo</div>
+                  <div class="text-[10px] text-slate-400">Pomodoro e barras</div>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-PAINEL 2: GERENCIADOR DE ATALHOS RÁPIDOS DE QUESTÕES -->
+      <div id="sub-shortcuts" class="hidden glass-card p-6 space-y-4">
+        <div class="flex flex-wrap justify-between items-center gap-2">
+          <div>
+            <h3 class="text-base font-bold text-white">⚡ Gerenciador de Atalhos Rápidos de Questões</h3>
+            <p class="text-xs text-slate-400">Crie ou exclua botões de 1-toque que ficam no topo da aba de Questões.</p>
+          </div>
+          <button onclick="promptNewQuickQButton()" class="text-xs px-3.5 py-2 rounded-xl accent-bg text-slate-950 font-bold">
+            ➕ Novo Atalho
+          </button>
+        </div>
+        <div id="studioQuickQList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+      </div>
+
+      <!-- SUB-PAINEL 3: CONEXÃO GOOGLE DRIVE & BACKUPS -->
+      <div id="sub-cloud" class="hidden glass-card p-6 space-y-4">
+        <h3 class="text-base font-bold text-white">☁️ Sincronização Google Planilhas & Backups Locais</h3>
+        <p class="text-xs text-slate-400">O painel sincroniza automaticamente suas metas, áreas, caderno de erros e caixinhas com sua Planilha do Google Drive.</p>
+
+        <div class="flex flex-col sm:flex-row gap-2">
+          <input 
+            type="url" 
+            id="gasUrlInput" 
+            placeholder="https://script.google.com/macros/s/.../exec" 
+            class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none"
+          >
+          <button onclick="saveGasUrl()" class="accent-bg text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition">
+            Salvar Conexão
+          </button>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-800 text-xs">
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="pullFromCloud(true)" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-sky-300 rounded-xl font-medium border border-slate-700 transition">
+              ☁️↓ Baixar da Planilha Agora
+            </button>
+            <button onclick="pushToCloud(true)" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-emerald-300 rounded-xl font-medium border border-slate-700 transition">
+              ☁️↑ Enviar Tudo p/ Planilha
+            </button>
+            <button onclick="exportJSON()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-medium border border-slate-700 transition">
+              ⬇️ Exportar .JSON
+            </button>
+            <button onclick="exportCSV()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-medium border border-slate-700 transition">
+              📊 Exportar .CSV
+            </button>
+            <input type="file" id="importFileInput" accept=".json,.csv" class="hidden" onchange="handleFileImport(event)">
+            <button onclick="document.getElementById('importFileInput').click()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded-xl font-medium border border-slate-700 transition">
+              ⬆️ Importar Backup
+            </button>
+            <button onclick="resetWeekOnly()" class="px-3 py-2 bg-rose-950/40 hover:bg-rose-900/50 text-rose-300 rounded-xl font-medium border border-rose-500/30 transition">
+              🧹 Zerar Semana Atual
+            </button>
+          </div>
+          <span id="lastSyncTimestamp" class="text-[11px] font-mono text-slate-400">Último sync: Nunca</span>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
 
   <script>
-    const DAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-    
-    const jsDay = new Date().getDay();
-    let selectedDayIndex = jsDay === 0 ? 6 : jsDay - 1;
+    // ==================== 1. CONFIGURAÇÃO DE SEMANA (DOMINGO A SÁBADO) ====================
+    const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    const DEFAULT_AREAS = ['Clínica', 'Cirurgia', 'GO', 'Pediatria', 'Preventiva', 'Português (Concurso)', 'SUS / Legislação', 'Geral'];
+    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbz9fYDyV8f4LH31YsaXV5Y31uaCPuCY-OIE3dBt13a6DNVRGq7s040TCn2yGlprak73oQ/exec';
+    const CHART_PALETTE = ['#10b981', '#6366f1', '#06b6d4', '#f59e0b', '#ec4899', '#3b82f6', '#a855f7', '#14b8a6', '#f43f5e'];
 
-    const defaultHabits = [
-      { id: 1, name: 'Treino Funcional / Academia', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, false, true, true, false, false] },
-      { id: 2, name: 'Bloco de Questões & Revisão Ativa', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, false] },
-      { id: 3, name: 'Hidratação (3L) + Creatina', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, true] },
-      { id: 4, name: 'Leitura / Estudo Dirigido', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, false] },
-      { id: 5, name: 'Rotina de Autocuidado & Sono (7h+)', days: [false, false, false, false, false, false, false], scheduledDays: [true, true, true, true, true, true, true] }
+    let selectedDayIndex = new Date().getDay();
+    let activeTab = 'today';
+
+    function getWeekDatesSundayToSaturday() {
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const sunday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek, 12, 0, 0);
+
+      return DAYS.map((dayLabel, idx) => {
+        const d = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate() + idx, 12, 0, 0);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return {
+          dayLabel,
+          dateObj: d,
+          iso: `${yyyy}-${mm}-${dd}`,
+          shortBr: `${dd}/${mm}`
+        };
+      });
+    }
+
+    const WEEK_DATES = getWeekDatesSundayToSaturday();
+    const CURRENT_WEEK_SUNDAY_ISO = WEEK_DATES[0].iso;
+    const TODAY_ISO = WEEK_DATES[selectedDayIndex].iso;
+
+    const THEME_PRESETS = {
+      ocean: { surface: 'dark', primary: '#10b981', secondary: '#6366f1' },
+      graphite: { surface: 'oled', primary: '#38bdf8', secondary: '#94a3b8' },
+      midnight: { surface: 'midnight', primary: '#f59e0b', secondary: '#a855f7' }
+    };
+
+    const DEFAULT_QUICK_Q_BUTTONS = [
+      { id: 'qq1', label: '🩺 Clínica 20q', area: 'Clínica', solved: 20 },
+      { id: 'qq2', label: '🔪 Cirurgia 20q', area: 'Cirurgia', solved: 20 },
+      { id: 'qq3', label: '🤰 GO 20q', area: 'GO', solved: 20 },
+      { id: 'qq4', label: '👶 Pediatria 20q', area: 'Pediatria', solved: 20 },
+      { id: 'qq5', label: '🏥 Preventiva / SUS 20q', area: 'Preventiva', solved: 20 },
+      { id: 'qq6', label: '📝 Bloco Concurso 15q', area: 'Português (Concurso)', solved: 15 },
+      { id: 'qq7', label: '🔥 Simulado 50q', area: 'Geral', solved: 50 }
     ];
 
-    let habits = JSON.parse(localStorage.getItem('habitDashboardData')) || defaultHabits;
-    habits.forEach(h => {
-      if (!Array.isArray(h.scheduledDays) || h.scheduledDays.length !== 7) {
-        h.scheduledDays = [true, true, true, true, true, true, true];
+    const DEFAULT_STUDY_BANKS = [
+      { id: 'sb1', name: '🎯 Rumo às 5.000 Questões (Residência & Concursos)', current: 0, target: 5000, unit: 'questões', autoType: 'questions', note: 'Soma automaticamente a cada bloco de questões resolvido' },
+      { id: 'sb2', name: '⏱️ Maratona 300 Horas Líquidas de Foco', current: 0, target: 300, unit: 'horas', autoType: 'hours', note: 'Alimentado pelas suas horas líquidas de estudo' },
+      { id: 'sb3', name: '📄 Provas Antigas / Simulados na Íntegra', current: 0, target: 40, unit: 'provas', autoType: 'manual', note: 'Meta de provas completas resolvidas até os exames' },
+      { id: 'sb4', name: '🏋️ Consistência Física (150 Treinos no Ano)', current: 0, target: 150, unit: 'treinos', autoType: 'manual', note: 'Esquema 2 dias ON / 1 dia OFF' }
+    ];
+
+    const defaultHabits = [
+      {
+        id: 1,
+        name: 'Treino Funcional / Força',
+        days: [false, false, false, false, false, false, false],
+        scheduleMode: 'cycle',
+        cycleOn: 2,
+        cycleOff: 1,
+        cycleAnchor: TODAY_ISO,
+        scheduledDays: [true, true, false, true, true, false, true]
+      },
+      {
+        id: 2,
+        name: 'Bloco de Questões & Revisão Ativa',
+        days: [false, false, false, false, false, false, false],
+        scheduleMode: 'fixed',
+        cycleOn: 5,
+        cycleOff: 1,
+        cycleAnchor: TODAY_ISO,
+        scheduledDays: [false, true, true, true, true, true, true]
+      },
+      {
+        id: 3,
+        name: 'Hidratação (3L) + Creatina',
+        days: [false, false, false, false, false, false, false],
+        scheduleMode: 'fixed',
+        cycleOn: 1,
+        cycleOff: 0,
+        cycleAnchor: TODAY_ISO,
+        scheduledDays: [true, true, true, true, true, true, true]
+      },
+      {
+        id: 4,
+        name: 'Leitura / Estudo Dirigido',
+        days: [false, false, false, false, false, false, false],
+        scheduleMode: 'fixed',
+        cycleOn: 5,
+        cycleOff: 1,
+        cycleAnchor: TODAY_ISO,
+        scheduledDays: [false, true, true, true, true, true, true]
+      },
+      {
+        id: 5,
+        name: 'Rotina de Autocuidado & Sono (7h+)',
+        days: [false, false, false, false, false, false, false],
+        scheduleMode: 'fixed',
+        cycleOn: 1,
+        cycleOff: 0,
+        cycleAnchor: TODAY_ISO,
+        scheduledDays: [true, true, true, true, true, true, true]
       }
+    ];
+
+    function safeParseJSON(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function hexToRgba(hex, alpha = 0.55) {
+      let c = String(hex || '#6366f1').replace('#', '').trim();
+      if (c.length === 3) c = c.split('').map(x => x + x).join('');
+      const num = parseInt(c, 16);
+      if (isNaN(num)) return `rgba(99, 102, 241, ${alpha})`;
+      return `rgba(${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}, ${alpha})`;
+    }
+
+    // ==================== 2. CARREGAMENTO DO ESTADO ====================
+    let brandTitle = localStorage.getItem('habitBrandTitle') || 'Performance Studio';
+    let customAreas = safeParseJSON('habitCustomAreas', DEFAULT_AREAS);
+    if (!Array.isArray(customAreas) || customAreas.length === 0) customAreas = [...DEFAULT_AREAS];
+
+    let quickQButtons = safeParseJSON('habitQuickQButtons', DEFAULT_QUICK_Q_BUTTONS);
+    let studyBanks = safeParseJSON('habitStudyBanks', DEFAULT_STUDY_BANKS);
+
+    let habits = safeParseJSON('habitDashboardData', defaultHabits);
+    habits.forEach(h => {
+      if (!Array.isArray(h.days) || h.days.length !== 7) h.days = [false, false, false, false, false, false, false];
+      if (!Array.isArray(h.scheduledDays) || h.scheduledDays.length !== 7) h.scheduledDays = [true, true, true, true, true, true, true];
+      if (!h.scheduleMode) h.scheduleMode = h.name.toLowerCase().includes('treino') ? 'cycle' : 'fixed';
+      if (!h.cycleOn) h.cycleOn = 2;
+      if (!h.cycleOff) h.cycleOff = 1;
+      if (!h.cycleAnchor) h.cycleAnchor = TODAY_ISO;
     });
 
-    let studySeconds = JSON.parse(localStorage.getItem('habitStudySeconds')) || [0, 0, 0, 0, 0, 0, 0];
-    let pomodoroCycles = JSON.parse(localStorage.getItem('habitPomodoroCycles')) || [0, 0, 0, 0, 0, 0, 0];
-    let dailyGoalHours = Number(localStorage.getItem('habitDailyGoalHours')) || 3;
+    let studySeconds = safeParseJSON('habitStudySeconds', [0, 0, 0, 0, 0, 0, 0]);
+    let pomodoroCycles = safeParseJSON('habitPomodoroCycles', [0, 0, 0, 0, 0, 0, 0]);
+    let dailyGoalHours = Number(localStorage.getItem('habitDailyGoalHours')) || 4;
     let linkedHabitId = Number(localStorage.getItem('habitLinkedId')) || (habits[3] ? habits[3].id : (habits[0] ? habits[0].id : 0));
 
-    let questionsSolved = JSON.parse(localStorage.getItem('habitQuestionsSolved')) || [0, 0, 0, 0, 0, 0, 0];
-    let questionsCorrect = JSON.parse(localStorage.getItem('habitQuestionsCorrect')) || [0, 0, 0, 0, 0, 0, 0];
-    let dailyQuestionsGoal = Number(localStorage.getItem('habitDailyQuestionsGoal')) || 20;
+    let questionsSolved = safeParseJSON('habitQuestionsSolved', [0, 0, 0, 0, 0, 0, 0]);
+    let questionsCorrect = safeParseJSON('habitQuestionsCorrect', [0, 0, 0, 0, 0, 0, 0]);
+    let questionLogs = safeParseJSON('habitQuestionLogs', []);
+    let errorNotebook = safeParseJSON('habitErrorNotebook', []);
+    let dailyQuestionsGoal = Number(localStorage.getItem('habitDailyQuestionsGoal')) || 30;
     let linkedQuestionHabitId = Number(localStorage.getItem('habitLinkedQuestionId')) || (habits[1] ? habits[1].id : 0);
-    let archivedWeeks = JSON.parse(localStorage.getItem('habitArchivedWeeks')) || [];
+    let busyDays = safeParseJSON('habitBusyDays', [false, false, false, false, false, false, false]);
+    let archivedWeeks = safeParseJSON('habitArchivedWeeks', []);
+    let storedWeekStartIso = localStorage.getItem('habitWeekStartIso') || CURRENT_WEEK_SUNDAY_ISO;
 
-    // Dados do Google Calendar (eventos "study" e "training")
-    let calendarWeekData = JSON.parse(localStorage.getItem('habitCalendarWeekData')) || null;
-    let autoCalendarSync = localStorage.getItem('habitAutoCalendarSync') !== 'false';
+    let themeConfig = safeParseJSON('habitThemeConfig', THEME_PRESETS.ocean);
+    if (!themeConfig.surface) themeConfig.surface = 'dark';
 
-    let gasWebAppUrl = localStorage.getItem('habitGasWebAppUrl') || '';
+    let gasWebAppUrl = localStorage.getItem('habitGasWebAppUrl') || DEFAULT_GAS_URL;
     let lastCloudSync = localStorage.getItem('habitLastCloudSync') || '';
     let cloudSyncTimeout = null;
+    let isPullingFromCloud = false;
+    let hasCompletedInitialPull = false;
 
     let editingScheduleHabitId = null;
+    let newHabitMode = 'fixed';
     let newHabitSchedule = [true, true, true, true, true, true, true];
+    let currentRecommendedArea = null;
     let chartInstance = null;
+    let areaDoughnutInstance = null;
 
     let timerMode = 'focus25';
     let timeLeft = 25 * 60;
     let timerInterval = null;
     let isRunning = false;
+    let lastTickTimestamp = null;
     let toastTimeout = null;
 
-    function showToast(message, icon = '✓') {
+    // ==================== 3. NAVEGAÇÃO POR ABAS & MODO BIBLIOTECA ====================
+    function switchTab(tabId) {
+      activeTab = tabId;
+      ['today', 'questions', 'goals', 'week', 'studio'].forEach(id => {
+        document.getElementById(`view-${id}`).classList.add('hidden');
+        document.getElementById(`tab-${id}`).classList.remove('active');
+      });
+      document.getElementById(`view-${tabId}`).classList.remove('hidden');
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+
+      // Redimensiona gráficos que estavam em abas ocultas para evitar bug de canvas 0px
+      setTimeout(() => {
+        if (tabId === 'today' && chartInstance) chartInstance.resize();
+        if (tabId === 'questions') renderAreaDoughnutChart();
+      }, 30);
+    }
+
+    function switchStudioSubTab(subId) {
+      ['sub-appearance', 'sub-shortcuts', 'sub-cloud'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+        const btn = document.getElementById(`btn-${id}`);
+        if (btn) btn.className = 'px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300';
+      });
+      document.getElementById(subId).classList.remove('hidden');
+      const activeBtn = document.getElementById(`btn-${subId}`);
+      if (activeBtn) activeBtn.className = 'px-3.5 py-2 rounded-xl accent-bg text-slate-950 font-bold';
+    }
+
+    function togglePrivacy() {
+      document.body.classList.toggle('privacy-blur');
+      const isBlur = document.body.classList.contains('privacy-blur');
+      showToast(isBlur ? 'Modo Biblioteca ativado (Métricas ocultas).' : 'Modo Biblioteca desativado.', '👁️');
+    }
+
+    function updateBrandTitle(val) {
+      brandTitle = (val || '').trim() || 'Performance Studio';
+      document.getElementById('brandTitle').textContent = brandTitle;
+      localStorage.setItem('habitBrandTitle', brandTitle);
+    }
+
+    // ==================== 4. CÁLCULO DE CICLOS ON/OFF E ESTÚDIO VISUAL ====================
+    function isHabitActiveOnDay(habit, dayIdx) {
+      if (habit.scheduleMode === 'cycle') {
+        const onDays = Math.max(1, Number(habit.cycleOn) || 2);
+        const offDays = Math.max(1, Number(habit.cycleOff) || 1);
+        const period = onDays + offDays;
+        
+        const anchorStr = habit.cycleAnchor || TODAY_ISO;
+        const parts = anchorStr.split('-').map(Number);
+        const anchorDate = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
+        const targetDate = WEEK_DATES[dayIdx].dateObj;
+
+        const diffDays = Math.round((targetDate.getTime() - anchorDate.getTime()) / 86400000);
+        const mod = ((diffDays % period) + period) % period;
+        return mod < onDays;
+      }
+      return Boolean(habit.scheduledDays && habit.scheduledDays[dayIdx]);
+    }
+
+    function applyThemeVariables() {
+      const root = document.documentElement;
+      root.style.setProperty('--accent-primary', themeConfig.primary || '#10b981');
+      root.style.setProperty('--accent-secondary', themeConfig.secondary || '#6366f1');
+
+      document.body.classList.remove('surface-oled', 'surface-midnight', 'surface-light');
+      if (themeConfig.surface === 'oled') document.body.classList.add('surface-oled');
+      else if (themeConfig.surface === 'midnight') document.body.classList.add('surface-midnight');
+      else if (themeConfig.surface === 'light') document.body.classList.add('surface-light');
+
+      const surfSelect = document.getElementById('cfgSurfaceSelect');
+      if (surfSelect) surfSelect.value = themeConfig.surface || 'dark';
+
+      const pPrimary = document.getElementById('pickerPrimary');
+      const pSecondary = document.getElementById('pickerSecondary');
+      if (pPrimary) pPrimary.value = themeConfig.primary || '#10b981';
+      if (pSecondary) pSecondary.value = themeConfig.secondary || '#6366f1';
+
+      if (chartInstance) {
+        chartInstance.data.datasets[0].borderColor = themeConfig.primary;
+        chartInstance.data.datasets[0].pointBorderColor = themeConfig.primary;
+        chartInstance.data.datasets[2].borderColor = themeConfig.secondary;
+        chartInstance.data.datasets[2].backgroundColor = hexToRgba(themeConfig.secondary, 0.55);
+        chartInstance.update();
+      }
+    }
+
+    function changeSurfaceMode(surf) {
+      themeConfig.surface = surf;
+      applyThemeVariables();
+      saveState();
+    }
+
+    function applyThemePreset(presetKey) {
+      if (!THEME_PRESETS[presetKey]) return;
+      themeConfig = { ...THEME_PRESETS[presetKey] };
+      applyThemeVariables();
+      saveState();
+      showToast('Esquema visual aplicado!', '🎨');
+    }
+
+    function applyCustomWheelColors() {
+      themeConfig.primary = document.getElementById('pickerPrimary').value;
+      themeConfig.secondary = document.getElementById('pickerSecondary').value;
+      applyThemeVariables();
+      saveState();
+    }
+
+    function showToast(message, icon = '✅') {
       const toast = document.getElementById('toastNotification');
       document.getElementById('toastMessage').textContent = message;
       document.getElementById('toastIcon').textContent = icon;
@@ -477,62 +1118,20 @@
       clearTimeout(toastTimeout);
       toastTimeout = setTimeout(() => {
         toast.classList.add('hidden');
-      }, 3500);
+      }, 3600);
     }
 
-    // Identifica se um hábito é de Treino/Academia
-    function isTrainingHabit(habit) {
-      const n = habit.name.toLowerCase();
-      return n.includes('treino') || n.includes('training') || n.includes('academia') || n.includes('força');
-    }
-
-    // Identifica se um hábito é vinculado ao Estudo ("study")
-    function isStudyHabit(habit) {
-      const n = habit.name.toLowerCase();
-      return habit.id === Number(linkedHabitId) || habit.id === Number(linkedQuestionHabitId) || n.includes('estudo') || n.includes('questões') || n.includes('questoes') || n.includes('revisão') || n.includes('study');
-    }
-
-    // Sincroniza os dias ativos de Treino e Estudo conforme os eventos "training" e "study" da agenda
-    function applyCalendarScheduleToHabits() {
-      if (!autoCalendarSync || !Array.isArray(calendarWeekData) || calendarWeekData.length !== 7) return;
-      habits.forEach(h => {
-        if (isTrainingHabit(h)) {
-          h.scheduledDays = calendarWeekData.map(d => Boolean(d && d.hasTraining));
-        } else if (isStudyHabit(h)) {
-          h.scheduledDays = calendarWeekData.map(d => Boolean(d && d.hasStudy));
-        }
-      });
-    }
-
-    // Meta de segundos líquidos do dia baseada na duração do evento "study"
-    function getEffectiveStudyGoalSeconds(dayIdx) {
-      if (autoCalendarSync && Array.isArray(calendarWeekData) && calendarWeekData[dayIdx]) {
-        return calendarWeekData[dayIdx].studyPlannedSeconds || 0;
-      }
-      return dailyGoalHours * 3600;
-    }
-
-    // Meta de questões do dia (0 se não houver evento "study" no dia)
-    function getEffectiveQuestionGoal(dayIdx) {
-      if (autoCalendarSync && Array.isArray(calendarWeekData) && calendarWeekData[dayIdx]) {
-        if (!calendarWeekData[dayIdx].hasStudy) return 0;
-      }
-      return dailyQuestionsGoal;
-    }
-
-    function toggleAutoCalendarSync() {
-      autoCalendarSync = !autoCalendarSync;
-      localStorage.setItem('habitAutoCalendarSync', String(autoCalendarSync));
-      if (autoCalendarSync) {
-        applyCalendarScheduleToHabits();
-      }
-      saveState();
-      showToast(autoCalendarSync ? 'Agenda "study" e "training" comandando as metas.' : 'Sincronização automática de metas pausada.');
-    }
-
+    // ==================== 5. PERSISTÊNCIA E SINCRONIZAÇÃO GOOGLE SHEETS ====================
     function buildFullPayload() {
+      const enrichedHabits = habits.map(h => ({
+        ...h,
+        effectiveScheduledDays: DAYS.map((_, dIdx) => isHabitActiveOnDay(h, dIdx))
+      }));
+
       return {
-        version: 5,
+        version: 7,
+        brandTitle,
+        weekStartIso: storedWeekStartIso,
         updatedAt: new Date().toISOString(),
         dailyGoalHours,
         linkedHabitId,
@@ -542,7 +1141,14 @@
         pomodoroCycles,
         questionsSolved,
         questionsCorrect,
-        habits,
+        customAreas,
+        quickQButtons,
+        studyBanks,
+        questionLogs,
+        errorNotebook,
+        busyDays,
+        themeConfig,
+        habits: enrichedHabits,
         archivedWeeks
       };
     }
@@ -551,21 +1157,39 @@
       if (!data || !Array.isArray(data.habits)) return false;
       habits = data.habits.map(h => ({
         ...h,
-        scheduledDays: Array.isArray(h.scheduledDays) && h.scheduledDays.length === 7 ? h.scheduledDays : [true,true,true,true,true,true,true]
+        days: Array.isArray(h.days) && h.days.length === 7 ? h.days.map(Boolean) : [false,false,false,false,false,false,false],
+        scheduledDays: Array.isArray(h.scheduledDays) && h.scheduledDays.length === 7 ? h.scheduledDays.map(Boolean) : [true,true,true,true,true,true,true],
+        scheduleMode: h.scheduleMode || 'fixed',
+        cycleOn: Number(h.cycleOn) || 2,
+        cycleOff: Number(h.cycleOff) || 1,
+        cycleAnchor: h.cycleAnchor || TODAY_ISO
       }));
-      if (Array.isArray(data.studySeconds) && data.studySeconds.length === 7) studySeconds = data.studySeconds.map(Number);
-      if (Array.isArray(data.pomodoroCycles) && data.pomodoroCycles.length === 7) pomodoroCycles = data.pomodoroCycles.map(Number);
-      if (Array.isArray(data.questionsSolved) && data.questionsSolved.length === 7) questionsSolved = data.questionsSolved.map(Number);
-      if (Array.isArray(data.questionsCorrect) && data.questionsCorrect.length === 7) questionsCorrect = data.questionsCorrect.map(Number);
+      if (data.brandTitle) brandTitle = data.brandTitle;
+      if (Array.isArray(data.studySeconds) && data.studySeconds.length === 7) studySeconds = data.studySeconds.map(v => Math.max(0, Number(v) || 0));
+      if (Array.isArray(data.pomodoroCycles) && data.pomodoroCycles.length === 7) pomodoroCycles = data.pomodoroCycles.map(v => Math.max(0, Number(v) || 0));
+      if (Array.isArray(data.questionsSolved) && data.questionsSolved.length === 7) questionsSolved = data.questionsSolved.map(v => Math.max(0, Number(v) || 0));
+      if (Array.isArray(data.questionsCorrect) && data.questionsCorrect.length === 7) questionsCorrect = data.questionsCorrect.map(v => Math.max(0, Number(v) || 0));
+      if (Array.isArray(data.customAreas) && data.customAreas.length > 0) customAreas = data.customAreas;
+      if (Array.isArray(data.quickQButtons)) quickQButtons = data.quickQButtons;
+      if (Array.isArray(data.studyBanks)) studyBanks = data.studyBanks;
+      if (Array.isArray(data.questionLogs)) questionLogs = data.questionLogs;
+      if (Array.isArray(data.errorNotebook)) errorNotebook = data.errorNotebook;
+      if (Array.isArray(data.busyDays) && data.busyDays.length === 7) busyDays = data.busyDays.map(Boolean);
       if (Array.isArray(data.archivedWeeks)) archivedWeeks = data.archivedWeeks;
       if (data.dailyGoalHours) dailyGoalHours = Number(data.dailyGoalHours);
-      if (data.linkedHabitId) linkedHabitId = Number(data.linkedHabitId);
+      if (data.linkedHabitId !== undefined) linkedHabitId = Number(data.linkedHabitId);
       if (data.dailyQuestionsGoal) dailyQuestionsGoal = Number(data.dailyQuestionsGoal);
-      if (data.linkedQuestionHabitId) linkedQuestionHabitId = Number(data.linkedQuestionHabitId);
+      if (data.linkedQuestionHabitId !== undefined) linkedQuestionHabitId = Number(data.linkedQuestionHabitId);
+      if (data.weekStartIso) storedWeekStartIso = data.weekStartIso;
+      if (data.themeConfig && data.themeConfig.primary) {
+        themeConfig = data.themeConfig;
+        applyThemeVariables();
+      }
       return true;
     }
 
     function saveLocalOnly() {
+      localStorage.setItem('habitBrandTitle', brandTitle);
       localStorage.setItem('habitDashboardData', JSON.stringify(habits));
       localStorage.setItem('habitStudySeconds', JSON.stringify(studySeconds));
       localStorage.setItem('habitPomodoroCycles', JSON.stringify(pomodoroCycles));
@@ -573,27 +1197,25 @@
       localStorage.setItem('habitLinkedId', String(linkedHabitId));
       localStorage.setItem('habitQuestionsSolved', JSON.stringify(questionsSolved));
       localStorage.setItem('habitQuestionsCorrect', JSON.stringify(questionsCorrect));
+      localStorage.setItem('habitCustomAreas', JSON.stringify(customAreas));
+      localStorage.setItem('habitQuickQButtons', JSON.stringify(quickQButtons));
+      localStorage.setItem('habitStudyBanks', JSON.stringify(studyBanks));
+      localStorage.setItem('habitQuestionLogs', JSON.stringify(questionLogs));
+      localStorage.setItem('habitErrorNotebook', JSON.stringify(errorNotebook));
       localStorage.setItem('habitDailyQuestionsGoal', String(dailyQuestionsGoal));
       localStorage.setItem('habitLinkedQuestionId', String(linkedQuestionHabitId));
+      localStorage.setItem('habitBusyDays', JSON.stringify(busyDays));
       localStorage.setItem('habitArchivedWeeks', JSON.stringify(archivedWeeks));
-      if (calendarWeekData) {
-        localStorage.setItem('habitCalendarWeekData', JSON.stringify(calendarWeekData));
-      }
+      localStorage.setItem('habitWeekStartIso', storedWeekStartIso);
+      localStorage.setItem('habitThemeConfig', JSON.stringify(themeConfig));
     }
 
     function saveState(skipCloud = false) {
       saveLocalOnly();
       renderAll();
-      if (!skipCloud && gasWebAppUrl) {
+      if (!skipCloud && gasWebAppUrl && !isPullingFromCloud) {
         scheduleCloudPush();
       }
-    }
-
-    function toggleCloudConfig() {
-      const panel = document.getElementById('cloudConfigPanel');
-      panel.classList.toggle('hidden');
-      const input = document.getElementById('gasUrlInput');
-      if (input) input.value = gasWebAppUrl;
     }
 
     function updateCloudStatusUI(state, customText) {
@@ -601,25 +1223,21 @@
       const text = document.getElementById('cloudStatusText');
       const lastSyncEl = document.getElementById('lastSyncTimestamp');
 
-      if (lastSyncEl && lastCloudSync) {
-        lastSyncEl.textContent = `Última sincronização: ${lastCloudSync}`;
-      }
-
+      if (lastSyncEl && lastCloudSync) lastSyncEl.textContent = `Último sync: ${lastCloudSync}`;
       if (!gasWebAppUrl) {
-        dot.className = 'w-1.5 h-1.5 rounded-full bg-zinc-600';
-        text.textContent = 'Nuvem Off';
+        dot.className = 'w-2 h-2 rounded-full bg-slate-500';
+        text.textContent = 'Local';
         return;
       }
-
       if (state === 'syncing') {
-        dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping';
+        dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
         text.textContent = customText || 'Sincronizando...';
       } else if (state === 'ok') {
-        dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500';
-        text.textContent = customText || 'Sincronizado';
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+        text.textContent = customText || 'Planilha OK ✓';
       } else if (state === 'error') {
-        dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-500';
-        text.textContent = customText || 'Erro Nuvem';
+        dot.className = 'w-2 h-2 rounded-full bg-rose-500';
+        text.textContent = customText || 'Offline';
       }
     }
 
@@ -627,40 +1245,30 @@
       const input = document.getElementById('gasUrlInput');
       const url = (input.value || '').trim();
       if (!url.startsWith('https://script.google.com/')) {
-        showToast('Insira uma URL válida do Google Apps Script.', '!');
+        showToast('Insira uma URL válida do Google Apps Script (/exec).', '⚠️');
         return;
       }
       gasWebAppUrl = url;
       localStorage.setItem('habitGasWebAppUrl', gasWebAppUrl);
-      showToast('Conectado! Buscando eventos study e training...');
+      showToast('URL salva! Sincronizando com a Planilha...', '☁️');
       pullFromCloud(true);
     }
 
-    function disconnectCloud() {
-      gasWebAppUrl = '';
-      localStorage.removeItem('habitGasWebAppUrl');
-      updateCloudStatusUI('off');
-      showToast('Nuvem desconectada.');
-    }
-
     function scheduleCloudPush() {
-      if (!gasWebAppUrl) return;
+      if (!gasWebAppUrl || isPullingFromCloud || !hasCompletedInitialPull) return;
       updateCloudStatusUI('syncing', 'Salvando...');
       clearTimeout(cloudSyncTimeout);
-      cloudSyncTimeout = setTimeout(() => {
-        pushToCloud(false);
-      }, 1200);
+      cloudSyncTimeout = setTimeout(() => { pushToCloud(false); }, 1200);
     }
 
     async function pushToCloud(showNotification = false) {
-      if (!gasWebAppUrl) return;
+      if (!gasWebAppUrl || isPullingFromCloud) return;
       updateCloudStatusUI('syncing', 'Enviando...');
       try {
-        const payload = buildFullPayload();
         const response = await fetch(gasWebAppUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(buildFullPayload())
         });
         const resData = await response.json();
         if (resData.status === 'saved') {
@@ -668,121 +1276,520 @@
           lastCloudSync = `${new Date().toLocaleDateString('pt-BR')} às ${timeStr}`;
           localStorage.setItem('habitLastCloudSync', lastCloudSync);
           updateCloudStatusUI('ok', `Salvo (${timeStr})`);
-          if (showNotification) showToast('Dados salvos na planilha.');
+          if (showNotification) showToast('Dados salvos na Planilha Google!', '☁️');
         } else {
-          throw new Error('Erro ao salvar');
+          throw new Error('Falha no retorno');
         }
       } catch (err) {
-        updateCloudStatusUI('error', 'Falha no envio');
-        if (showNotification) showToast('Falha ao enviar para a planilha.', '!');
+        updateCloudStatusUI('error', 'Salvo Local');
+        if (showNotification) showToast('Erro ao enviar para a Planilha.', '❌');
       }
     }
 
     async function pullFromCloud(showNotification = false) {
       if (!gasWebAppUrl) {
-        if (showNotification) toggleCloudConfig();
+        hasCompletedInitialPull = true;
         return;
       }
-      updateCloudStatusUI('syncing', 'Lendo Agenda...');
+      isPullingFromCloud = true;
+      clearTimeout(cloudSyncTimeout);
+      updateCloudStatusUI('syncing', 'Lendo Planilha...');
       try {
         const response = await fetch(`${gasWebAppUrl}?t=${Date.now()}`);
         const resData = await response.json();
-        if (resData.status === 'ok') {
-          if (resData.hasData && resData.data) {
-            applyPayloadToState(resData.data);
-          }
-          if (Array.isArray(resData.calendar) && resData.calendar.length === 7) {
-            calendarWeekData = resData.calendar;
-            applyCalendarScheduleToHabits();
-            checkAutoCompleteStudyHabit(selectedDayIndex);
-            checkAutoCompleteQuestionHabit(selectedDayIndex);
-          }
+        if (resData.status === 'ok' && resData.hasData && resData.data) {
+          applyPayloadToState(resData.data);
           saveLocalOnly();
+          checkNewWeekRollover();
           renderAll();
           const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
           lastCloudSync = `${new Date().toLocaleDateString('pt-BR')} às ${timeStr}`;
           localStorage.setItem('habitLastCloudSync', lastCloudSync);
           updateCloudStatusUI('ok', `Sincronizado (${timeStr})`);
-          if (showNotification) showToast('Eventos "study" e "training" sincronizados!');
-          if (!resData.hasData) {
-            await pushToCloud(false);
-          }
+          if (showNotification) showToast('Sincronizado com a Planilha Google!', '☁️');
+          isPullingFromCloud = false;
+          hasCompletedInitialPull = true;
+        } else if (resData.status === 'ok' && !resData.hasData) {
+          isPullingFromCloud = false;
+          hasCompletedInitialPull = true;
+          await pushToCloud(showNotification);
+        } else {
+          throw new Error('Retorno inválido');
         }
       } catch (err) {
+        isPullingFromCloud = false;
+        hasCompletedInitialPull = true;
         updateCloudStatusUI('error', 'Offline');
-        if (showNotification) showToast('Sem conexão com a planilha/agenda.', '!');
+        if (showNotification) showToast('Usando dados locais (sem resposta da nuvem).', '⚠️');
       }
     }
 
-    function updateNotificationButtonUI() {
-      const btnText = document.getElementById('notifBtnText');
-      if (!('Notification' in window)) {
-        btnText.textContent = 'Sem Suporte';
-        return;
+    // ==================== 6. ATALHOS RÁPIDOS DE 1-TOQUE & QUESTÕES ====================
+    function renderQuickQButtons() {
+      const cont = document.getElementById('quickQButtonsContainer');
+      const studioList = document.getElementById('studioQuickQList');
+      if (cont) {
+        cont.innerHTML = quickQButtons.map(qb => `
+          <button type="button" onclick="triggerQuickQButton('${qb.id}')" class="text-xs px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-slate-200 transition font-medium">
+            ${escapeHtml(qb.label)}
+          </button>
+        `).join('');
       }
-      btnText.textContent = Notification.permission === 'granted' ? 'Alertas ON' : 'Alertas';
+      if (studioList) {
+        studioList.innerHTML = quickQButtons.map(qb => `
+          <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs">
+            <div>
+              <div class="font-bold text-white">${escapeHtml(qb.label)}</div>
+              <div class="text-slate-400 font-mono">${escapeHtml(qb.area)} • ${qb.solved} questões</div>
+            </div>
+            <button onclick="deleteQuickQButton('${qb.id}')" class="px-2 py-1 rounded bg-rose-500/20 text-rose-300">🗑️</button>
+          </div>
+        `).join('');
+      }
     }
 
-    function requestDesktopNotifications() {
-      if (!('Notification' in window)) return;
-      Notification.requestPermission().then(permission => {
-        updateNotificationButtonUI();
-        if (permission === 'granted') {
-          showToast('Notificações ativadas.');
+    function triggerQuickQButton(id) {
+      const qb = quickQButtons.find(x => x.id === id);
+      if (!qb) return;
+      switchTab('questions');
+      if (!customAreas.includes(qb.area)) {
+        customAreas.push(qb.area);
+        renderQuestionBar();
+      }
+      document.getElementById('qAreaSelect').value = qb.area;
+      document.getElementById('qSolvedInput').value = qb.solved;
+      const correctEl = document.getElementById('qCorrectInput');
+      correctEl.value = '';
+      correctEl.focus();
+      autoPreviewAccuracy();
+      showToast(`Atalho "${qb.label}" carregado! Digite quantos acertos fez.`, '⚡');
+    }
+
+    function promptNewQuickQButton() {
+      const area = prompt(`Qual Área/Matéria deste atalho?\n(Ex: ${customAreas.slice(0, 4).join(', ')})`, customAreas[0] || 'Clínica');
+      if (!area) return;
+      const solved = parseInt(prompt('Quantidade padrão de questões do bloco:', '20') || '20', 10);
+      if (isNaN(solved) || solved <= 0) return;
+      const label = prompt('Nome curto do botão:', `⚡ ${area.trim()} ${solved}q`) || `${area.trim()} ${solved}q`;
+
+      if (!customAreas.includes(area.trim())) customAreas.push(area.trim());
+      quickQButtons.push({ id: 'qq_' + Date.now(), label: label.trim(), area: area.trim(), solved });
+      saveState();
+      showToast('Atalho rápido criado!', '⚡');
+    }
+
+    function deleteQuickQButton(id) {
+      quickQButtons = quickQButtons.filter(q => q.id !== id);
+      saveState();
+    }
+
+    function autoPreviewAccuracy() {
+      const s = Number(document.getElementById('qSolvedInput').value) || 0;
+      const c = Number(document.getElementById('qCorrectInput').value) || 0;
+      const prev = document.getElementById('liveBatchAccPreview');
+      if (s > 0 && c >= 0 && c <= s) {
+        prev.textContent = `${Math.round((c / s) * 100)}%`;
+      } else {
+        prev.textContent = '';
+      }
+    }
+
+    // ==================== 7. CAIXINHAS / BOLSÕES ACUMULATIVOS DE LONGO PRAZO ====================
+    function feedAutoStudyBanks(type, deltaValue) {
+      studyBanks.forEach(bank => {
+        if (bank.autoType === type) {
+          bank.current = Math.max(0, Number((Number(bank.current || 0) + deltaValue).toFixed(2)));
         }
       });
     }
 
-    function sendDesktopNotification(title, body) {
-      if ('Notification' in window && Notification.permission === 'granted') {
-        try { new Notification(title, { body }); } catch (e) {}
+    function renderStudyBanks() {
+      const grid = document.getElementById('studyBanksGrid');
+      if (!grid) return;
+      grid.innerHTML = studyBanks.map(b => {
+        const pct = b.target > 0 ? Math.min(100, (b.current / b.target) * 100) : 0;
+        const rem = Math.max(0, Number((b.target - b.current).toFixed(1)));
+        const stepSmall = b.unit === 'questões' ? 20 : 1;
+        const stepLarge = b.unit === 'questões' ? 100 : 5;
+
+        return `
+          <div class="p-5 rounded-2xl bg-slate-900/75 border border-slate-800 space-y-3">
+            <div class="flex justify-between items-start gap-2">
+              <div>
+                <h4 class="font-bold text-sm text-white">${escapeHtml(b.name)}</h4>
+                <p class="text-[11px] text-slate-400">${escapeHtml(b.note || '')}</p>
+              </div>
+              <span class="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 metric-val">${pct.toFixed(1)}%</span>
+            </div>
+            <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
+              <div class="accent-bg h-full transition-all duration-300" style="width: ${pct}%"></div>
+            </div>
+            <div class="flex justify-between text-xs pt-1 font-mono">
+              <span>Acumulado: <strong class="accent-text metric-val">${b.current} ${escapeHtml(b.unit)}</strong></span>
+              <span>Faltam: <strong class="text-amber-400 metric-val">${rem} ${escapeHtml(b.unit)}</strong></span>
+            </div>
+            <div class="flex flex-wrap gap-2 pt-2 border-t border-slate-800/80 font-mono">
+              <button onclick="adjustStudyBank('${b.id}', ${stepSmall})" class="text-xs px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300">+${stepSmall}</button>
+              <button onclick="adjustStudyBank('${b.id}', ${stepLarge})" class="text-xs px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300">+${stepLarge}</button>
+              <button onclick="adjustStudyBank('${b.id}', -${stepSmall})" class="text-xs px-2 py-1 rounded-lg bg-slate-800 text-slate-400">-${stepSmall}</button>
+              <button onclick="promptEditStudyBank('${b.id}')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 ml-auto font-sans">✏️ Editar</button>
+              <button onclick="deleteStudyBank('${b.id}')" class="text-xs px-2 py-1 rounded-lg bg-rose-500/20 text-rose-300">🗑️</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function adjustStudyBank(id, delta) {
+      const b = studyBanks.find(x => x.id === id);
+      if (!b) return;
+      b.current = Math.max(0, Number((Number(b.current || 0) + delta).toFixed(2)));
+      saveState();
+    }
+
+    function openNewStudyBankPrompt() {
+      const name = prompt('Nome da nova Caixinha / Meta de Longo Prazo (Ex: 🎯 1.000 Questões de Português):');
+      if (!name) return;
+      const unit = prompt('Unidade de medida (Ex: questões, horas, provas, treinos):', 'questões') || 'questões';
+      const target = parseFloat(prompt(`Meta Total em ${unit}:`, '1000') || '1000');
+      const current = parseFloat(prompt(`Valor já acumulado hoje:`, '0') || '0');
+      const note = prompt('Observação / Estratégia:', 'Acumulativo até a prova') || '';
+
+      studyBanks.push({
+        id: 'sb_' + Date.now(),
+        name: name.trim(),
+        current: isNaN(current) ? 0 : current,
+        target: isNaN(target) || target <= 0 ? 100 : target,
+        unit: unit.trim(),
+        autoType: 'manual',
+        note: note.trim()
+      });
+      saveState();
+      showToast('Caixinha de longo prazo criada!', '🎯');
+    }
+
+    function promptEditStudyBank(id) {
+      const b = studyBanks.find(x => x.id === id);
+      if (!b) return;
+      const name = prompt('Nome da Meta:', b.name);
+      if (name === null) return;
+      const cur = prompt(`Valor acumulado atual (${b.unit}):`, b.current);
+      if (cur === null) return;
+      const tar = prompt(`Meta total (${b.unit}):`, b.target);
+      if (tar === null) return;
+      b.name = name.trim() || b.name;
+      b.current = Math.max(0, parseFloat(cur) || 0);
+      b.target = Math.max(1, parseFloat(tar) || 100);
+      saveState();
+    }
+
+    function deleteStudyBank(id) {
+      if (!confirm('Excluir esta caixinha de longo prazo?')) return;
+      studyBanks = studyBanks.filter(x => x.id !== id);
+      saveState();
+    }
+
+    // ==================== 8. GERENCIADOR DE ÁREAS, RECOMENDADOR E CADERNO DE ERROS ====================
+    function toggleAreaManager() {
+      const panel = document.getElementById('areaManagerPanel');
+      panel.classList.toggle('hidden');
+      renderCustomAreasManager();
+    }
+
+    function addCustomArea() {
+      const input = document.getElementById('newAreaInput');
+      const name = (input.value || '').trim();
+      if (!name) return;
+      if (customAreas.some(a => a.toLowerCase() === name.toLowerCase())) {
+        showToast('Essa área já existe.', '⚠️');
+        return;
       }
+      customAreas.push(name);
+      input.value = '';
+      saveState();
+      showToast(`Área "${name}" adicionada!`, '📚');
+    }
+
+    function renameCustomArea(index) {
+      const oldName = customAreas[index];
+      if (!oldName) return;
+      const newName = prompt(`Renomear "${oldName}" para:`, oldName);
+      if (newName === null) return;
+      const trimmed = newName.trim();
+      if (!trimmed || trimmed === oldName) return;
+
+      customAreas[index] = trimmed;
+      questionLogs.forEach(log => { if (log.area === oldName) log.area = trimmed; });
+      errorNotebook.forEach(item => { if (item.area === oldName) item.area = trimmed; });
+      quickQButtons.forEach(qb => { if (qb.area === oldName) qb.area = trimmed; });
+      saveState();
+      showToast(`Renomeado para "${trimmed}"!`, '✏️');
+    }
+
+    function deleteCustomArea(index) {
+      if (customAreas.length <= 1) return showToast('Mantenha pelo menos 1 área.', '⚠️');
+      const target = customAreas[index];
+      if (confirm(`Remover "${target}" da lista?`)) {
+        customAreas.splice(index, 1);
+        saveState();
+      }
+    }
+
+    function renderCustomAreasManager() {
+      const listEl = document.getElementById('customAreasList');
+      if (!listEl) return;
+      listEl.innerHTML = customAreas.map((area, idx) => `
+        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-200">
+          <span>${escapeHtml(area)}</span>
+          <button type="button" onclick="renameCustomArea(${idx})" class="text-slate-400 hover:text-cyan-300 text-[10px] ml-1">✏️</button>
+          <button type="button" onclick="deleteCustomArea(${idx})" class="text-slate-500 hover:text-rose-400 text-[10px]">✕</button>
+        </div>
+      `).join('');
+    }
+
+    function renderRecommendationBanner() {
+      const badgeEl = document.getElementById('recBadge');
+      const descEl = document.getElementById('recDescription');
+      const btnEl = document.getElementById('recActionBtn');
+
+      const areaStats = getAreaStatsForWeek();
+      const practicedAreas = customAreas.filter(a => areaStats[a] && areaStats[a].solved > 0);
+      const untouchedAreas = customAreas.filter(a => !areaStats[a] || areaStats[a].solved === 0);
+
+      let weakestArea = null;
+      let lowestAcc = 101;
+      practicedAreas.forEach(a => {
+        const st = areaStats[a];
+        const acc = Math.round((st.correct / st.solved) * 100);
+        if (acc < lowestAcc) {
+          lowestAcc = acc;
+          weakestArea = { name: a, acc, solved: st.solved, correct: st.correct };
+        }
+      });
+
+      const pendingErrors = errorNotebook.filter(e => !e.reviewed).length;
+
+      if (weakestArea && weakestArea.acc < 70) {
+        currentRecommendedArea = weakestArea.name;
+        badgeEl.textContent = `🔴 Ponto Crítico (${weakestArea.acc}%)`;
+        badgeEl.className = 'text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30';
+        descEl.innerHTML = `Sua menor precisão está em <b>${escapeHtml(weakestArea.name)}</b> (${weakestArea.correct}/${weakestArea.solved} — <b>${weakestArea.acc}%</b>). Atacar essa matéria hoje traz o maior ganho líquido na nota.`;
+        btnEl.classList.remove('hidden');
+        btnEl.textContent = `🎯 Focar em ${weakestArea.name}`;
+      } else if (untouchedAreas.length > 0 && practicedAreas.length > 0) {
+        currentRecommendedArea = untouchedAreas[0];
+        badgeEl.textContent = `🟡 Matéria Negligenciada`;
+        badgeEl.className = 'text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30';
+        descEl.innerHTML = `Matérias praticadas acima de 70%, mas você ainda tem <b>0 questões</b> em <b>${escapeHtml(untouchedAreas[0])}</b> nesta semana.`;
+        btnEl.classList.remove('hidden');
+        btnEl.textContent = `🎯 Iniciar ${untouchedAreas[0]}`;
+      } else if (weakestArea) {
+        currentRecommendedArea = weakestArea.name;
+        badgeEl.textContent = `🟢 Desempenho Sólido`;
+        badgeEl.className = 'text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+        descEl.innerHTML = `Todas as áreas praticadas estão ≥ 70%! Refine <b>${escapeHtml(weakestArea.name)}</b> (${weakestArea.acc}%)${pendingErrors > 0 ? ` ou revise seus <b>${pendingErrors} erros pendentes</b>.` : '.'}`;
+        btnEl.classList.remove('hidden');
+        btnEl.textContent = `🎯 Praticar ${weakestArea.name}`;
+      } else {
+        currentRecommendedArea = customAreas[0] || 'Clínica';
+        badgeEl.textContent = `⚪ Aguardando Blocos`;
+        badgeEl.className = 'text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400';
+        descEl.innerHTML = `Registre sua primeira bateria de questões na Aba 2 para ativar o diagnóstico automático por área.`;
+        btnEl.classList.add('hidden');
+      }
+    }
+
+    function selectRecommendedArea() {
+      if (!currentRecommendedArea) return;
+      switchTab('questions');
+      const selectEl = document.getElementById('qAreaSelect');
+      if (selectEl) {
+        selectEl.value = currentRecommendedArea;
+        document.getElementById('qSolvedInput').focus();
+      }
+    }
+
+    function addStandaloneErrorTopic() {
+      const areaSelect = document.getElementById('qAreaSelect');
+      const defaultArea = areaSelect && areaSelect.value ? areaSelect.value : (customAreas[0] || 'Geral');
+      const topic = prompt(`Tema/conceito que errou ou precisa revisar (Área: ${defaultArea}):`);
+      if (!topic || !topic.trim()) return;
+
+      errorNotebook.unshift({
+        id: Date.now(),
+        dateStr: WEEK_DATES[selectedDayIndex].shortBr,
+        area: defaultArea,
+        topic: topic.trim(),
+        batchScore: 'Avulso',
+        reviewed: false
+      });
+      saveState();
+      showToast('Salvo na Fila de Revisão!', '📓');
+    }
+
+    function toggleErrorReviewed(id) {
+      const item = errorNotebook.find(e => e.id === id);
+      if (item) {
+        item.reviewed = !item.reviewed;
+        saveState();
+      }
+    }
+
+    function deleteErrorItem(id) {
+      errorNotebook = errorNotebook.filter(e => e.id !== id);
+      saveState();
+    }
+
+    function clearReviewedErrors() {
+      const revCount = errorNotebook.filter(e => e.reviewed).length;
+      if (revCount === 0) return showToast('Nenhum item marcado como revisado.', '⚠️');
+      if (confirm(`Remover os ${revCount} tópicos já revisados?`)) {
+        errorNotebook = errorNotebook.filter(e => !e.reviewed);
+        saveState();
+      }
+    }
+
+    function renderErrorNotebook() {
+      const container = document.getElementById('errorNotebookContainer');
+      const badge = document.getElementById('errorQueueCountBadge');
+      if (!container || !badge) return;
+
+      const pendingCount = errorNotebook.filter(e => !e.reviewed).length;
+      badge.textContent = `${pendingCount} ${pendingCount === 1 ? 'pendente' : 'pendentes'}`;
+
+      if (errorNotebook.length === 0) {
+        container.innerHTML = `<div class="col-span-full text-center py-5 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">Nenhum erro pendente na fila.</div>`;
+        return;
+      }
+
+      container.innerHTML = errorNotebook.map(item => `
+        <div class="p-3 rounded-xl bg-slate-900/75 border ${item.reviewed ? 'border-slate-800/50 opacity-55' : 'border-rose-500/30'} flex items-start justify-between gap-2.5 transition">
+          <label class="flex items-start gap-2.5 cursor-pointer flex-1 min-w-0">
+            <input type="checkbox" class="hidden custom-checkbox" ${item.reviewed ? 'checked' : ''} onchange="toggleErrorReviewed(${item.id})">
+            <div class="w-4 h-4 mt-0.5 shrink-0 rounded border border-slate-600 flex items-center justify-center transition">
+              ${item.reviewed ? '<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>' : ''}
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800/60">${escapeHtml(item.area)}</span>
+                <span class="text-[10px] text-slate-500 font-mono">${escapeHtml(item.dateStr)} • ${escapeHtml(item.batchScore)}</span>
+              </div>
+              <p class="text-xs font-medium break-words ${item.reviewed ? 'line-through text-slate-500' : 'text-slate-100'}">${escapeHtml(item.topic)}</p>
+            </div>
+          </label>
+          <button onclick="deleteErrorItem(${item.id})" class="text-slate-600 hover:text-rose-400 text-xs px-1">✕</button>
+        </div>
+      `).join('');
+    }
+
+    // ==================== 9. QUESTÕES, POMODORO & HÁBITOS ====================
+    function getEffectiveStudyGoalSeconds(dayIdx) {
+      return dailyGoalHours * 3600 * (busyDays[dayIdx] ? 0.5 : 1);
+    }
+
+    function getEffectiveQuestionGoal(dayIdx) {
+      return Math.max(1, Math.round(dailyQuestionsGoal * (busyDays[dayIdx] ? 0.5 : 1)));
+    }
+
+    function toggleBusyDay() {
+      busyDays[selectedDayIndex] = !busyDays[selectedDayIndex];
+      checkAutoCompleteStudyHabit(selectedDayIndex);
+      checkAutoCompleteQuestionHabit(selectedDayIndex);
+      saveState();
+      showToast(busyDays[selectedDayIndex] ? `Modo Dia Corrido ON (${DAYS[selectedDayIndex]}).` : 'Modo Dia Corrido OFF.', '⚡');
     }
 
     function checkAutoCompleteQuestionHabit(dayIdx) {
       const goalQ = getEffectiveQuestionGoal(dayIdx);
       const currentQ = questionsSolved[dayIdx] || 0;
-      if (goalQ > 0 && currentQ >= goalQ && linkedQuestionHabitId) {
-        const targetHabit = habits.find(h => h.id === Number(linkedQuestionHabitId));
-        if (targetHabit && !targetHabit.days[dayIdx]) {
-          targetHabit.days[dayIdx] = true;
-          playBeep(1046.5, 0.5);
-          showToast(`Meta de questões atingida: "${targetHabit.name}" concluído.`);
-          return true;
-        }
+      if (!linkedQuestionHabitId) return false;
+      const targetHabit = habits.find(h => h.id === Number(linkedQuestionHabitId));
+      if (!targetHabit) return false;
+
+      if (currentQ >= goalQ && !targetHabit.days[dayIdx]) {
+        targetHabit.days[dayIdx] = true;
+        playBeep(1046.5, 0.5);
+        return true;
+      } else if (currentQ < goalQ && targetHabit.days[dayIdx]) {
+        targetHabit.days[dayIdx] = false;
+        return true;
       }
       return false;
     }
 
     function addQuestionBatch(event) {
       event.preventDefault();
+      const areaEl = document.getElementById('qAreaSelect');
       const solvedEl = document.getElementById('qSolvedInput');
       const correctEl = document.getElementById('qCorrectInput');
+      const errorTopicEl = document.getElementById('qErrorTopicInput');
+      
+      const area = areaEl && areaEl.value ? areaEl.value : (customAreas[0] || 'Geral');
       const solved = Math.max(0, Number(solvedEl.value) || 0);
       const correct = Math.max(0, Number(correctEl.value) || 0);
+      const errorTopic = errorTopicEl ? errorTopicEl.value.trim() : '';
 
       if (solved === 0) return;
-      if (correct > solved) {
-        showToast('Acertos não podem superar o total de questões.', '!');
-        return;
-      }
+      if (correct > solved) return showToast('Acertos não podem superar as questões feitas.', '⚠️');
 
       questionsSolved[selectedDayIndex] = (questionsSolved[selectedDayIndex] || 0) + solved;
       questionsCorrect[selectedDayIndex] = (questionsCorrect[selectedDayIndex] || 0) + correct;
 
+      const batchId = Date.now();
+      const batchAcc = Math.round((correct / solved) * 100);
+
+      questionLogs.push({ id: batchId, dayIdx: selectedDayIndex, area, solved, correct });
+      feedAutoStudyBanks('questions', solved);
+
+      if (errorTopic) {
+        errorNotebook.unshift({
+          id: batchId + 1,
+          logId: batchId,
+          dateStr: WEEK_DATES[selectedDayIndex].shortBr,
+          area,
+          topic: errorTopic,
+          batchScore: `${correct}/${solved} (${batchAcc}%)`,
+          reviewed: false
+        });
+      }
+
       solvedEl.value = '';
       correctEl.value = '';
+      if (errorTopicEl) errorTopicEl.value = '';
+      document.getElementById('liveBatchAccPreview').textContent = '';
 
       checkAutoCompleteQuestionHabit(selectedDayIndex);
       saveState();
-      showToast(`+${solved} questões registradas.`);
+      showToast(`+${solved}q em ${area} (${batchAcc}%) registradas!`, '📝');
+    }
+
+    function undoLastQuestionBatch() {
+      let lastLogIndex = -1;
+      for (let i = questionLogs.length - 1; i >= 0; i--) {
+        if (questionLogs[i].dayIdx === selectedDayIndex) { lastLogIndex = i; break; }
+      }
+      if (lastLogIndex === -1) return showToast(`Nenhum bloco em ${DAYS[selectedDayIndex]} para desfazer.`, '⚠️');
+
+      const removed = questionLogs.splice(lastLogIndex, 1)[0];
+      questionsSolved[selectedDayIndex] = Math.max(0, (questionsSolved[selectedDayIndex] || 0) - removed.solved);
+      questionsCorrect[selectedDayIndex] = Math.max(0, (questionsCorrect[selectedDayIndex] || 0) - removed.correct);
+      feedAutoStudyBanks('questions', -removed.solved);
+      errorNotebook = errorNotebook.filter(item => item.logId !== removed.id);
+
+      checkAutoCompleteQuestionHabit(selectedDayIndex);
+      saveState();
+      showToast(`Desfeito: -${removed.solved}q de ${removed.area}.`, '↩️');
     }
 
     function clearTodayQuestions() {
       if (questionsSolved[selectedDayIndex] === 0) return;
       if (confirm(`Zerar questões de ${DAYS[selectedDayIndex]}?`)) {
+        const removedTotal = questionsSolved[selectedDayIndex] || 0;
         questionsSolved[selectedDayIndex] = 0;
         questionsCorrect[selectedDayIndex] = 0;
+        feedAutoStudyBanks('questions', -removedTotal);
+        questionLogs = questionLogs.filter(log => log.dayIdx !== selectedDayIndex);
+        checkAutoCompleteQuestionHabit(selectedDayIndex);
         saveState();
       }
     }
@@ -807,12 +1814,354 @@
       });
     }
 
+    function getAreaStatsForWeek() {
+      const map = {};
+      customAreas.forEach(a => { map[a] = { solved: 0, correct: 0 }; });
+      questionLogs.forEach(log => {
+        const area = log.area || 'Geral';
+        if (!map[area]) map[area] = { solved: 0, correct: 0 };
+        map[area].solved += (Number(log.solved) || 0);
+        map[area].correct += (Number(log.correct) || 0);
+      });
+      return map;
+    }
+
+    // ==================== 10. POMODORO COM TIMESTAMP REAL ====================
+    function playBeep(freq = 880, duration = 0.4) {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function checkAutoCompleteStudyHabit(dayIdx) {
+      const goalSeconds = getEffectiveStudyGoalSeconds(dayIdx);
+      const currentSeconds = studySeconds[dayIdx] || 0;
+      if (!linkedHabitId) return false;
+      const targetHabit = habits.find(h => h.id === Number(linkedHabitId));
+      if (!targetHabit) return false;
+
+      if (currentSeconds >= goalSeconds && !targetHabit.days[dayIdx]) {
+        targetHabit.days[dayIdx] = true;
+        playBeep(1046.5, 0.5);
+        showToast(`Meta de estudo atingida! "${targetHabit.name}" concluído!`, '🎯');
+        sendDesktopNotification('Meta Diária Atingida! 🎯', `O hábito "${targetHabit.name}" foi marcado.`);
+        return true;
+      }
+      return false;
+    }
+
+    function updateDailyGoal(hoursValue) {
+      dailyGoalHours = Number(hoursValue);
+      checkAutoCompleteStudyHabit(selectedDayIndex);
+      saveState();
+    }
+
+    function updateLinkedHabit(habitIdValue) {
+      linkedHabitId = Number(habitIdValue);
+      checkAutoCompleteStudyHabit(selectedDayIndex);
+      saveState();
+    }
+
+    function setTimerMode(mode) {
+      if (isRunning) pauseTimer();
+      timerMode = mode;
+      ['focus25', 'focus50', 'break'].forEach(m => {
+        const btn = document.getElementById(`btn-${m}`);
+        btn.className = m === mode 
+          ? 'py-1.5 text-xs font-semibold rounded-lg secondary-bg text-white transition'
+          : 'py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition';
+      });
+      const badge = document.getElementById('timerStatusBadge');
+      if (mode === 'focus25') { timeLeft = 25 * 60; badge.textContent = 'Foco 25m'; }
+      else if (mode === 'focus50') { timeLeft = 50 * 60; badge.textContent = 'Foco 50m'; }
+      else { timeLeft = 5 * 60; badge.textContent = 'Pausa 5m'; }
+      updateTimerDisplay();
+    }
+
+    function updateTimerDisplay() {
+      const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+      const secs = (timeLeft % 60).toString().padStart(2, '0');
+      document.getElementById('timerDisplay').textContent = `${mins}:${secs}`;
+      document.title = isRunning ? `(${mins}:${secs}) ${brandTitle}` : brandTitle;
+    }
+
+    function toggleTimer() {
+      if (isRunning) pauseTimer();
+      else startTimer();
+    }
+
+    function processTimerDelta() {
+      if (!isRunning || !lastTickTimestamp) return;
+      const now = Date.now();
+      const elapsedSeconds = Math.floor((now - lastTickTimestamp) / 1000);
+      if (elapsedSeconds < 1) return;
+
+      lastTickTimestamp += elapsedSeconds * 1000;
+      const effectiveDelta = Math.min(elapsedSeconds, timeLeft);
+      timeLeft -= effectiveDelta;
+
+      if (timerMode === 'focus25' || timerMode === 'focus50') {
+        studySeconds[selectedDayIndex] = (studySeconds[selectedDayIndex] || 0) + effectiveDelta;
+        feedAutoStudyBanks('hours', effectiveDelta / 3600);
+        const autoChecked = checkAutoCompleteStudyHabit(selectedDayIndex);
+        if (autoChecked || studySeconds[selectedDayIndex] % 60 < effectiveDelta) {
+          saveState();
+        } else if (studySeconds[selectedDayIndex] % 10 < effectiveDelta) {
+          saveLocalOnly();
+          renderAll();
+        } else {
+          renderKPIs();
+          renderGoalBar();
+        }
+      }
+
+      updateTimerDisplay();
+
+      if (timeLeft <= 0) {
+        playBeep(880, 0.6);
+        if (timerMode === 'focus25' || timerMode === 'focus50') {
+          pomodoroCycles[selectedDayIndex] = (pomodoroCycles[selectedDayIndex] || 0) + 1;
+          checkAutoCompleteStudyHabit(selectedDayIndex);
+          saveState();
+          sendDesktopNotification('Bloco Concluído! ✅', 'Hora de fazer uma pausa.');
+          setTimerMode('break');
+        } else {
+          sendDesktopNotification('Fim da Pausa! 🚀', 'Hora de retomar o foco.');
+          setTimerMode('focus25');
+        }
+      }
+    }
+
+    function startTimer() {
+      if (isRunning) return;
+      isRunning = true;
+      lastTickTimestamp = Date.now();
+      const btn = document.getElementById('startPauseBtn');
+      btn.textContent = '⏸ Pausar';
+      btn.className = 'flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm transition';
+      clearInterval(timerInterval);
+      timerInterval = setInterval(processTimerDelta, 1000);
+    }
+
+    function pauseTimer() {
+      if (isRunning) processTimerDelta();
+      isRunning = false;
+      lastTickTimestamp = null;
+      clearInterval(timerInterval);
+      const btn = document.getElementById('startPauseBtn');
+      btn.textContent = '▶ Retomar';
+      btn.className = 'flex-1 accent-bg text-slate-950 font-bold py-2.5 rounded-xl text-sm transition shadow-lg';
+      saveState();
+      updateTimerDisplay();
+    }
+
+    function resetTimer() {
+      pauseTimer();
+      document.getElementById('startPauseBtn').textContent = '▶ Iniciar Foco';
+      setTimerMode(timerMode);
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (isRunning) {
+        processTimerDelta();
+        if (document.visibilityState === 'hidden') saveState();
+      }
+    });
+
+    function adjustStudyTime(secondsDelta) {
+      const prev = studySeconds[selectedDayIndex] || 0;
+      studySeconds[selectedDayIndex] = Math.max(0, prev + secondsDelta);
+      const realDelta = studySeconds[selectedDayIndex] - prev;
+      feedAutoStudyBanks('hours', realDelta / 3600);
+      checkAutoCompleteStudyHabit(selectedDayIndex);
+      saveState();
+    }
+
+    function formatHoursMinutes(totalSeconds) {
+      const safeSecs = Math.max(0, Math.round(totalSeconds || 0));
+      const hours = Math.floor(safeSecs / 3600);
+      const minutes = Math.floor((safeSecs % 3600) / 60);
+      return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
+    }
+
+    // ==================== 11. HÁBITOS, ARQUIVAMENTO E BACKUPS ====================
+    function selectDay(index) {
+      selectedDayIndex = index;
+      renderAll();
+    }
+
+    function toggleHabitDay(habitId, dayIdx) {
+      const habit = habits.find(h => h.id === habitId);
+      if (habit) {
+        habit.days[dayIdx] = !habit.days[dayIdx];
+        saveState();
+      }
+    }
+
+    function renameHabit(habitId) {
+      const habit = habits.find(h => h.id === habitId);
+      if (!habit) return;
+      const newName = prompt('Renomear hábito:', habit.name);
+      if (newName !== null && newName.trim() !== '') {
+        habit.name = newName.trim();
+        saveState();
+      }
+    }
+
+    function moveHabit(index, direction) {
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= habits.length) return;
+      const temp = habits[index];
+      habits[index] = habits[targetIndex];
+      habits[targetIndex] = temp;
+      saveState();
+    }
+
+    function toggleScheduleEditor(habitId) {
+      editingScheduleHabitId = editingScheduleHabitId === habitId ? null : habitId;
+      renderHabitList();
+    }
+
+    function setHabitScheduleMode(habitId, mode) {
+      const habit = habits.find(h => h.id === habitId);
+      if (!habit) return;
+      habit.scheduleMode = mode;
+      if (!habit.cycleAnchor) habit.cycleAnchor = WEEK_DATES[selectedDayIndex].iso;
+      saveState();
+    }
+
+    function updateHabitCycleParams(habitId, field, value) {
+      const habit = habits.find(h => h.id === habitId);
+      if (!habit) return;
+      if (field === 'cycleOn') habit.cycleOn = Math.max(1, Number(value) || 1);
+      if (field === 'cycleOff') habit.cycleOff = Math.max(1, Number(value) || 1);
+      if (field === 'cycleAnchor') habit.cycleAnchor = value || TODAY_ISO;
+      saveState();
+    }
+
+    function toggleHabitScheduledDay(habitId, dayIdx) {
+      const habit = habits.find(h => h.id === habitId);
+      if (habit) {
+        habit.scheduleMode = 'fixed';
+        habit.scheduledDays[dayIdx] = !habit.scheduledDays[dayIdx];
+        saveState();
+      }
+    }
+
+    function setNewHabitMode(mode) {
+      newHabitMode = mode;
+      const fixedBtn = document.getElementById('newModeFixedBtn');
+      const cycleBtn = document.getElementById('newModeCycleBtn');
+      const fixedCont = document.getElementById('newFixedContainer');
+      const cycleCont = document.getElementById('newCycleContainer');
+
+      if (mode === 'fixed') {
+        fixedBtn.className = 'px-2 py-0.5 rounded-md text-[10px] font-semibold accent-bg text-slate-950';
+        cycleBtn.className = 'px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-400';
+        fixedCont.classList.remove('hidden');
+        cycleCont.classList.add('hidden');
+      } else {
+        cycleBtn.className = 'px-2 py-0.5 rounded-md text-[10px] font-semibold accent-bg text-slate-950';
+        fixedBtn.className = 'px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-400';
+        fixedCont.classList.add('hidden');
+        cycleCont.classList.remove('hidden');
+        const anchorInput = document.getElementById('newCycleAnchor');
+        if (anchorInput && !anchorInput.value) anchorInput.value = WEEK_DATES[selectedDayIndex].iso;
+      }
+    }
+
+    function toggleNewHabitDay(dayIdx) {
+      newHabitSchedule[dayIdx] = !newHabitSchedule[dayIdx];
+      renderNewHabitDaysPicker();
+    }
+
+    function renderNewHabitDaysPicker() {
+      const container = document.getElementById('newHabitDaysPicker');
+      if (!container) return;
+      container.innerHTML = DAYS.map((d, idx) => `
+        <button type="button" onclick="toggleNewHabitDay(${idx})" class="px-1.5 py-0.5 rounded text-[10px] font-semibold transition ${
+          newHabitSchedule[idx] ? 'accent-bg text-slate-950' : 'bg-slate-800 text-slate-500'
+        }">${d[0]}</button>
+      `).join('');
+    }
+
+    function addHabit(event) {
+      event.preventDefault();
+      const input = document.getElementById('newHabitInput');
+      const name = input.value.trim();
+      if (!name) return;
+
+      const scheduleToUse = newHabitSchedule.some(Boolean) ? [...newHabitSchedule] : [true, true, true, true, true, true, true];
+      const cOn = Math.max(1, Number(document.getElementById('newCycleOn').value) || 2);
+      const cOff = Math.max(1, Number(document.getElementById('newCycleOff').value) || 1);
+      const cAnchor = document.getElementById('newCycleAnchor').value || WEEK_DATES[selectedDayIndex].iso;
+
+      habits.push({
+        id: Date.now(),
+        name,
+        days: [false, false, false, false, false, false, false],
+        scheduleMode: newHabitMode,
+        cycleOn: cOn,
+        cycleOff: cOff,
+        cycleAnchor: cAnchor,
+        scheduledDays: scheduleToUse
+      });
+      input.value = '';
+      newHabitSchedule = [true, true, true, true, true, true, true];
+      setNewHabitMode('fixed');
+      saveState();
+      showToast(`Hábito "${name}" criado!`, '✅');
+    }
+
+    function deleteHabit(habitId) {
+      habits = habits.filter(h => h.id !== habitId);
+      if (linkedHabitId === habitId) linkedHabitId = habits[0] ? habits[0].id : 0;
+      if (linkedQuestionHabitId === habitId) linkedQuestionHabitId = habits[0] ? habits[0].id : 0;
+      saveState();
+    }
+
+    function getDailyPercentages() {
+      if (habits.length === 0) return [0, 0, 0, 0, 0, 0, 0];
+      return DAYS.map((_, dayIdx) => {
+        const activeHabits = habits.filter(h => isHabitActiveOnDay(h, dayIdx) || h.days[dayIdx]);
+        if (activeHabits.length === 0) return 100;
+        const completed = activeHabits.filter(h => h.days[dayIdx]).length;
+        return Math.round((completed / activeHabits.length) * 100);
+      });
+    }
+
+    function calculateCurrentStreak() {
+      const dailyPcts = getDailyPercentages();
+      let currentStreak = 0;
+      for (let i = 0; i <= selectedDayIndex; i++) {
+        const activeCount = habits.filter(h => isHabitActiveOnDay(h, i) || h.days[i]).length;
+        if (activeCount === 0) continue;
+        const threshold = busyDays[i] ? 60 : 80;
+        if (dailyPcts[i] >= threshold) currentStreak++;
+        else if (i < selectedDayIndex) currentStreak = 0;
+      }
+      return currentStreak;
+    }
+
+    function getDailyStudyHours() {
+      return studySeconds.map(sec => +(sec / 3600).toFixed(2));
+    }
+
     function getWeeklyStatsSummary() {
-      let totalScheduled = 0;
-      let totalDone = 0;
+      let totalScheduled = 0, totalDone = 0;
       habits.forEach(h => {
         DAYS.forEach((_, dIdx) => {
-          if (h.scheduledDays[dIdx] || h.days[dIdx]) {
+          const active = isHabitActiveOnDay(h, dIdx);
+          if (active || h.days[dIdx]) {
             totalScheduled++;
             if (h.days[dIdx]) totalDone++;
           }
@@ -823,14 +2172,30 @@
       const totalQ = questionsSolved.reduce((a, b) => a + b, 0);
       const totalC = questionsCorrect.reduce((a, b) => a + b, 0);
       const weeklyQAcc = totalQ > 0 ? Math.round((totalC / totalQ) * 100) : 0;
-      const streak = calculateCurrentStreak();
-      return { totalScheduled, totalDone, weeklyRate, totalSecs, totalQ, totalC, weeklyQAcc, streak };
+      return { totalScheduled, totalDone, weeklyRate, totalSecs, totalQ, totalC, weeklyQAcc, streak: calculateCurrentStreak() };
+    }
+
+    function checkNewWeekRollover() {
+      const hasAnyProgress = studySeconds.some(s => s > 0) || questionsSolved.some(q => q > 0) || habits.some(h => h.days.some(Boolean));
+      if (storedWeekStartIso && storedWeekStartIso !== CURRENT_WEEK_SUNDAY_ISO && hasAnyProgress) {
+        document.getElementById('newWeekBanner').classList.remove('hidden');
+      } else {
+        storedWeekStartIso = CURRENT_WEEK_SUNDAY_ISO;
+        localStorage.setItem('habitWeekStartIso', CURRENT_WEEK_SUNDAY_ISO);
+      }
+    }
+
+    function dismissNewWeekBanner() {
+      storedWeekStartIso = CURRENT_WEEK_SUNDAY_ISO;
+      localStorage.setItem('habitWeekStartIso', CURRENT_WEEK_SUNDAY_ISO);
+      document.getElementById('newWeekBanner').classList.add('hidden');
+      saveState();
     }
 
     function archiveAndResetWeek() {
       const stats = getWeeklyStatsSummary();
-      const defaultLabel = `Semana encerrada em ${new Date().toLocaleDateString('pt-BR')}`;
-      const weekLabel = prompt('Identificação da semana para o histórico:', defaultLabel);
+      const defaultLabel = `Semana ${WEEK_DATES[0].shortBr} a ${WEEK_DATES[6].shortBr}`;
+      const weekLabel = prompt('Período para arquivar no histórico:', defaultLabel);
       if (weekLabel === null) return;
 
       archivedWeeks.unshift({
@@ -852,18 +2217,27 @@
       pomodoroCycles = [0, 0, 0, 0, 0, 0, 0];
       questionsSolved = [0, 0, 0, 0, 0, 0, 0];
       questionsCorrect = [0, 0, 0, 0, 0, 0, 0];
+      questionLogs = [];
+      errorNotebook = errorNotebook.filter(item => !item.reviewed);
+      busyDays = [false, false, false, false, false, false, false];
+      storedWeekStartIso = CURRENT_WEEK_SUNDAY_ISO;
+      document.getElementById('newWeekBanner').classList.add('hidden');
 
       saveState();
-      showToast('Semana arquivada com sucesso.');
+      showToast('Semana arquivada! Caixinhas e erros pendentes preservados.', '📦');
     }
 
     function resetWeekOnly() {
-      if (confirm('Zerar a semana atual sem salvar no histórico?')) {
+      if (confirm('Zerar a semana atual sem arquivar? (Suas Caixinhas de Longo Prazo não serão afetadas)')) {
         habits.forEach(h => h.days = [false, false, false, false, false, false, false]);
         studySeconds = [0, 0, 0, 0, 0, 0, 0];
         pomodoroCycles = [0, 0, 0, 0, 0, 0, 0];
         questionsSolved = [0, 0, 0, 0, 0, 0, 0];
         questionsCorrect = [0, 0, 0, 0, 0, 0, 0];
+        questionLogs = [];
+        busyDays = [false, false, false, false, false, false, false];
+        storedWeekStartIso = CURRENT_WEEK_SUNDAY_ISO;
+        document.getElementById('newWeekBanner').classList.add('hidden');
         saveState();
       }
     }
@@ -875,10 +2249,27 @@
       }
     }
 
-    function getFormattedDate() {
-      return new Date().toISOString().split('T')[0];
+    function updateNotificationButtonUI() {
+      const btnText = document.getElementById('notifBtnText');
+      if (!('Notification' in window) || !btnText) return;
+      btnText.textContent = Notification.permission === 'granted' ? 'Alertas ON' : 'Alertas';
     }
 
+    function requestDesktopNotifications() {
+      if (!('Notification' in window)) return;
+      Notification.requestPermission().then(p => {
+        updateNotificationButtonUI();
+        if (p === 'granted') showToast('Notificações ativadas!', '🔔');
+      });
+    }
+
+    function sendDesktopNotification(title, body) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try { new Notification(title, { body }); } catch (e) {}
+      }
+    }
+
+    // ==================== 12. EXPORTAÇÃO E IMPORTAÇÃO ====================
     function triggerDownload(content, filename, mimeType) {
       const blob = new Blob([content], { type: mimeType });
       const url = URL.createObjectURL(blob);
@@ -892,8 +2283,8 @@
     }
 
     function exportJSON() {
-      const jsonString = JSON.stringify(buildFullPayload(), null, 2);
-      triggerDownload(jsonString, `backup-painel-${getFormattedDate()}.json`, 'application/json;charset=utf-8;');
+      triggerDownload(JSON.stringify(buildFullPayload(), null, 2), `performance_studio_${TODAY_ISO}.json`, 'application/json;charset=utf-8;');
+      showToast('Backup JSON exportado!', '⬇️');
     }
 
     function exportCSV() {
@@ -901,10 +2292,11 @@
       const rows = [['Tipo', 'ID', 'Item', ...DAYS, 'Acumulado_Semana', 'Dias_Programados']];
 
       habits.forEach(h => {
-        const schedCount = h.scheduledDays.filter(Boolean).length;
+        const effSched = DAYS.map((_, idx) => isHabitActiveOnDay(h, idx));
+        const schedCount = effSched.filter(Boolean).length;
         const doneCount = h.days.filter(Boolean).length;
-        const dayValues = h.days.map((d, idx) => d ? '1' : (h.scheduledDays[idx] ? '0' : '-'));
-        const schedMask = h.scheduledDays.map(s => s ? '1' : '0').join('');
+        const dayValues = h.days.map((d, idx) => d ? '1' : (effSched[idx] ? '0' : '-'));
+        const schedMask = effSched.map(s => s ? '1' : '0').join('');
         rows.push(['HABITO', h.id, escapeCSV(h.name), ...dayValues, `${doneCount}/${schedCount}`, `"${schedMask}"`]);
       });
 
@@ -916,7 +2308,7 @@
       rows.push(['QUESTOES_ACERTOS', '0', '"Questoes Certas"', ...questionsCorrect, totalC, '']);
 
       const csvContent = '\uFEFF' + rows.map(r => r.join(',')).join('\r\n');
-      triggerDownload(csvContent, `relatorio-painel-${getFormattedDate()}.csv`, 'text/csv;charset=utf-8;');
+      triggerDownload(csvContent, `relatorio_performance_${TODAY_ISO}.csv`, 'text/csv;charset=utf-8;');
     }
 
     function handleFileImport(event) {
@@ -927,13 +2319,12 @@
         try {
           if (file.name.toLowerCase().endsWith('.json')) {
             const data = JSON.parse(e.target.result);
-            if (applyPayloadToState(data)) {
-              saveState();
-              showToast('Backup restaurado.');
-            }
+            if (!applyPayloadToState(data)) throw new Error('JSON inválido');
+            saveState();
+            showToast('Backup JSON restaurado!', '🎉');
           }
         } catch (err) {
-          showToast('Arquivo inválido.', '!');
+          showToast('Erro ao importar arquivo.', '❌');
         } finally {
           event.target.value = '';
         }
@@ -941,345 +2332,40 @@
       reader.readAsText(file);
     }
 
-    function playBeep(freq = 660, duration = 0.35) {
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        gain.gain.setValueAtTime(0.12, ctx.currentTime);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + duration);
-      } catch (e) {}
-    }
-
-    function checkAutoCompleteStudyHabit(dayIdx) {
-      const goalSeconds = getEffectiveStudyGoalSeconds(dayIdx);
-      const currentSeconds = studySeconds[dayIdx] || 0;
-      if (goalSeconds > 0 && currentSeconds >= goalSeconds && linkedHabitId) {
-        const targetHabit = habits.find(h => h.id === Number(linkedHabitId));
-        if (targetHabit && !targetHabit.days[dayIdx]) {
-          targetHabit.days[dayIdx] = true;
-          playBeep(880, 0.4);
-          showToast(`Bloco "study" concluído: "${targetHabit.name}" marcado.`);
-          sendDesktopNotification('Meta de Estudo Concluída', `O hábito "${targetHabit.name}" foi marcado automaticamente.`);
-          return true;
-        }
-      }
-      return false;
-    }
-
-    function updateDailyGoal(hoursValue) {
-      dailyGoalHours = Number(hoursValue);
-      checkAutoCompleteStudyHabit(selectedDayIndex);
-      saveState();
-    }
-
-    function updateLinkedHabit(habitIdValue) {
-      linkedHabitId = Number(habitIdValue);
-      applyCalendarScheduleToHabits();
-      checkAutoCompleteStudyHabit(selectedDayIndex);
-      saveState();
-    }
-
-    function setTimerMode(mode) {
-      if (isRunning) pauseTimer();
-      timerMode = mode;
-      
-      ['focus25', 'focus50', 'break'].forEach(m => {
-        const btn = document.getElementById(`btn-${m}`);
-        btn.className = m === mode 
-          ? 'py-1.5 text-xs font-medium rounded-md bg-slate-700 text-zinc-100 transition'
-          : 'py-1.5 text-xs font-medium rounded-md text-zinc-500 hover:text-zinc-300 transition';
-      });
-
-      const badge = document.getElementById('timerStatusBadge');
-      if (mode === 'focus25') {
-        timeLeft = 25 * 60;
-        badge.textContent = 'Modo Foco (25m)';
-      } else if (mode === 'focus50') {
-        timeLeft = 50 * 60;
-        badge.textContent = 'Modo Foco (50m)';
-      } else {
-        timeLeft = 5 * 60;
-        badge.textContent = 'Intervalo (5m)';
-      }
-      updateTimerDisplay();
-    }
-
-    function updateTimerDisplay() {
-      const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-      const secs = (timeLeft % 60).toString().padStart(2, '0');
-      document.getElementById('timerDisplay').textContent = `${mins}:${secs}`;
-      document.title = isRunning ? `(${mins}:${secs}) Painel` : 'Painel de Performance';
-    }
-
-    function toggleTimer() {
-      if (isRunning) pauseTimer();
-      else startTimer();
-    }
-
-    function startTimer() {
-      isRunning = true;
-      const btn = document.getElementById('startPauseBtn');
-      btn.textContent = '⏸ Pausar';
-      btn.className = 'flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-medium py-2.5 rounded-lg text-xs transition border border-zinc-700';
-
-      timerInterval = setInterval(() => {
-        if (timeLeft > 0) {
-          timeLeft--;
-          if (timerMode === 'focus25' || timerMode === 'focus50') {
-            studySeconds[selectedDayIndex]++;
-            const autoChecked = checkAutoCompleteStudyHabit(selectedDayIndex);
-            if (autoChecked || studySeconds[selectedDayIndex] % 60 === 0) {
-              saveState();
-            } else if (studySeconds[selectedDayIndex] % 10 === 0) {
-              saveLocalOnly();
-              renderAll();
-            } else {
-              renderKPIs();
-              renderGoalBar();
-            }
-          }
-          updateTimerDisplay();
-        } else {
-          playBeep(660, 0.5);
-          if (timerMode === 'focus25' || timerMode === 'focus50') {
-            pomodoroCycles[selectedDayIndex]++;
-            checkAutoCompleteStudyHabit(selectedDayIndex);
-            saveState();
-            sendDesktopNotification('Ciclo Finalizado', 'Bloco concluído. Inicie o intervalo.');
-            setTimerMode('break');
-          } else {
-            sendDesktopNotification('Intervalo Finalizado', 'Pronto para retomar o foco.');
-            setTimerMode('focus25');
-          }
-        }
-      }, 1000);
-    }
-
-    function pauseTimer() {
-      isRunning = false;
-      clearInterval(timerInterval);
-      const btn = document.getElementById('startPauseBtn');
-      btn.textContent = '▶ Retomar';
-      btn.className = 'flex-1 bg-slate-700 hover:bg-slate-600 text-zinc-100 font-medium py-2.5 rounded-lg text-xs transition';
-      saveState();
-      updateTimerDisplay();
-    }
-
-    function resetTimer() {
-      pauseTimer();
-      document.getElementById('startPauseBtn').textContent = '▶ Iniciar Foco';
-      setTimerMode(timerMode);
-    }
-
-    function adjustStudyTime(secondsDelta) {
-      studySeconds[selectedDayIndex] = Math.max(0, studySeconds[selectedDayIndex] + secondsDelta);
-      checkAutoCompleteStudyHabit(selectedDayIndex);
-      saveState();
-    }
-
-    function formatHoursMinutes(totalSeconds) {
-      const hours = Math.floor(totalSeconds / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
-    }
-
-    function selectDay(index) {
-      selectedDayIndex = index;
-      renderAll();
-    }
-
-    function toggleHabitDay(habitId, dayIdx) {
-      const habit = habits.find(h => h.id === habitId);
-      if (habit) {
-        habit.days[dayIdx] = !habit.days[dayIdx];
-        saveState();
-      }
-    }
-
-    function toggleScheduleEditor(habitId) {
-      editingScheduleHabitId = editingScheduleHabitId === habitId ? null : habitId;
-      renderHabitList();
-    }
-
-    function toggleHabitScheduledDay(habitId, dayIdx) {
-      const habit = habits.find(h => h.id === habitId);
-      if (habit) {
-        habit.scheduledDays[dayIdx] = !habit.scheduledDays[dayIdx];
-        saveState();
-      }
-    }
-
-    function toggleNewHabitDay(dayIdx) {
-      newHabitSchedule[dayIdx] = !newHabitSchedule[dayIdx];
-      renderNewHabitDaysPicker();
-    }
-
-    function renderNewHabitDaysPicker() {
-      const container = document.getElementById('newHabitDaysPicker');
-      if (!container) return;
-      container.innerHTML = DAYS.map((d, idx) => `
-        <button type="button" onclick="toggleNewHabitDay(${idx})" class="px-1.5 py-0.5 rounded text-[10px] font-medium transition ${
-          newHabitSchedule[idx] ? 'bg-slate-700 text-zinc-100' : 'bg-zinc-900 text-zinc-600'
-        }">${d[0]}</button>
-      `).join('');
-    }
-
-    function addHabit(event) {
-      event.preventDefault();
-      const input = document.getElementById('newHabitInput');
-      const name = input.value.trim();
-      if (!name) return;
-
-      const scheduleToUse = newHabitSchedule.some(Boolean) ? [...newHabitSchedule] : [true, true, true, true, true, true, true];
-      habits.push({
-        id: Date.now(),
-        name,
-        days: [false, false, false, false, false, false, false],
-        scheduledDays: scheduleToUse
-      });
-      input.value = '';
-      newHabitSchedule = [true, true, true, true, true, true, true];
-      applyCalendarScheduleToHabits();
-      saveState();
-    }
-
-    function deleteHabit(habitId) {
-      habits = habits.filter(h => h.id !== habitId);
-      if (linkedHabitId === habitId) linkedHabitId = habits[0] ? habits[0].id : 0;
-      if (linkedQuestionHabitId === habitId) linkedQuestionHabitId = habits[0] ? habits[0].id : 0;
-      saveState();
-    }
-
-    function getDailyPercentages() {
-      if (habits.length === 0) return [0, 0, 0, 0, 0, 0, 0];
-      return DAYS.map((_, dayIdx) => {
-        const activeHabits = habits.filter(h => h.scheduledDays[dayIdx] || h.days[dayIdx]);
-        if (activeHabits.length === 0) return 100;
-        const completed = activeHabits.filter(h => h.days[dayIdx]).length;
-        return Math.round((completed / activeHabits.length) * 100);
-      });
-    }
-
-    function calculateCurrentStreak() {
-      const dailyPcts = getDailyPercentages();
-      let currentStreak = 0;
-      for (let i = 0; i <= selectedDayIndex; i++) {
-        const activeCount = habits.filter(h => h.scheduledDays[i] || h.days[i]).length;
-        if (activeCount === 0) continue;
-        if (dailyPcts[i] >= 80) currentStreak++;
-        else if (i < selectedDayIndex) currentStreak = 0;
-      }
-      return currentStreak;
-    }
-
-    function getDailyStudyHours() {
-      return studySeconds.map(sec => +(sec / 3600).toFixed(2));
-    }
-
-    function getDailyPlannedStudyHours() {
-      return DAYS.map((_, idx) => +(getEffectiveStudyGoalSeconds(idx) / 3600).toFixed(2));
-    }
-
-    function renderCalendarCard() {
-      const listEl = document.getElementById('calendarEventsList');
-      const badgeEl = document.getElementById('calSyncBadge');
-      const toggleBtn = document.getElementById('autoCalToggleBtn');
-
-      if (toggleBtn) {
-        toggleBtn.textContent = autoCalendarSync ? 'Ativo (Automático)' : 'Pausado (Manual)';
-        toggleBtn.className = autoCalendarSync ? 'text-zinc-200 font-semibold hover:underline' : 'text-zinc-500 font-medium hover:underline';
-      }
-
-      if (!Array.isArray(calendarWeekData) || !calendarWeekData[selectedDayIndex]) {
-        badgeEl.textContent = 'Aguardando Sync';
-        listEl.innerHTML = `
-          <div class="text-xs text-zinc-500 py-4 text-center border border-dashed border-zinc-800 rounded-lg">
-            Clique em <b>↻ Sincronizar Agenda</b> no topo para buscar seus eventos <b>"study"</b> e <b>"training"</b>.
-          </div>
-        `;
-        return;
-      }
-
-      const dayCal = calendarWeekData[selectedDayIndex];
-      const studyPlanStr = dayCal.hasStudy ? formatHoursMinutes(dayCal.studyPlannedSeconds) : 'Sem study';
-      const trainPlanStr = dayCal.hasTraining ? 'Com training' : 'Sem training';
-      badgeEl.textContent = `${studyPlanStr} • ${trainPlanStr}`;
-
-      const relevantEvents = (dayCal.events || []).filter(e => e.type === 'study' || e.type === 'training');
-      const otherEvents = (dayCal.events || []).filter(e => e.type === 'other');
-
-      if (relevantEvents.length === 0 && otherEvents.length === 0) {
-        listEl.innerHTML = `
-          <div class="text-xs text-zinc-500 py-4 text-center border border-dashed border-zinc-800/80 rounded-lg">
-            Nenhum evento em ${DAYS[selectedDayIndex]} (Folga de estudo e treino).
-          </div>
-        `;
-        return;
-      }
-
-      const renderEvItem = (ev) => {
-        const tag = ev.type === 'study'
-          ? '<span class="px-1.5 py-0.5 text-[10px] rounded bg-slate-700 text-zinc-100 font-semibold">STUDY</span>'
-          : (ev.type === 'training' ? '<span class="px-1.5 py-0.5 text-[10px] rounded bg-zinc-700 text-zinc-200 font-semibold">TRAINING</span>' : '');
-        return `
-          <div class="flex items-center justify-between p-2 rounded-lg bg-zinc-950 border ${ev.type !== 'other' ? 'border-slate-600/80' : 'border-zinc-800/60 opacity-60'} text-xs">
-            <div class="flex items-center gap-2 truncate pr-2">
-              ${tag}
-              <span class="font-medium text-zinc-200 truncate">${ev.title}</span>
-            </div>
-            <span class="text-[11px] text-zinc-400 font-mono shrink-0">
-              ${ev.isAllDay ? 'Dia todo' : `${ev.start} - ${ev.end}`}
-            </span>
-          </div>
-        `;
-      };
-
-      listEl.innerHTML = [...relevantEvents.map(renderEvItem), ...otherEvents.map(renderEvItem)].join('');
-    }
-
+    // ==================== 13. RENDERIZAÇÃO DE COMPONENTES E GRÁFICOS ====================
     function renderDaySelector() {
       const container = document.getElementById('daySelector');
-      const badgesContainer = document.getElementById('dayScheduleBadges');
-      const calToday = Array.isArray(calendarWeekData) ? calendarWeekData[selectedDayIndex] : null;
-
-      document.getElementById('selectedDayLabel').textContent = DAYS[selectedDayIndex];
-
-      if (calToday && autoCalendarSync) {
-        const studyBadge = calToday.hasStudy
-          ? `<span class="px-2 py-0.5 rounded bg-slate-800 text-zinc-200 border border-slate-700">📚 Study: ${formatHoursMinutes(calToday.studyPlannedSeconds)}</span>`
-          : `<span class="px-2 py-0.5 rounded bg-zinc-900 text-zinc-500 border border-zinc-800">📚 Sem Study (Folga)</span>`;
-        const trainBadge = calToday.hasTraining
-          ? `<span class="px-2 py-0.5 rounded bg-slate-800 text-zinc-200 border border-slate-700">🏋️ Training: Sim</span>`
-          : `<span class="px-2 py-0.5 rounded bg-zinc-900 text-zinc-500 border border-zinc-800">🏋️ Sem Training</span>`;
-        badgesContainer.innerHTML = studyBadge + trainBadge;
+      const isBusyToday = busyDays[selectedDayIndex];
+      const dInfo = WEEK_DATES[selectedDayIndex];
+      document.getElementById('selectedDayLabel').textContent = `${dInfo.dayLabel} (${dInfo.shortBr})${isBusyToday ? ' ⚡' : ''}`;
+      
+      const busyBtn = document.getElementById('busyDayBtn');
+      const busyBtnText = document.getElementById('busyDayBtnText');
+      if (isBusyToday) {
+        busyBtn.className = 'text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition flex items-center gap-1 bg-amber-500/20 text-amber-300 border-amber-500/50';
+        busyBtnText.textContent = 'Dia Corrido: ON (-50%)';
       } else {
-        badgesContainer.innerHTML = '';
+        busyBtn.className = 'text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition flex items-center gap-1 bg-slate-800/90 text-slate-300 border-slate-700 hover:border-amber-500/50';
+        busyBtnText.textContent = 'Dia Corrido: OFF';
       }
 
-      container.innerHTML = DAYS.map((day, idx) => {
+      container.innerHTML = WEEK_DATES.map((info, idx) => {
         const isSelected = idx === selectedDayIndex;
-        const dCal = Array.isArray(calendarWeekData) ? calendarWeekData[idx] : null;
-        const hasS = dCal && dCal.hasStudy;
-        const hasT = dCal && dCal.hasTraining;
+        const isBusy = busyDays[idx];
         return `
           <button 
             onclick="selectDay(${idx})"
-            class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition border flex flex-col items-center justify-center ${
+            class="px-2.5 py-1.5 rounded-xl text-xs font-semibold transition border flex flex-col items-center justify-center ${
               isSelected 
-                ? 'bg-slate-700 text-zinc-100 border-slate-500' 
-                : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-800/80'
+                ? 'accent-bg text-slate-950 font-bold border-transparent shadow-lg' 
+                : 'bg-slate-800/70 text-slate-400 border-slate-700/60 hover:bg-slate-800'
             }"
           >
-            <span>${day}</span>
-            <span class="text-[9px] text-zinc-400 mt-0.5 h-3 flex items-center gap-0.5">
-              ${hasS ? '📚' : ''}${hasT ? '🏋️' : ''}${!hasS && !hasT && dCal ? '—' : ''}
-            </span>
+            <div class="flex items-center gap-0.5">
+              <span>${info.dayLabel}</span>
+              ${isBusy ? '<span>⚡</span>' : ''}
+            </div>
+            <span class="text-[9px] opacity-75 font-mono">${info.shortBr}</span>
           </button>
         `;
       }).join('');
@@ -1292,38 +2378,28 @@
       const linkedSelect = document.getElementById('linkedHabitSelect');
       if (linkedSelect) {
         linkedSelect.innerHTML = habits.length === 0
-          ? '<option value="0" class="bg-zinc-900">Nenhum</option>'
-          : habits.map(h => `<option value="${h.id}" class="bg-zinc-900" ${h.id === Number(linkedHabitId) ? 'selected' : ''}>${h.name}</option>`).join('');
+          ? '<option value="0" class="bg-slate-900">Nenhum</option>'
+          : habits.map(h => `<option value="${h.id}" class="bg-slate-900" ${h.id === Number(linkedHabitId) ? 'selected' : ''}>${escapeHtml(h.name)}</option>`).join('');
       }
 
       const goalSecs = getEffectiveStudyGoalSeconds(selectedDayIndex);
       const todaySecs = studySeconds[selectedDayIndex] || 0;
-      const statusBadge = document.getElementById('goalStatusBadge');
-      const remainingText = document.getElementById('goalRemainingText');
+      const rawPct = goalSecs > 0 ? Math.round((todaySecs / goalSecs) * 100) : 0;
 
-      if (goalSecs === 0) {
-        document.getElementById('goalProgressFraction').textContent = `${formatHoursMinutes(todaySecs)} (Sem evento "study" hoje)`;
-        document.getElementById('goalProgressPercent').textContent = `Folga`;
-        document.getElementById('goalProgressBar').style.width = `100%`;
-        statusBadge.textContent = 'Dia Livre de Estudo';
-        statusBadge.className = 'text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400';
-        remainingText.textContent = 'Nenhum evento "study" agendado para hoje. Aproveite seu descanso ou foque nas outras tarefas.';
-        return;
-      }
-
-      const rawPct = Math.round((todaySecs / goalSecs) * 100);
-      document.getElementById('goalProgressFraction').textContent = `${formatHoursMinutes(todaySecs)} de ${formatHoursMinutes(goalSecs)} planejados`;
+      document.getElementById('goalProgressFraction').textContent = `${formatHoursMinutes(todaySecs)} / ${formatHoursMinutes(goalSecs)} (${DAYS[selectedDayIndex]})`;
       document.getElementById('goalProgressPercent').textContent = `${rawPct}%`;
       document.getElementById('goalProgressBar').style.width = `${Math.min(100, rawPct)}%`;
 
+      const statusBadge = document.getElementById('goalStatusBadge');
+      const remainingText = document.getElementById('goalRemainingText');
       if (todaySecs >= goalSecs) {
-        statusBadge.textContent = 'Bloco Study Concluído';
-        statusBadge.className = 'text-[10px] font-medium px-2 py-0.5 rounded bg-slate-700 text-zinc-100';
-        remainingText.textContent = 'Você cumpriu 100% do tempo planejado no seu evento "study" de hoje.';
+        statusBadge.textContent = '✅ Meta Batida';
+        statusBadge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300';
+        remainingText.textContent = 'Meta de horas líquidas do dia concluída!';
       } else {
-        statusBadge.textContent = 'Em andamento';
-        statusBadge.className = 'text-[10px] font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-400';
-        remainingText.textContent = `Restam ${formatHoursMinutes(goalSecs - todaySecs)} para cumprir seu bloco "study" de hoje.`;
+        statusBadge.textContent = busyDays[selectedDayIndex] ? '⚡ Meta Reduzida (-50%)' : 'Em andamento';
+        statusBadge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400';
+        remainingText.textContent = `Faltam ${formatHoursMinutes(goalSecs - todaySecs)} para completar a meta.`;
       }
     }
 
@@ -1334,98 +2410,164 @@
       const linkedQSelect = document.getElementById('linkedQHabitSelect');
       if (linkedQSelect) {
         linkedQSelect.innerHTML = habits.length === 0
-          ? '<option value="0" class="bg-zinc-900">Nenhum</option>'
-          : habits.map(h => `<option value="${h.id}" class="bg-zinc-900" ${h.id === Number(linkedQuestionHabitId) ? 'selected' : ''}>${h.name}</option>`).join('');
+          ? '<option value="0" class="bg-slate-900">Nenhum</option>'
+          : habits.map(h => `<option value="${h.id}" class="bg-slate-900" ${h.id === Number(linkedQuestionHabitId) ? 'selected' : ''}>${escapeHtml(h.name)}</option>`).join('');
       }
+
+      const areaSelect = document.getElementById('qAreaSelect');
+      if (areaSelect) {
+        const prev = areaSelect.value;
+        areaSelect.innerHTML = customAreas.map(a => `<option value="${escapeHtml(a)}" class="bg-slate-900">${escapeHtml(a)}</option>`).join('');
+        if (customAreas.includes(prev)) areaSelect.value = prev;
+      }
+
+      renderCustomAreasManager();
+      renderQuickQButtons();
 
       const effectiveQGoal = getEffectiveQuestionGoal(selectedDayIndex);
       const solvedToday = questionsSolved[selectedDayIndex] || 0;
       const correctToday = questionsCorrect[selectedDayIndex] || 0;
       const accToday = solvedToday > 0 ? Math.round((correctToday / solvedToday) * 100) : 0;
+      const rawPct = effectiveQGoal > 0 ? Math.round((solvedToday / effectiveQGoal) * 100) : 0;
 
-      if (effectiveQGoal === 0) {
-        document.getElementById('qProgressFraction').textContent = `${solvedToday} questões feitas (Sem evento "study" hoje)`;
-        document.getElementById('qProgressPercent').textContent = `Folga`;
-        document.getElementById('qProgressBar').style.width = `100%`;
-        document.getElementById('qAccuracyBadge').textContent = solvedToday > 0 ? `Acerto: ${accToday}%` : 'Folga hoje';
-        return;
-      }
-
-      const rawPct = Math.round((solvedToday / effectiveQGoal) * 100);
-      document.getElementById('qProgressFraction').textContent = `${solvedToday} de ${effectiveQGoal} questões (${correctToday} acertos)`;
+      document.getElementById('qProgressFraction').textContent = `${solvedToday} / ${effectiveQGoal} questões (${correctToday} acertos em ${DAYS[selectedDayIndex]})`;
       document.getElementById('qProgressPercent').textContent = `${rawPct}%`;
       document.getElementById('qProgressBar').style.width = `${Math.min(100, rawPct)}%`;
-      document.getElementById('qAccuracyBadge').textContent = solvedToday > 0 ? `Acerto: ${accToday}%` : 'Sem registros';
+
+      const accBadge = document.getElementById('qAccuracyBadge');
+      accBadge.textContent = solvedToday > 0 ? `Acerto Hoje: ${accToday}%` : 'Sem questões hoje';
+
+      const pillsContainer = document.getElementById('areaStatsPills');
+      const areaStats = getAreaStatsForWeek();
+      const allAreaKeys = Object.keys(areaStats).filter(a => areaStats[a].solved > 0);
+
+      if (allAreaKeys.length === 0) {
+        pillsContainer.innerHTML = `<span class="text-[11px] text-slate-500">Nenhuma questão por área registrada nesta semana.</span>`;
+      } else {
+        pillsContainer.innerHTML = allAreaKeys.map(area => {
+          const st = areaStats[area];
+          const pct = Math.round((st.correct / st.solved) * 100);
+          const colorClass = pct >= 80
+            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+            : (pct >= 70 ? 'bg-amber-500/15 text-amber-300 border-amber-500/30' : 'bg-rose-500/15 text-rose-300 border-rose-500/30');
+          return `<span class="text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-lg border ${colorClass}">${escapeHtml(area)}: ${st.correct}/${st.solved} (${pct}%)</span>`;
+        }).join('');
+      }
+    }
+
+    function renderAreaDoughnutChart() {
+      const ctx = document.getElementById('areaDoughnutChart');
+      if (!ctx) return;
+      if (areaDoughnutInstance) areaDoughnutInstance.destroy();
+
+      const areaStats = getAreaStatsForWeek();
+      const activeAreas = Object.keys(areaStats).filter(a => areaStats[a].solved > 0);
+      const totalWeekQ = activeAreas.reduce((acc, a) => acc + areaStats[a].solved, 0);
+
+      document.getElementById('doughnutFooterText').textContent = `Volume acumulado na semana: ${totalWeekQ} questões`;
+
+      const labels = activeAreas.length > 0 ? activeAreas : ['Sem registros'];
+      const vals = activeAreas.length > 0 ? activeAreas.map(a => areaStats[a].solved) : [1];
+      const colors = activeAreas.length > 0 ? activeAreas.map((_, i) => CHART_PALETTE[i % CHART_PALETTE.length]) : ['#334155'];
+
+      areaDoughnutInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{ data: vals, backgroundColor: colors, borderWidth: 0 }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 11, family: 'Inter' } } }
+          }
+        }
+      });
     }
 
     function renderHabitList() {
       const container = document.getElementById('habitList');
-      const scheduledToday = habits.filter(h => h.scheduledDays[selectedDayIndex] || h.days[selectedDayIndex]);
+      const scheduledToday = habits.filter(h => isHabitActiveOnDay(h, selectedDayIndex) || h.days[selectedDayIndex]);
       const doneToday = scheduledToday.filter(h => h.days[selectedDayIndex]).length;
-      document.getElementById('dailyProgressText').textContent = `${doneToday}/${scheduledToday.length} concluídas`;
+      document.getElementById('dailyProgressText').textContent = `${doneToday}/${scheduledToday.length} ativos`;
 
       if (habits.length === 0) {
-        container.innerHTML = `<p class="text-xs text-zinc-600 text-center py-6">Nenhum hábito cadastrado.</p>`;
+        container.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">Nenhum hábito cadastrado.</p>`;
         return;
       }
 
-      container.innerHTML = habits.map(habit => {
+      container.innerHTML = habits.map((habit, idx) => {
         const isDone = habit.days[selectedDayIndex];
-        const isScheduled = habit.scheduledDays[selectedDayIndex];
+        const isScheduled = isHabitActiveOnDay(habit, selectedDayIndex);
+        const isStudyLinked = habit.id === Number(linkedHabitId);
+        const isQLinked = habit.id === Number(linkedQuestionHabitId);
         const isEditingDays = editingScheduleHabitId === habit.id;
-        const isTrain = isTrainingHabit(habit);
-        const isStud = isStudyHabit(habit);
+        const isCycle = habit.scheduleMode === 'cycle';
 
-        const autoTag = (autoCalendarSync && Array.isArray(calendarWeekData))
-          ? (isTrain ? '<span class="ml-1.5 text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">Agenda: training</span>' : (isStud ? '<span class="ml-1.5 text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">Agenda: study</span>' : ''))
-          : '';
-
-        const schedulePills = isEditingDays ? `
-          <div class="mt-2.5 pt-2 border-t border-zinc-800 flex items-center justify-between gap-1">
-            <span class="text-[10px] text-zinc-500">Dias:</span>
-            <div class="flex gap-1">
-              ${DAYS.map((d, dIdx) => `
-                <button 
-                  type="button"
-                  onclick="toggleHabitScheduledDay(${habit.id}, ${dIdx})"
-                  class="px-1.5 py-0.5 rounded text-[10px] font-medium transition ${
-                    habit.scheduledDays[dIdx] ? 'bg-slate-700 text-zinc-100' : 'bg-zinc-900 text-zinc-600'
-                  }"
-                >${d}</button>
-              `).join('')}
+        const editorDrawer = isEditingDays ? `
+          <div class="mt-3 pt-2.5 border-t border-slate-800 space-y-2.5 text-[11px]">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400">Modo:</span>
+              <div class="flex gap-1 bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+                <button type="button" onclick="setHabitScheduleMode(${habit.id}, 'fixed')" class="px-2 py-0.5 rounded text-[10px] font-semibold ${!isCycle ? 'accent-bg text-slate-950' : 'text-slate-400'}">Dias Fixos</button>
+                <button type="button" onclick="setHabitScheduleMode(${habit.id}, 'cycle')" class="px-2 py-0.5 rounded text-[10px] font-semibold ${isCycle ? 'accent-bg text-slate-950' : 'text-slate-400'}">Ciclo ON/OFF</button>
+              </div>
             </div>
+            ${!isCycle ? `
+              <div class="flex items-center justify-between gap-1">
+                <span class="text-[10px] text-slate-400">Dias:</span>
+                <div class="flex gap-1">
+                  ${DAYS.map((d, dIdx) => `
+                    <button type="button" onclick="toggleHabitScheduledDay(${habit.id}, ${dIdx})" class="px-1.5 py-0.5 rounded text-[10px] font-semibold ${habit.scheduledDays[dIdx] ? 'accent-bg text-slate-950' : 'bg-slate-800 text-slate-500'}">${d}</button>
+                  `).join('')}
+                </div>
+              </div>
+            ` : `
+              <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-950/80 p-2 rounded-lg border border-slate-800">
+                <div class="flex items-center gap-1">
+                  <input type="number" min="1" max="30" value="${habit.cycleOn || 2}" onchange="updateHabitCycleParams(${habit.id}, 'cycleOn', this.value)" class="w-10 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-center text-white font-mono font-bold">
+                  <span class="accent-text font-semibold text-[10px]">ON</span>
+                </div>
+                <span class="text-slate-600">/</span>
+                <div class="flex items-center gap-1">
+                  <input type="number" min="1" max="30" value="${habit.cycleOff || 1}" onchange="updateHabitCycleParams(${habit.id}, 'cycleOff', this.value)" class="w-10 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-center text-white font-mono font-bold">
+                  <span class="text-slate-400 font-semibold text-[10px]">OFF</span>
+                </div>
+                <div class="flex items-center gap-1 ml-auto">
+                  <span class="text-[10px] text-slate-400">Dia 1:</span>
+                  <input type="date" value="${habit.cycleAnchor || TODAY_ISO}" onchange="updateHabitCycleParams(${habit.id}, 'cycleAnchor', this.value)" class="bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-[10px] text-slate-200 font-mono">
+                </div>
+              </div>
+            `}
           </div>
         ` : '';
 
         return `
-          <div class="p-2.5 rounded-lg bg-zinc-950 border ${!isScheduled && !isDone ? 'border-zinc-900 opacity-45' : 'border-zinc-800/90'} transition">
+          <div class="p-3 rounded-xl bg-slate-900/60 border ${!isScheduled && !isDone ? 'border-slate-800/40 opacity-55' : 'border-slate-800'} transition">
             <div class="flex items-center justify-between gap-2">
               <label class="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0">
-                <input 
-                  type="checkbox" 
-                  class="hidden custom-checkbox" 
-                  ${isDone ? 'checked' : ''} 
-                  onchange="toggleHabitDay(${habit.id}, ${selectedDayIndex})"
-                >
-                <div class="w-4 h-4 shrink-0 rounded border border-zinc-600 flex items-center justify-center transition">
-                  ${isDone ? '<svg class="w-3 h-3 text-zinc-100" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>' : ''}
+                <input type="checkbox" class="hidden custom-checkbox" ${isDone ? 'checked' : ''} onchange="toggleHabitDay(${habit.id}, ${selectedDayIndex})">
+                <div class="w-5 h-5 shrink-0 rounded-md border-2 border-slate-600 flex items-center justify-center transition">
+                  ${isDone ? '<svg class="w-3.5 h-3.5 text-slate-950" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>' : ''}
                 </div>
                 <div class="truncate">
-                  <span class="text-xs font-medium ${isDone ? 'line-through text-zinc-600' : 'text-zinc-200'}">${habit.name}</span>
-                  ${!isScheduled && !isDone ? '<span class="ml-1 text-[10px] text-zinc-500">(Sem evento hoje)</span>' : ''}
-                  ${autoTag}
+                  <span class="text-xs sm:text-sm font-medium ${isDone ? 'line-through text-slate-500' : 'text-slate-200'}">${escapeHtml(habit.name)}</span>
+                  ${isCycle ? `<span class="ml-1 text-[10px] font-mono font-semibold px-1.5 py-0.5 bg-slate-800 text-amber-300 rounded">${habit.cycleOn}x${habit.cycleOff}</span>` : ''}
+                  ${!isScheduled && !isDone ? '<span class="ml-1 text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">OFF</span>' : ''}
+                  ${isStudyLinked ? '<span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded">⚡H</span>' : ''}
+                  ${isQLinked ? '<span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 bg-cyan-500/20 text-cyan-300 rounded">⚡Q</span>' : ''}
                 </div>
               </label>
               <div class="flex items-center gap-1 shrink-0">
-                <button onclick="toggleScheduleEditor(${habit.id})" class="px-2 py-0.5 rounded text-[10px] font-medium bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border border-zinc-800 transition">
-                  Dias
-                </button>
-                <button onclick="deleteHabit(${habit.id})" class="text-zinc-600 hover:text-zinc-300 p-1 text-xs transition">
-                  ✕
-                </button>
+                <button onclick="moveHabit(${idx}, -1)" class="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400 hover:text-white">↑</button>
+                <button onclick="moveHabit(${idx}, 1)" class="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400 hover:text-white">↓</button>
+                <button onclick="renameHabit(${habit.id})" class="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300">✏️</button>
+                <button onclick="toggleScheduleEditor(${habit.id})" class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300">📅 Dias</button>
+                <button onclick="deleteHabit(${habit.id})" class="text-slate-600 hover:text-rose-400 px-1 text-xs">✕</button>
               </div>
             </div>
-            ${schedulePills}
+            ${editorDrawer}
           </div>
         `;
       }).join('');
@@ -1434,95 +2576,76 @@
     function renderMatrix() {
       const theadRow = document.getElementById('matrixHeaderRow');
       theadRow.innerHTML = `
-        <th class="py-2.5 pr-4">Hábito / Indicador</th>
-        ${DAYS.map(d => `<th class="py-2.5 text-center">${d}</th>`).join('')}
-        <th class="py-2.5 text-right">Desempenho</th>
+        <th class="py-3 pr-4">Hábito / Indicador</th>
+        ${WEEK_DATES.map((d, idx) => `<th class="py-3 text-center font-mono">${d.dayLabel}${busyDays[idx] ? '⚡' : ''}<br><span class="text-[9px] text-slate-500">${d.shortBr}</span></th>`).join('')}
+        <th class="py-3 text-right">Desempenho</th>
       `;
 
       const tbody = document.getElementById('matrixBody');
-      
       const habitRows = habits.map(habit => {
-        let schedCount = 0;
-        let doneCount = 0;
+        let schedCount = 0, doneCount = 0;
         habit.days.forEach((done, idx) => {
-          if (habit.scheduledDays[idx] || done) {
-            schedCount++;
-            if (done) doneCount++;
-          }
+          const isSched = isHabitActiveOnDay(habit, idx);
+          if (isSched || done) { schedCount++; if (done) doneCount++; }
         });
         const pct = schedCount > 0 ? Math.round((doneCount / schedCount) * 100) : 100;
-        
         const dayCells = habit.days.map((done, dIdx) => {
-          const isSched = habit.scheduledDays[dIdx];
-          if (done) {
-            return `<td class="py-2.5 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-5 h-5 rounded mx-auto flex items-center justify-center bg-slate-600 text-zinc-100 font-bold text-[10px]">✓</button></td>`;
-          } else if (isSched) {
-            return `<td class="py-2.5 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-5 h-5 rounded mx-auto flex items-center justify-center bg-zinc-900 text-zinc-400 hover:bg-zinc-800">·</button></td>`;
-          } else {
-            return `<td class="py-2.5 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-5 h-5 rounded mx-auto flex items-center justify-center text-zinc-700 font-mono text-[10px]">—</button></td>`;
-          }
+          const isSched = isHabitActiveOnDay(habit, dIdx);
+          if (done) return `<td class="py-3 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center accent-bg text-slate-950 font-bold">✓</button></td>`;
+          if (isSched) return `<td class="py-3 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-slate-800 text-slate-400">·</button></td>`;
+          return `<td class="py-3 text-center"><button onclick="toggleHabitDay(${habit.id}, ${dIdx})" class="w-6 h-6 rounded-full mx-auto flex items-center justify-center bg-slate-900/50 text-slate-700 font-mono text-xs">—</button></td>`;
         }).join('');
 
         return `
           <tr>
-            <td class="py-2.5 pr-4 font-medium text-zinc-300">${habit.name}</td>
+            <td class="py-3 pr-4 font-medium text-slate-200">${escapeHtml(habit.name)}</td>
             ${dayCells}
-            <td class="py-2.5 text-right font-medium text-zinc-300">${doneCount}/${schedCount} (${pct}%)</td>
+            <td class="py-3 text-right font-mono font-semibold accent-text metric-val">${doneCount}/${schedCount} (${pct}%)</td>
           </tr>
         `;
       }).join('');
 
-      // Linha de Estudo Planejado ("study") vs Realizado
       const totalWeekSecs = studySeconds.reduce((a, b) => a + b, 0);
-      const totalPlannedSecs = DAYS.reduce((acc, _, idx) => acc + getEffectiveStudyGoalSeconds(idx), 0);
       const studyCells = studySeconds.map((sec, idx) => {
-        const planSec = getEffectiveStudyGoalSeconds(idx);
-        if (planSec === 0 && sec === 0) return `<td class="py-2.5 text-center text-[11px] text-zinc-600 font-mono">—</td>`;
-        const hit = planSec > 0 && sec >= planSec;
-        return `<td class="py-2.5 text-center text-[11px] ${hit ? 'text-zinc-100 font-semibold' : 'text-zinc-400'}">${formatHoursMinutes(sec)} <span class="text-[10px] text-zinc-600">/ ${formatHoursMinutes(planSec)}</span></td>`;
+        const goalSecs = getEffectiveStudyGoalSeconds(idx);
+        const hit = sec >= goalSecs && goalSecs > 0;
+        return `<td class="py-3 text-center text-xs font-mono font-semibold metric-val ${hit ? 'accent-text' : (sec > 0 ? 'secondary-text' : 'text-slate-600')}">${formatHoursMinutes(sec)}</td>`;
       }).join('');
-
-      const studyRow = `
-        <tr class="bg-zinc-900/40">
-          <td class="py-2.5 pr-4 font-medium text-zinc-400">Estudo Feito / Evento "study"</td>
-          ${studyCells}
-          <td class="py-2.5 text-right font-semibold text-zinc-200">${formatHoursMinutes(totalWeekSecs)} / ${formatHoursMinutes(totalPlannedSecs)}</td>
-        </tr>
-      `;
 
       const totalQ = questionsSolved.reduce((a, b) => a + b, 0);
       const totalC = questionsCorrect.reduce((a, b) => a + b, 0);
       const weekQAcc = totalQ > 0 ? Math.round((totalC / totalQ) * 100) : 0;
-
       const questionCells = DAYS.map((_, idx) => {
         const s = questionsSolved[idx] || 0;
         const c = questionsCorrect[idx] || 0;
-        const acc = s > 0 ? Math.round((c / s) * 100) : 0;
-        if (s === 0) return `<td class="py-2.5 text-center text-[11px] text-zinc-600 font-mono">—</td>`;
-        return `<td class="py-2.5 text-center text-[11px] text-zinc-300 font-medium">${c}/${s} (${acc}%)</td>`;
+        if (s === 0) return `<td class="py-3 text-center text-xs font-mono text-slate-600">—</td>`;
+        return `<td class="py-3 text-center text-xs font-mono font-semibold text-cyan-400 metric-val">${c}/${s} (${Math.round((c / s) * 100)}%)</td>`;
       }).join('');
 
-      const questionRow = `
-        <tr class="bg-zinc-900/40">
-          <td class="py-2.5 pr-4 font-medium text-zinc-400">Questões (Acertos/Total)</td>
+      tbody.innerHTML = habitRows + `
+        <tr class="bg-indigo-950/20">
+          <td class="py-3 pr-4 font-semibold secondary-text">⏱️ Horas Líquidas</td>
+          ${studyCells}
+          <td class="py-3 text-right font-mono font-bold secondary-text metric-val">${formatHoursMinutes(totalWeekSecs)}</td>
+        </tr>
+        <tr class="bg-cyan-950/20">
+          <td class="py-3 pr-4 font-semibold text-cyan-300">📝 Questões (Acertos/Total)</td>
           ${questionCells}
-          <td class="py-2.5 text-right font-semibold text-zinc-200">${totalC}/${totalQ} (${weekQAcc}%)</td>
+          <td class="py-3 text-right font-mono font-bold text-cyan-400 metric-val">${totalC}/${totalQ} (${weekQAcc}%)</td>
         </tr>
       `;
-
-      tbody.innerHTML = habitRows + studyRow + questionRow;
     }
 
     function renderKPIs() {
       const stats = getWeeklyStatsSummary();
       const todaySecs = studySeconds[selectedDayIndex] || 0;
       const cyclesToday = pomodoroCycles[selectedDayIndex] || 0;
-
       const qToday = questionsSolved[selectedDayIndex] || 0;
       const cToday = questionsCorrect[selectedDayIndex] || 0;
       const accToday = qToday > 0 ? Math.round((cToday / qToday) * 100) : 0;
 
       document.getElementById('streakCount').textContent = `${stats.streak} ${stats.streak === 1 ? 'dia' : 'dias'}`;
+      document.getElementById('streakSubtext').textContent = busyDays[selectedDayIndex] ? 'Hoje: Meta 60%' : 'Meta: 80% do dia';
       document.getElementById('dailyStudyTime').textContent = formatHoursMinutes(todaySecs);
       document.getElementById('weeklyStudyTime').textContent = `Semana: ${formatHoursMinutes(stats.totalSecs)}`;
       document.getElementById('dailyQuestionsKPI').textContent = `${qToday} (${accToday}%)`;
@@ -1535,31 +2658,25 @@
     function renderArchives() {
       const container = document.getElementById('archiveContainer');
       if (archivedWeeks.length === 0) {
-        container.innerHTML = `
-          <div class="text-center py-5 text-xs text-zinc-600 border border-dashed border-zinc-800 rounded-lg">
-            Nenhuma semana arquivada.
-          </div>
-        `;
+        container.innerHTML = `<div class="text-center py-6 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">Nenhuma semana arquivada ainda.</div>`;
         return;
       }
 
       const rows = archivedWeeks.map(w => `
-        <tr class="border-b border-zinc-800/60 text-xs">
-          <td class="py-2.5 pr-4 font-medium text-zinc-200">${w.label}</td>
-          <td class="py-2.5 text-center text-zinc-300">${w.weeklyRate}% (${w.totalDone}/${w.totalScheduled})</td>
-          <td class="py-2.5 text-center text-zinc-300">${formatHoursMinutes(w.totalStudySeconds)}</td>
-          <td class="py-2.5 text-center text-zinc-300">${w.totalCorrect}/${w.totalQuestions} (${w.questionAccuracy}%)</td>
-          <td class="py-2.5 text-center text-zinc-400">${w.streak}d</td>
-          <td class="py-2.5 text-right">
-            <button onclick="deleteArchivedWeek(${w.id})" class="text-zinc-600 hover:text-zinc-300 text-xs px-2">✕</button>
-          </td>
+        <tr class="border-b border-slate-800/60 text-xs font-mono">
+          <td class="py-3 pr-4 font-sans font-semibold text-white">${escapeHtml(w.label)}</td>
+          <td class="py-3 text-center accent-text font-bold">${w.weeklyRate}% (${w.totalDone}/${w.totalScheduled})</td>
+          <td class="py-3 text-center secondary-text font-semibold">${formatHoursMinutes(w.totalStudySeconds)}</td>
+          <td class="py-3 text-center text-cyan-400 font-semibold">${w.totalCorrect}/${w.totalQuestions} (${w.questionAccuracy}%)</td>
+          <td class="py-3 text-center text-amber-400 font-semibold">🔥 ${w.streak}d</td>
+          <td class="py-3 text-right"><button onclick="deleteArchivedWeek(${w.id})" class="text-slate-500 hover:text-rose-400 px-2">✕</button></td>
         </tr>
       `).join('');
 
       container.innerHTML = `
-        <table class="w-full text-left border-collapse min-w-[520px]">
+        <table class="w-full text-left border-collapse min-w-[550px]">
           <thead>
-            <tr class="border-b border-zinc-800 text-[10px] uppercase text-zinc-500">
+            <tr class="border-b border-slate-800 text-[11px] uppercase text-slate-400">
               <th class="py-2 pr-4">Período</th>
               <th class="py-2 text-center">Hábitos</th>
               <th class="py-2 text-center">Horas</th>
@@ -1578,13 +2695,16 @@
       const dataPcts = getDailyPercentages();
       const dataQAcc = getDailyQuestionAccuracies();
       const dataHours = getDailyStudyHours();
-      const dataPlannedHours = getDailyPlannedStudyHours();
 
       if (chartInstance) {
+        chartInstance.data.labels = DAYS;
         chartInstance.data.datasets[0].data = dataPcts;
+        chartInstance.data.datasets[0].borderColor = themeConfig.primary;
+        chartInstance.data.datasets[0].pointBorderColor = themeConfig.primary;
         chartInstance.data.datasets[1].data = dataQAcc;
         chartInstance.data.datasets[2].data = dataHours;
-        chartInstance.data.datasets[3].data = dataPlannedHours;
+        chartInstance.data.datasets[2].borderColor = themeConfig.secondary;
+        chartInstance.data.datasets[2].backgroundColor = hexToRgba(themeConfig.secondary, 0.55);
         chartInstance.update();
         return;
       }
@@ -1597,46 +2717,36 @@
               type: 'line',
               label: 'Hábitos (%)',
               data: dataPcts,
-              borderColor: '#e4e4e7',
-              backgroundColor: 'rgba(228, 228, 231, 0.05)',
-              borderWidth: 2,
-              pointBackgroundColor: '#18191d',
-              pointBorderColor: '#e4e4e7',
-              pointRadius: 3,
-              tension: 0.3,
+              borderColor: themeConfig.primary,
+              backgroundColor: 'rgba(16, 185, 129, 0.10)',
+              borderWidth: 3,
+              pointBackgroundColor: '#0f172a',
+              pointBorderColor: themeConfig.primary,
+              pointRadius: 4,
+              tension: 0.35,
               yAxisID: 'y'
             },
             {
               type: 'line',
-              label: 'Acerto (%)',
+              label: 'Taxa de Acerto (%)',
               data: dataQAcc,
-              borderColor: '#71717a',
-              borderDash: [4, 4],
-              borderWidth: 1.5,
-              pointBackgroundColor: '#18191d',
-              pointBorderColor: '#71717a',
-              pointRadius: 2.5,
-              tension: 0.3,
+              borderColor: '#06b6d4',
+              borderDash: [5, 5],
+              borderWidth: 2,
+              pointBackgroundColor: '#0f172a',
+              pointBorderColor: '#06b6d4',
+              pointRadius: 3,
+              tension: 0.35,
               yAxisID: 'y'
             },
             {
               type: 'bar',
-              label: 'Estudo Feito (h)',
+              label: 'Horas Líquidas (h)',
               data: dataHours,
-              backgroundColor: 'rgba(148, 163, 184, 0.5)',
-              borderColor: '#94a3b8',
+              backgroundColor: hexToRgba(themeConfig.secondary, 0.55),
+              borderColor: themeConfig.secondary,
               borderWidth: 1,
-              borderRadius: 4,
-              yAxisID: 'y1'
-            },
-            {
-              type: 'bar',
-              label: 'Planejado "study" (h)',
-              data: dataPlannedHours,
-              backgroundColor: 'rgba(63, 63, 70, 0.35)',
-              borderColor: '#52525b',
-              borderWidth: 1,
-              borderRadius: 4,
+              borderRadius: 6,
               yAxisID: 'y1'
             }
           ]
@@ -1645,49 +2755,41 @@
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            y: {
-              type: 'linear',
-              position: 'left',
-              beginAtZero: true,
-              max: 100,
-              grid: { color: 'rgba(255, 255, 255, 0.04)' },
-              ticks: { color: '#a1a1aa', callback: v => v + '%' }
-            },
-            y1: {
-              type: 'linear',
-              position: 'right',
-              beginAtZero: true,
-              suggestedMax: 5,
-              grid: { drawOnChartArea: false },
-              ticks: { color: '#71717a', callback: v => v + 'h' }
-            },
-            x: {
-              grid: { display: false },
-              ticks: { color: '#71717a' }
-            }
+            y: { type: 'linear', position: 'left', beginAtZero: true, max: 100, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', callback: v => v + '%' } },
+            y1: { type: 'linear', position: 'right', beginAtZero: true, suggestedMax: 6, grid: { drawOnChartArea: false }, ticks: { color: '#94a3b8', callback: v => v + 'h' } },
+            x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
           },
-          plugins: {
-            legend: { display: false }
-          }
+          plugins: { legend: { display: false } }
         }
       });
     }
 
     function renderAll() {
+      document.getElementById('brandTitle').textContent = brandTitle;
+      const cfgTitle = document.getElementById('cfgBrandTitle');
+      if (cfgTitle && document.activeElement !== cfgTitle) cfgTitle.value = brandTitle;
+      const gasInput = document.getElementById('gasUrlInput');
+      if (gasInput && document.activeElement !== gasInput) gasInput.value = gasWebAppUrl;
+
       updateNotificationButtonUI();
       updateCloudStatusUI(gasWebAppUrl ? 'ok' : 'off');
       renderDaySelector();
-      renderCalendarCard();
+      renderRecommendationBanner();
       renderGoalBar();
       renderQuestionBar();
       renderHabitList();
       renderNewHabitDaysPicker();
+      renderErrorNotebook();
+      renderStudyBanks();
       renderMatrix();
       renderKPIs();
       renderArchives();
       renderChart();
+      if (activeTab === 'questions') renderAreaDoughnutChart();
     }
 
+    applyThemeVariables();
+    checkNewWeekRollover();
     renderAll();
     if (gasWebAppUrl) {
       pullFromCloud(false);
