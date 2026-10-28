@@ -9,7 +9,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#0b0f19" id="metaThemeColor" />
 
-  <title>Performance Studio • Hábitos, Horas & Questões</title>
+  <title>Performance Studio • Questões, Revisão & Simulados</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -57,7 +57,7 @@
       transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
-    /* ==================== CORREÇÃO COMPLETA DE CONTRASTE DO MODO CLARO ==================== */
+    /* ==================== CONTRASTE COMPLETO DO MODO CLARO ==================== */
     body.surface-light {
       --bg-main: #f1f5f9;
       --bg-card: #ffffff;
@@ -71,56 +71,29 @@
     body.surface-light .glass-card {
       box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
     }
-    /* Textos claros convertidos para alta legibilidade no fundo claro */
     body.surface-light .text-white,
     body.surface-light .text-slate-100,
-    body.surface-light .text-slate-200 {
-      color: #0f172a !important;
-    }
-    body.surface-light .text-slate-300 {
-      color: #1e293b !important;
-    }
-    body.surface-light .text-slate-400 {
-      color: #475569 !important;
-    }
+    body.surface-light .text-slate-200 { color: #0f172a !important; }
+    body.surface-light .text-slate-300 { color: #1e293b !important; }
+    body.surface-light .text-slate-400 { color: #475569 !important; }
     body.surface-light .text-slate-500,
-    body.surface-light .text-slate-600 {
-      color: #64748b !important;
-    }
-    /* Cores de destaque pastel escurecidas para contraste perfeito no branco */
+    body.surface-light .text-slate-600 { color: #64748b !important; }
     body.surface-light .text-cyan-300,
-    body.surface-light .text-cyan-400 {
-      color: #0e7490 !important;
-    }
+    body.surface-light .text-cyan-400 { color: #0e7490 !important; }
     body.surface-light .text-amber-300,
-    body.surface-light .text-amber-400 {
-      color: #b45309 !important;
-    }
+    body.surface-light .text-amber-400 { color: #b45309 !important; }
     body.surface-light .text-emerald-300,
-    body.surface-light .text-emerald-400 {
-      color: #047857 !important;
-    }
+    body.surface-light .text-emerald-400 { color: #047857 !important; }
     body.surface-light .text-indigo-300,
-    body.surface-light .text-indigo-400 {
-      color: #4338ca !important;
-    }
+    body.surface-light .text-indigo-400 { color: #4338ca !important; }
     body.surface-light .text-sky-300,
-    body.surface-light .text-sky-400 {
-      color: #0369a1 !important;
-    }
+    body.surface-light .text-sky-400 { color: #0369a1 !important; }
     body.surface-light .text-rose-200,
     body.surface-light .text-rose-300,
-    body.surface-light .text-rose-400 {
-      color: #be123c !important;
-    }
+    body.surface-light .text-rose-400 { color: #be123c !important; }
     body.surface-light .text-purple-200,
-    body.surface-light .text-pink-300 {
-      color: #6d28d9 !important;
-    }
-    body.surface-light .text-teal-300 {
-      color: #0f766e !important;
-    }
-    /* Fundos escuros internos convertidos para superfícies claras nítidas */
+    body.surface-light .text-pink-300 { color: #6d28d9 !important; }
+    body.surface-light .text-teal-300 { color: #0f766e !important; }
     body.surface-light .bg-slate-950,
     body.surface-light .bg-slate-950\/90,
     body.surface-light .bg-slate-950\/80,
@@ -145,42 +118,21 @@
     }
     body.surface-light .bg-slate-800:hover,
     body.surface-light .bg-slate-800\/70:hover,
-    body.surface-light .bg-slate-800\/90:hover {
-      background-color: #cbd5e1 !important;
-    }
-    /* Fundos translúcidos coloridos ajustados para o modo claro */
-    body.surface-light .bg-indigo-950\/20 {
-      background-color: #eef2ff !important;
-    }
+    body.surface-light .bg-slate-800\/90:hover { background-color: #cbd5e1 !important; }
+    body.surface-light .bg-indigo-950\/20 { background-color: #eef2ff !important; }
     body.surface-light .bg-cyan-950,
-    body.surface-light .bg-cyan-950\/20 {
-      background-color: #ecfeff !important;
-      border-color: #a5f3fc !important;
-    }
+    body.surface-light .bg-cyan-950\/20 { background-color: #ecfeff !important; border-color: #a5f3fc !important; }
     body.surface-light .bg-teal-950\/50,
     body.surface-light .bg-emerald-950\/40,
-    body.surface-light .bg-emerald-950\/50 {
-      background-color: #d1fae5 !important;
-      border-color: #6ee7b7 !important;
-    }
+    body.surface-light .bg-emerald-950\/50 { background-color: #d1fae5 !important; border-color: #6ee7b7 !important; }
     body.surface-light .bg-amber-950\/20,
-    body.surface-light .bg-amber-950\/40 {
-      background-color: #fef3c7 !important;
-      border-color: #fcd34d !important;
-    }
+    body.surface-light .bg-amber-950\/40 { background-color: #fef3c7 !important; border-color: #fcd34d !important; }
     body.surface-light .bg-pink-950\/40,
     body.surface-light .bg-purple-900\/60,
     body.surface-light .bg-indigo-950\/50,
-    body.surface-light .bg-sky-950\/50 {
-      background-color: #ede9fe !important;
-      border-color: #c4b5fd !important;
-    }
+    body.surface-light .bg-sky-950\/50 { background-color: #ede9fe !important; border-color: #c4b5fd !important; }
     body.surface-light .bg-rose-950\/40,
-    body.surface-light .bg-rose-950\/50 {
-      background-color: #ffe4e6 !important;
-      border-color: #fda4af !important;
-    }
-    /* Bordas e divisórias no modo claro */
+    body.surface-light .bg-rose-950\/50 { background-color: #ffe4e6 !important; border-color: #fda4af !important; }
     body.surface-light .border-slate-800,
     body.surface-light .border-slate-800\/80,
     body.surface-light .border-slate-800\/60,
@@ -188,22 +140,11 @@
     body.surface-light .border-slate-800\/40,
     body.surface-light .border-slate-700,
     body.surface-light .border-slate-700\/70,
-    body.surface-light .border-slate-700\/60 {
-      border-color: #cbd5e1 !important;
-    }
-    body.surface-light .divide-slate-800\/60 > :not([hidden]) ~ :not([hidden]) {
-      border-color: #e2e8f0 !important;
-    }
-    body.surface-light select option {
-      background-color: #ffffff !important;
-      color: #0f172a !important;
-    }
-    body.surface-light input::placeholder {
-      color: #94a3b8 !important;
-    }
-    body.surface-light .timer-glow {
-      text-shadow: none !important;
-    }
+    body.surface-light .border-slate-700\/60 { border-color: #cbd5e1 !important; }
+    body.surface-light .divide-slate-800\/60 > :not([hidden]) ~ :not([hidden]) { border-color: #e2e8f0 !important; }
+    body.surface-light select option { background-color: #ffffff !important; color: #0f172a !important; }
+    body.surface-light input::placeholder { color: #94a3b8 !important; }
+    body.surface-light .timer-glow { text-shadow: none !important; }
 
     .custom-checkbox:checked + div {
       background-color: var(--accent-primary);
@@ -222,7 +163,7 @@
     .tab-btn.active {
       border-bottom: 2px solid var(--accent-primary);
       color: var(--accent-primary);
-      font-weight: 600;
+      font-weight: 700;
     }
     .metric-val {
       font-family: 'JetBrains Mono', monospace;
@@ -266,26 +207,32 @@
   </div>
 
   <!-- TOP STICKY HEADER -->
-  <header class="sticky top-0 z-30 backdrop-blur-md bg-slate-900/90 border-b border-slate-800 px-4 py-3">
-    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center accent-text font-bold font-mono text-sm">
+  <header class="sticky top-0 z-30 backdrop-blur-md bg-slate-900/90 border-b border-slate-800 px-4 py-2.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2.5">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center accent-text font-bold font-mono text-sm">
           ⚡
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="font-bold text-base sm:text-lg leading-tight text-white" id="brandTitle">Performance Studio</h1>
-            <span id="cloudStatusPill" onclick="switchTab('studio'); switchStudioSubTab('sub-cloud');" class="cursor-pointer text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700 hover:border-slate-500 transition flex items-center gap-1.5" title="Status da Planilha Google">
-              <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-slate-500"></span>
+            <h1 class="font-bold text-sm sm:text-base leading-tight text-white" id="brandTitle">Performance Studio</h1>
+            <span id="cloudStatusPill" onclick="switchTab('studio'); switchStudioSubTab('sub-cloud');" class="cursor-pointer text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700 hover:border-slate-500 transition flex items-center gap-1" title="Status da Planilha Google">
+              <span id="cloudStatusDot" class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
               <span id="cloudStatusText">Local</span>
             </span>
           </div>
-          <p class="text-[11px] text-slate-400">Semana Dom-Sáb • Ciclos ON/OFF • Residência & Concursos</p>
+          <!-- Barra Compacta da Trilha ENAMED 42 Semanas -->
+          <div class="flex items-center gap-1.5 mt-0.5 text-[11px] text-slate-400">
+            <span>🧭 Trilha ENAMED:</span>
+            <button onclick="adjustEnamedWeek(-1)" class="px-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-[10px]">-</button>
+            <strong id="enamedHeaderLabel" class="font-mono accent-text">Semana 1 / 42 (2%)</strong>
+            <button onclick="adjustEnamedWeek(1)" class="px-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-[10px]">+</button>
+          </div>
         </div>
       </div>
 
       <!-- Controles Rápidos Globais -->
-      <div class="flex items-center gap-2 flex-wrap">
+      <div class="flex items-center gap-1.5 flex-wrap">
         <button id="busyDayBtn" onclick="toggleBusyDay()" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition flex items-center gap-1 bg-slate-800/90 text-slate-300 border-slate-700 hover:border-amber-500/50" title="Reduz metas do dia selecionado pela metade">
           <span>⚡</span> <span id="busyDayBtnText">Dia Corrido: OFF</span>
         </button>
@@ -299,23 +246,24 @@
         </button>
 
         <button onclick="pullFromCloud(true)" class="text-xs px-2.5 py-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 transition flex items-center gap-1 font-medium">
-          🔄 <span class="hidden md:inline">Sincronizar</span>
+          🔄 <span class="hidden md:inline">Sync</span>
         </button>
       </div>
     </div>
 
-    <!-- NAVEGAÇÃO DE ABAS -->
-    <nav class="max-w-7xl mx-auto mt-3 flex gap-1 overflow-x-auto border-b border-slate-800/80 text-xs sm:text-sm">
-      <button onclick="switchTab('today')" id="tab-today" class="tab-btn active px-3 py-2 whitespace-nowrap">📊 Hoje, Pomodoro & Hábitos</button>
-      <button onclick="switchTab('questions')" id="tab-questions" class="tab-btn px-3 py-2 whitespace-nowrap">📝 Questões, Áreas & Caderno de Erros</button>
-      <button onclick="switchTab('goals')" id="tab-goals" class="tab-btn px-3 py-2 whitespace-nowrap">🎯 Caixinhas & Metas de Longo Prazo</button>
-      <button onclick="switchTab('week')" id="tab-week" class="tab-btn px-3 py-2 whitespace-nowrap">📅 Matriz da Semana & Histórico</button>
-      <button onclick="switchTab('studio')" id="tab-studio" class="tab-btn px-3 py-2 whitespace-nowrap">⚙️ Estúdio de Personalização</button>
+    <!-- NAVEGAÇÃO DE ABAS ULTRA-COMPACTAS (6 ABAS CURTAS) -->
+    <nav class="max-w-7xl mx-auto mt-2.5 flex gap-1 overflow-x-auto border-b border-slate-800/80 text-xs">
+      <button onclick="switchTab('today')" id="tab-today" class="tab-btn active px-3 py-2 whitespace-nowrap">📊 Hoje</button>
+      <button onclick="switchTab('questions')" id="tab-questions" class="tab-btn px-3 py-2 whitespace-nowrap">📝 Questões <span id="navDueBadge" class="hidden ml-1 px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-mono text-[10px]">0</span></button>
+      <button onclick="switchTab('simulados')" id="tab-simulados" class="tab-btn px-3 py-2 whitespace-nowrap">🏟️ Simulados</button>
+      <button onclick="switchTab('goals')" id="tab-goals" class="tab-btn px-3 py-2 whitespace-nowrap">🎯 Metas</button>
+      <button onclick="switchTab('week')" id="tab-week" class="tab-btn px-3 py-2 whitespace-nowrap">📅 Semana</button>
+      <button onclick="switchTab('studio')" id="tab-studio" class="tab-btn px-3 py-2 whitespace-nowrap">⚙️ Estúdio</button>
     </nav>
   </header>
 
   <!-- CONTAINER PRINCIPAL -->
-  <main class="max-w-7xl mx-auto px-4 pt-5 space-y-6">
+  <main class="max-w-7xl mx-auto px-4 pt-4 space-y-5">
 
     <!-- Banner Automático de Virada de Semana -->
     <div id="newWeekBanner" class="hidden glass-card p-4 border border-amber-500/40 bg-amber-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -323,12 +271,12 @@
         <span class="text-2xl">📅</span>
         <div>
           <h3 class="text-xs md:text-sm font-bold text-amber-300">Uma nova semana começou (Domingo)!</h3>
-          <p class="text-xs text-slate-300">Deseja arquivar os números da semana anterior no histórico e iniciar a semana limpa? (Suas Caixinhas de Longo Prazo e Erros não revisados serão mantidos).</p>
+          <p class="text-xs text-slate-300">Deseja arquivar os números da semana anterior no histórico? (Seus Micro-Esquemas de revisão espaçada, Simulados e Caixinhas serão preservados).</p>
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
         <button onclick="archiveAndResetWeek()" class="px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white font-semibold rounded-xl text-xs transition">
-          📦 Arquivar e Iniciar Nova
+          📦 Arquivar e Avançar
         </button>
         <button onclick="dismissNewWeekBanner()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs transition border border-slate-700">
           Manter
@@ -337,18 +285,18 @@
     </div>
 
     <!-- BARRA GLOBAL DE SELEÇÃO DO DIA (DOM A SÁB) -->
-    <div class="glass-card p-3.5 flex flex-col md:flex-row items-center justify-between gap-3">
+    <div class="glass-card p-3 flex flex-col md:flex-row items-center justify-between gap-3">
       <div class="flex items-center gap-2">
-        <span class="text-xs font-medium text-slate-400">Dia Selecionado:</span>
+        <span class="text-xs font-medium text-slate-400">Dia em edição:</span>
         <span id="selectedDayLabel" class="text-xs font-bold font-mono px-2.5 py-1 bg-slate-800 accent-text rounded-lg">Hoje</span>
       </div>
       <div class="grid grid-cols-7 gap-1.5 w-full md:w-auto" id="daySelector"></div>
     </div>
 
-    <!-- ==================== ABA 1: HOJE, POMODORO & HÁBITOS ==================== -->
-    <section id="view-today" class="space-y-6">
+    <!-- ==================== ABA 1: 📊 HOJE ==================== -->
+    <section id="view-today" class="space-y-5">
 
-      <!-- 5 KPIs Rápidos com JetBrains Mono -->
+      <!-- 5 KPIs Rápidos -->
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
         <div class="glass-card p-4 flex items-center justify-between">
           <div>
@@ -379,20 +327,20 @@
 
         <div class="glass-card p-4 flex items-center justify-between">
           <div>
-            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Taxa da Semana</span>
-            <p class="text-xl sm:text-2xl font-bold accent-text mt-1 metric-val" id="weeklyRate">0%</p>
-            <span class="text-[10px] text-slate-500">Dias em atividade</span>
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Nota Potencial (S/ Desatenção)</span>
+            <p class="text-xl sm:text-2xl font-bold accent-text mt-1 metric-val" id="potentialAccuracyKPI">0%</p>
+            <span class="text-[10px] text-slate-500" id="potentialSubtext">Sem erros operacionais</span>
           </div>
-          <div class="text-2xl">📈</div>
+          <div class="text-2xl">🎯</div>
         </div>
 
         <div class="glass-card p-4 flex items-center justify-between col-span-2 sm:col-span-1">
           <div>
-            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Check-ins</span>
-            <p class="text-xl sm:text-2xl font-bold text-sky-400 mt-1 metric-val" id="totalCompleted">0 / 0</p>
-            <span class="text-[10px] text-slate-500">Metas na semana</span>
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Revisões Maduras</span>
+            <p class="text-xl sm:text-2xl font-bold text-sky-400 mt-1 metric-val" id="dueReviewsKPI">0 esquemas</p>
+            <span class="text-[10px] text-slate-500">Ciclo 14d / 30d / 60d</span>
           </div>
-          <div class="text-2xl">✅</div>
+          <div class="text-2xl">⚡</div>
         </div>
       </div>
 
@@ -402,17 +350,22 @@
           <div class="text-2xl">🧠</div>
           <div>
             <div class="flex flex-wrap items-center gap-2">
-              <span class="text-xs font-bold uppercase tracking-wider text-cyan-300">Algoritmo de Prioridade do Dia</span>
+              <span class="text-xs font-bold uppercase tracking-wider text-cyan-300">Treinador Algorítmico • Trilha ENAMED</span>
               <span id="recBadge" class="text-[10px] font-semibold font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">Analisando...</span>
             </div>
             <p id="recDescription" class="text-xs text-slate-300 mt-1 private-text">
-              Analisando seu histórico de questões por matéria...
+              Analisando seu histórico de questões e fila de micro-esquemas...
             </p>
           </div>
         </div>
-        <button id="recActionBtn" onclick="selectRecommendedArea()" class="hidden px-3.5 py-2 rounded-xl text-xs font-semibold bg-cyan-600 hover:bg-cyan-500 text-white transition shrink-0">
-          🎯 Resolver Agora
-        </button>
+        <div class="flex items-center gap-2 shrink-0">
+          <button id="recFlashBtn" onclick="switchTab('questions'); startFlashReviewSession();" class="hidden px-3 py-2 rounded-xl text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition">
+            ⚡ Sortear 5 Esquemas
+          </button>
+          <button id="recActionBtn" onclick="selectRecommendedArea()" class="hidden px-3.5 py-2 rounded-xl text-xs font-semibold bg-cyan-600 hover:bg-cyan-500 text-white transition">
+            🎯 Resolver Agora
+          </button>
+        </div>
       </div>
 
       <!-- Barra de Progresso de Horas Líquidas do Dia -->
@@ -434,12 +387,12 @@
               <span class="text-slate-400">Meta:</span>
               <select id="dailyGoalSelect" onchange="updateDailyGoal(this.value)" class="bg-transparent secondary-text font-mono font-bold focus:outline-none cursor-pointer">
                 <option value="1" class="bg-slate-900">1h/dia</option>
+                <option value="1.5" class="bg-slate-900">1h 30m/dia</option>
                 <option value="2" class="bg-slate-900">2h/dia</option>
                 <option value="3" class="bg-slate-900">3h/dia</option>
                 <option value="4" class="bg-slate-900">4h/dia</option>
                 <option value="5" class="bg-slate-900">5h/dia</option>
                 <option value="6" class="bg-slate-900">6h/dia</option>
-                <option value="8" class="bg-slate-900">8h/dia</option>
               </select>
             </div>
             <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg">
@@ -460,26 +413,29 @@
         </div>
       </div>
 
-      <!-- Grid Principal da Aba 1: Pomodoro + Checklist de Hábitos + Curva Rápida -->
+      <!-- Grid Principal da Aba 1: Pomodoro Customizável (60-90m) + Checklist de Hábitos + Curva Rápida -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- Cronômetro Pomodoro (4 Colunas) -->
+        <!-- Cronômetro Pomodoro Customizável (4 Colunas) -->
         <div class="lg:col-span-4 glass-card p-6 flex flex-col justify-between space-y-5">
           <div>
             <div class="flex items-center justify-between mb-3">
-              <h2 class="text-base font-bold text-white">Cronômetro Pomodoro</h2>
-              <span id="timerStatusBadge" class="text-[11px] font-mono font-semibold px-2.5 py-0.5 bg-slate-800 secondary-text rounded-full">Foco 25m</span>
+              <div class="flex items-center gap-2">
+                <h2 class="text-base font-bold text-white">Pomodoro Deep Work</h2>
+                <button onclick="switchTab('studio'); switchStudioSubTab('sub-appearance');" class="text-xs text-slate-400 hover:text-white" title="Alterar minutos dos blocos e descansos">⚙️</button>
+              </div>
+              <span id="timerStatusBadge" class="text-[11px] font-mono font-semibold px-2.5 py-0.5 bg-slate-800 secondary-text rounded-full">Foco 60m</span>
             </div>
 
             <div class="grid grid-cols-3 gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800 mb-5">
-              <button onclick="setTimerMode('focus25')" id="btn-focus25" class="py-1.5 text-xs font-semibold rounded-lg secondary-bg text-white transition">Foco 25m</button>
-              <button onclick="setTimerMode('focus50')" id="btn-focus50" class="py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Foco 50m</button>
-              <button onclick="setTimerMode('break')" id="btn-break" class="py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Pausa 5m</button>
+              <button onclick="setTimerMode('focus1')" id="btn-focus1" class="py-1.5 text-xs font-mono font-semibold rounded-lg secondary-bg text-white transition">Foco 60m</button>
+              <button onclick="setTimerMode('focus2')" id="btn-focus2" class="py-1.5 text-xs font-mono font-semibold rounded-lg text-slate-400 hover:text-white transition">Foco 90m</button>
+              <button onclick="setTimerMode('break')" id="btn-break" class="py-1.5 text-xs font-mono font-semibold rounded-lg text-slate-400 hover:text-white transition">Pausa 15m</button>
             </div>
 
             <div class="text-center py-7 bg-slate-900/70 rounded-2xl border border-slate-800/80 mb-5">
-              <div id="timerDisplay" class="text-6xl font-extrabold tracking-tight text-white font-mono timer-glow">25:00</div>
-              <p class="text-[11px] text-slate-400 mt-2" id="timerSubtext">Blindado contra bloqueio de tela e troca de aba</p>
+              <div id="timerDisplay" class="text-6xl font-extrabold tracking-tight text-white font-mono timer-glow">60:00</div>
+              <p class="text-[11px] text-slate-400 mt-2" id="timerSubtext">Blocos longos para resolução profunda e revisão de erros</p>
             </div>
 
             <div class="flex gap-2">
@@ -525,7 +481,7 @@
               <input 
                 type="text" 
                 id="newHabitInput" 
-                placeholder="Novo hábito (ex: Treino, Simulado)..." 
+                placeholder="Novo hábito (ex: Treino, Trilha ENAMED)..." 
                 required
                 class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
               >
@@ -579,7 +535,7 @@
       </div>
     </section>
 
-    <!-- ==================== ABA 2: QUESTÕES, ÁREAS & CADERNO DE ERROS ==================== -->
+    <!-- ==================== ABA 2: 📝 QUESTÕES, AUTÓPSIA MULTI-TAG & FLASH-REVIEW ==================== -->
     <section id="view-questions" class="hidden space-y-6">
 
       <!-- ATALHOS RÁPIDOS DE 1-TOQUE -->
@@ -591,42 +547,41 @@
         <div class="flex flex-wrap gap-2" id="quickQButtonsContainer"></div>
       </div>
 
-      <!-- Grid Lado a Lado: Registro de Questões (7 Colunas) + Gráfico de Rosca por Área (5 Colunas) -->
+      <!-- Grid Lado a Lado: Registro + Autópsia Multi-Tag (7 Colunas) + Diagnóstico de Erros & Pontos Recuperáveis (5 Colunas) -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        <!-- Card de Registro de Questões e Áreas Customizáveis (7 Colunas) -->
+        <!-- Card de Registro de Questões e Multi-Tags de Erro (7 Colunas) -->
         <div class="lg:col-span-7 glass-card p-5 flex flex-col justify-between space-y-4">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div class="flex items-center gap-2.5">
               <span class="text-xl">📝</span>
               <div>
                 <div class="flex items-center gap-2">
-                  <h2 class="text-base font-bold text-white">Lançamento de Questões por Área</h2>
+                  <h2 class="text-base font-bold text-white">Lançamento de Questões & Micro-Esquema</h2>
                   <span id="qAccuracyBadge" class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">Acerto: 0%</span>
                 </div>
-                <p class="text-xs text-slate-400 mt-0.5">Registre seus blocos de Residência ou Concursos e anote os temas que errou.</p>
+                <p class="text-xs text-slate-400 mt-0.5">Marque 1, 2 ou mais causas de erro para alimentar a Autópsia e o Flash-Review espaçado.</p>
               </div>
             </div>
 
             <div class="flex flex-wrap items-center gap-1.5 text-xs">
               <button type="button" onclick="toggleAreaManager()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-semibold border border-slate-700 transition">
-                ⚙️ Gerenciar Áreas
+                ⚙️ Áreas
+              </button>
+              <button type="button" onclick="toggleTagManager()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 font-semibold border border-slate-700 transition">
+                🏷️ Tags
               </button>
               <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2 py-1 rounded-lg">
                 <span class="text-slate-400">Meta:</span>
                 <select id="dailyQGoalSelect" onchange="updateDailyQuestionGoal(this.value)" class="bg-transparent text-cyan-300 font-mono font-bold focus:outline-none cursor-pointer">
-                  <option value="10" class="bg-slate-900">10/d</option>
                   <option value="15" class="bg-slate-900">15/d</option>
                   <option value="20" class="bg-slate-900">20/d</option>
                   <option value="30" class="bg-slate-900">30/d</option>
                   <option value="40" class="bg-slate-900">40/d</option>
                   <option value="50" class="bg-slate-900">50/d</option>
                   <option value="80" class="bg-slate-900">80/d</option>
+                  <option value="100" class="bg-slate-900">100/d</option>
                 </select>
-              </div>
-              <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2 py-1 rounded-lg">
-                <span class="text-slate-400">Auto:</span>
-                <select id="linkedQHabitSelect" onchange="updateLinkedQuestionHabit(this.value)" class="bg-transparent accent-text font-semibold focus:outline-none cursor-pointer max-w-[110px] truncate"></select>
               </div>
             </div>
           </div>
@@ -639,9 +594,28 @@
             </div>
             <div id="customAreasList" class="flex flex-wrap gap-1.5"></div>
             <div class="flex gap-2 pt-1">
-              <input type="text" id="newAreaInput" placeholder="Nova área (ex: Português, SUS, Raciocínio Lógico, Neurocirurgia)..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none">
+              <input type="text" id="newAreaInput" placeholder="Nova área (ex: Português, SUS, Neurocirurgia)..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none">
               <button type="button" onclick="addCustomArea()" class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg text-xs transition">
                 + Adicionar
+              </button>
+            </div>
+          </div>
+
+          <!-- Gaveta Gerenciadora de Tags de Erro (Item C - Alterar/Criar Tags) -->
+          <div id="tagManagerPanel" class="hidden p-3.5 rounded-xl bg-slate-950/90 border border-amber-500/30 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-amber-300">🏷️ Gerenciar Tags de Causa de Erro (Toque em ✏️ para renomear ou trocar tipo)</span>
+              <button type="button" onclick="toggleTagManager()" class="text-xs text-slate-400 hover:text-white">Fechar ✕</button>
+            </div>
+            <div id="customTagsManagerList" class="flex flex-wrap gap-1.5"></div>
+            <div class="flex flex-wrap gap-2 pt-1">
+              <input type="text" id="newTagInput" placeholder="Nova causa (ex: Erro de Dose, Leitura de Imagem)..." class="flex-1 min-w-[160px] bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none">
+              <select id="newTagCategorySelect" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-amber-300 font-semibold">
+                <option value="operational">⚡ Operacional / Prova (Recuperável)</option>
+                <option value="knowledge">📚 Conhecimento / Teoria</option>
+              </select>
+              <button type="button" onclick="addCustomErrorTag()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold rounded-lg text-xs transition">
+                + Criar Tag
               </button>
             </div>
           </div>
@@ -659,8 +633,8 @@
           <!-- Pílulas de Desempenho por Área na Semana -->
           <div id="areaStatsPills" class="flex flex-wrap items-center gap-1.5 pt-0.5 private-text"></div>
 
-          <!-- Formulário de Registro -->
-          <form onsubmit="addQuestionBatch(event)" class="space-y-2.5 pt-2 border-t border-slate-800/80">
+          <!-- Formulário de Registro com Multi-Tags -->
+          <form onsubmit="addQuestionBatch(event)" class="space-y-3 pt-2 border-t border-slate-800/80">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               <div class="flex flex-col">
                 <label class="text-[10px] text-slate-400 mb-1">Área / Disciplina</label>
@@ -679,12 +653,21 @@
               </div>
             </div>
 
+            <!-- SELETOR MULTI-TAG DE CAUSAS DE ERRO (Toque para marcar 1, 2 ou mais) -->
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-[11px]">
+                <span class="text-slate-400 font-medium">🏷️ Causas dos Erros neste Bloco (Marque 1, 2 ou mais):</span>
+                <span id="selectedTagsCountLabel" class="font-mono text-[10px] text-amber-400">0 selecionadas</span>
+              </div>
+              <div id="errorTagsMultiPicker" class="flex flex-wrap gap-1.5"></div>
+            </div>
+
             <div class="flex flex-wrap items-center gap-2 pt-1">
               <input 
                 type="text" 
                 id="qErrorTopicInput" 
-                placeholder="📓 Tema que errou / revisar no fim de semana (opcional)..." 
-                class="flex-1 min-w-[200px] bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
+                placeholder="📓 Micro-esquema breve do erro (Entra no ciclo espaçado: +14d → +30d → +60d)..." 
+                class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
               >
               <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-4 py-2 rounded-xl text-xs transition">
                 + Somar Bloco
@@ -699,15 +682,38 @@
           </form>
         </div>
 
-        <!-- Gráfico de Rosca: Divisão de Questões por Área (5 Colunas) -->
-        <div class="lg:col-span-5 glass-card p-5 flex flex-col justify-between">
-          <div>
-            <h3 class="text-base font-bold text-white">🍩 Distribuição de Questões por Matéria</h3>
-            <p class="text-xs text-slate-400 mt-0.5">Proporção do volume de questões acumulado na semana entre suas áreas.</p>
+        <!-- Diagnóstico de Autópsia & Pontos Recuperáveis (5 Colunas) -->
+        <div class="lg:col-span-5 glass-card p-5 flex flex-col justify-between space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-base font-bold text-white">🔍 Autópsia de Erros & Nota Potencial</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Separa falhas de Conhecimento vs. Operacionais (Desatenção/Pegadinha).</p>
+            </div>
+            <select id="rightChartModeSelect" onchange="renderRightQuestionChart()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-cyan-300 font-semibold">
+              <option value="autopsy">🔍 Causas de Erro</option>
+              <option value="areas">🍩 Volume por Área</option>
+            </select>
           </div>
-          <div class="relative h-64 w-full flex items-center justify-center my-2">
+
+          <!-- Box de Pontos Recuperáveis -->
+          <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <span class="text-[10px] text-slate-400 uppercase">Nota Real (Semana)</span>
+              <div class="text-lg font-bold font-mono text-cyan-400 metric-val" id="boxRealAcc">0%</div>
+            </div>
+            <div>
+              <span class="text-[10px] text-emerald-400 uppercase font-semibold">Nota s/ Erros Operacionais</span>
+              <div class="text-lg font-bold font-mono accent-text metric-val" id="boxPotentialAcc">0%</div>
+            </div>
+            <div class="col-span-2 text-[11px] text-slate-400 border-t border-slate-800/80 pt-1.5" id="autopsyInsightText">
+              Marque as tags ao registrar seus erros para calcular quantos pontos você recupera eliminando desatenções.
+            </div>
+          </div>
+
+          <div class="relative h-52 w-full flex items-center justify-center">
             <canvas id="areaDoughnutChart"></canvas>
           </div>
+
           <div class="text-[11px] text-slate-400 text-center border-t border-slate-800 pt-2" id="doughnutFooterText">
             Total na semana: 0 questões
           </div>
@@ -715,39 +721,131 @@
 
       </div>
 
-      <!-- Caderno de Erros & Fila de Revisão -->
+      <!-- ITEM B: FLASH-REVIEW ESPAÇADO DE LONGO PRAZO (CICLO 14 DIAS -> 30 DIAS -> 60 DIAS) -->
       <div class="glass-card p-6 space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div>
-            <div class="flex items-center gap-2.5">
-              <h2 class="text-base font-bold text-white">📓 Fila de Revisão & Caderno de Erros</h2>
-              <span id="errorQueueCountBadge" class="text-xs font-mono font-semibold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300">0 pendentes</span>
+            <div class="flex flex-wrap items-center gap-2">
+              <h2 class="text-base font-bold text-white">⚡ Flash-Review Espaçado de Longo Prazo (Micro-Esquemas)</h2>
+              <span id="srsDueBadge" class="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300">0 maduros hoje</span>
+              <span id="srsScheduledBadge" class="text-xs font-mono px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400">0 agendados p/ semanas/meses</span>
             </div>
-            <p class="text-xs text-slate-400 mt-0.5">Sincronizado automaticamente com a aba <b>Caderno_Erros</b> da sua planilha. Tópicos não revisados permanecem salvos na virada de semana.</p>
+            <p class="text-xs text-slate-400 mt-1">Ciclo longo para não acumular: <b>1ª Revisão (+14 dias)</b> → <b>2ª Revisão (+30 dias)</b> → <b>3ª Revisão (+60 dias)</b> → <b>Dominado</b>.</p>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
-            <button onclick="addStandaloneErrorTopic()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-xl text-xs font-semibold border border-slate-700 transition">
-              + Anotar Tópico Avulso
+            <button onclick="startFlashReviewSession()" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition shadow-lg">
+              🎲 Sortear 5 Esquemas p/ Ler Agora
             </button>
-            <button onclick="clearReviewedErrors()" class="px-3 py-1.5 bg-slate-900 hover:bg-rose-950/50 text-slate-400 hover:text-rose-300 rounded-xl text-xs font-medium border border-slate-800 transition">
-              🧹 Limpar Revisados
+            <button onclick="addStandaloneErrorTopic()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-xl text-xs font-semibold border border-slate-700 transition">
+              + Novo Micro-Esquema
             </button>
+            <select id="errorFilterSelect" onchange="renderErrorNotebook()" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-slate-300">
+              <option value="due">🔥 Maduros p/ Revisar Agora</option>
+              <option value="all">📋 Todos os Esquemas Ativos</option>
+              <option value="mastered">✅ Dominados / Arquivados</option>
+            </select>
           </div>
         </div>
 
-        <div id="errorNotebookContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 private-text"></div>
+        <!-- Drawer de Sessão Rápida de 5 Esquemas Sorteados -->
+        <div id="flashSessionDrawer" class="hidden p-4 rounded-2xl bg-slate-950/90 border border-amber-500/40 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-amber-300 uppercase tracking-wider">⚡ Sessão Flash-Review (Leitura Rápida de 5 Micro-Esquemas)</span>
+            <button onclick="closeFlashReviewSession()" class="text-xs text-slate-400 hover:text-white">Fechar Sessão ✕</button>
+          </div>
+          <div id="flashSessionCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+        </div>
+
+        <!-- Lista Geral de Micro-Esquemas -->
+        <div id="errorNotebookContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 private-text"></div>
       </div>
 
     </section>
 
-    <!-- ==================== ABA 3: CAIXINHAS & METAS ACUMULATIVAS DE LONGO PRAZO ==================== -->
+    <!-- ==================== ABA 3: 🏟️ SIMULADOS (ARENA & BOLETIM) ==================== -->
+    <section id="view-simulados" class="hidden space-y-6">
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Cronômetro de Prova + Lançador de Boletim (7 Colunas) -->
+        <div class="lg:col-span-7 glass-card p-6 space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
+            <div>
+              <h2 class="text-base font-bold text-white">🏟️ Arena de Simulados & Provas na Íntegra</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Use o cronômetro de prova ou lance direto os acertos por área do seu simulado da Trilha ENAMED.</p>
+            </div>
+            <!-- Cronômetro Progressivo de Prova -->
+            <div class="flex items-center gap-2 bg-slate-900 px-3 py-2 rounded-xl border border-slate-800">
+              <span id="simStopwatchDisplay" class="font-mono text-lg font-bold text-amber-400">00:00:00</span>
+              <button type="button" onclick="toggleSimStopwatch()" id="simStopwatchBtn" class="px-2.5 py-1 rounded-lg accent-bg text-slate-950 font-bold text-xs">▶ Prova</button>
+              <button type="button" onclick="resetSimStopwatch()" class="px-2 py-1 rounded-lg bg-slate-800 text-slate-400 text-xs font-mono">↺</button>
+            </div>
+          </div>
+
+          <form onsubmit="saveSimuladoBoletim(event)" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div class="sm:col-span-2">
+                <label class="text-xs text-slate-400">Identificação do Simulado / Prova Antiga</label>
+                <input type="text" id="simTitleInput" required placeholder="Ex: Simulado ENAMED #04, SUS-SP 2025, ENARE..." class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="text-xs text-slate-400">Semana da Trilha</label>
+                <input type="number" id="simTrilhaWeekInput" min="1" max="60" value="1" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono font-bold text-amber-300 focus:outline-none">
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-400 font-semibold">Boletim por Área (Preencha apenas as áreas presentes na prova):</span>
+                <span id="simLiveTotalPreview" class="font-mono font-bold text-cyan-400">Total: 0/0 (0%)</span>
+              </div>
+              <div id="simAreasInputsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-64 overflow-y-auto pr-1"></div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800">
+              <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                <input type="checkbox" id="simFeedDailyCheck" checked class="rounded bg-slate-900 border-slate-700">
+                <span>Somar questões do simulado na meta de hoje e na Caixinha de 5.000q</span>
+              </label>
+              <button type="submit" class="px-5 py-2.5 rounded-xl accent-bg text-slate-950 font-bold text-xs transition shadow-lg">
+                🏆 Registrar Boletim do Simulado
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Evolução das Notas de Simulado (5 Colunas) -->
+        <div class="lg:col-span-5 glass-card p-6 flex flex-col justify-between space-y-4">
+          <div>
+            <h3 class="text-base font-bold text-white">📈 Curva de Evolução em Simulados</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Progressão da sua taxa de acerto global nas provas ao longo das 42 semanas.</p>
+          </div>
+          <div class="relative h-64 w-full">
+            <canvas id="simuladosEvolutionChart"></canvas>
+          </div>
+          <div class="text-xs text-slate-400 text-center border-t border-slate-800 pt-2 font-mono" id="simSummaryFooter">
+            Média global em simulados: —
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Tabela de Histórico de Simulados Realizados -->
+      <div class="glass-card p-6 overflow-x-auto">
+        <h3 class="text-base font-bold text-white mb-3">📋 Boletins de Simulados & Provas Arquivadas</h3>
+        <div id="simuladosHistoryContainer"></div>
+      </div>
+
+    </section>
+
+    <!-- ==================== ABA 4: 🎯 METAS (CAIXINHAS DE LONGO PRAZO) ==================== -->
     <section id="view-goals" class="hidden space-y-6">
       <div class="glass-card p-6 space-y-5">
         <div class="flex flex-wrap justify-between items-center gap-3">
           <div>
             <h2 class="text-lg font-bold text-white">🎯 Bolsões & Metas Acumulativas de Longo Prazo</h2>
-            <p class="text-xs text-slate-400 mt-1">Diferente do quadro semanal, estas caixinhas <b>não zeram no domingo</b>. Elas acumulam sua jornada até a aprovação na Residência, Concursos e metas físicas.</p>
+            <p class="text-xs text-slate-400 mt-1">Diferente do quadro semanal, estas caixinhas <b>não zeram no domingo</b>. Elas acumulam sua jornada ao longo das 42 semanas.</p>
           </div>
           <button onclick="openNewStudyBankPrompt()" class="text-xs px-3.5 py-2 rounded-xl accent-bg text-slate-950 font-bold transition">
             ➕ Nova Meta de Longo Prazo
@@ -758,21 +856,18 @@
       </div>
     </section>
 
-    <!-- ==================== ABA 4: MATRIZ DA SEMANA & HISTÓRICO ==================== -->
+    <!-- ==================== ABA 5: 📅 SEMANA (MATRIZ & HISTÓRICO) ==================== -->
     <section id="view-week" class="hidden space-y-6">
 
-      <!-- Matriz Completa da Semana -->
       <div class="glass-card p-6 overflow-x-auto">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
           <div>
             <h2 class="text-base font-bold text-white">Visão Panorâmica da Semana (Domingo a Sábado)</h2>
             <p class="text-xs text-slate-400">Legenda: <span class="accent-text font-bold">✓</span> Concluído | <span class="text-slate-400 font-bold">·</span> Dia em Atividade (ON) | <span class="text-slate-600 font-mono">—</span> Dia de Descanso (OFF)</p>
           </div>
-          <div class="flex gap-2">
-            <button onclick="archiveAndResetWeek()" class="px-3 py-1.5 text-xs font-semibold text-purple-200 bg-purple-900/60 hover:bg-purple-800/80 rounded-xl transition border border-purple-600/60">
-              📦 Arquivar Semana
-            </button>
-          </div>
+          <button onclick="archiveAndResetWeek()" class="px-3 py-1.5 text-xs font-semibold text-purple-200 bg-purple-900/60 hover:bg-purple-800/80 rounded-xl transition border border-purple-600/60">
+            📦 Arquivar Semana
+          </button>
         </div>
         <table class="w-full text-left border-collapse min-w-[650px]">
           <thead>
@@ -782,37 +877,55 @@
         </table>
       </div>
 
-      <!-- Histórico de Semanas Arquivadas -->
       <div class="glass-card p-6 overflow-x-auto">
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <h2 class="text-base font-bold text-white">📦 Histórico de Semanas Arquivadas</h2>
-            <p class="text-xs text-slate-400">Evolução comparativa de consistência, horas líquidas e precisão ao longo das semanas.</p>
-          </div>
-        </div>
+        <h2 class="text-base font-bold text-white mb-1">📦 Histórico de Semanas Arquivadas</h2>
+        <p class="text-xs text-slate-400 mb-4">Evolução comparativa de consistência, horas líquidas e precisão ao longo das semanas.</p>
         <div id="archiveContainer"></div>
       </div>
 
     </section>
 
-    <!-- ==================== ABA 5: ESTÚDIO DE PERSONALIZAÇÃO & BACKUP ==================== -->
+    <!-- ==================== ABA 6: ⚙️ ESTÚDIO DE PERSONALIZAÇÃO ==================== -->
     <section id="view-studio" class="hidden space-y-6">
 
-      <!-- Sub-navegação do Estúdio -->
       <div class="flex flex-wrap gap-2 border-b border-slate-800 pb-3 text-xs">
-        <button onclick="switchStudioSubTab('sub-appearance')" id="btn-sub-appearance" class="px-3.5 py-2 rounded-xl accent-bg text-slate-950 font-bold">🎨 1. Temas, Superfície & Roda de Cores</button>
-        <button onclick="switchStudioSubTab('sub-shortcuts')" id="btn-sub-shortcuts" class="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300">⚡ 2. Atalhos Rápidos & Áreas</button>
+        <button onclick="switchStudioSubTab('sub-appearance')" id="btn-sub-appearance" class="px-3.5 py-2 rounded-xl accent-bg text-slate-950 font-bold">🎨 1. Pomodoro (60-90m), Trilha & Temas</button>
+        <button onclick="switchStudioSubTab('sub-shortcuts')" id="btn-sub-shortcuts" class="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300">⚡ 2. Atalhos Rápidos & Tags</button>
         <button onclick="switchStudioSubTab('sub-cloud')" id="btn-sub-cloud" class="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300">☁️ 3. Planilha Google & Backups</button>
       </div>
 
-      <!-- SUB-PAINEL 1: APARÊNCIA, SUPERFÍCIE (OLED/CLARO) & RODA DE CORES -->
+      <!-- SUB-PAINEL 1: POMODORO CUSTOMIZÁVEL (60-90M), TRILHA 42 SEMANAS & CORES -->
       <div id="sub-appearance" class="glass-card p-6 space-y-6">
+        
+        <!-- Configuração do Pomodoro 60-90m e Trilha ENAMED -->
         <div>
-          <h3 class="text-base font-bold text-white">🎨 Estúdio de Cores, Modo de Superfície & Identidade</h3>
-          <p class="text-xs text-slate-400 mt-0.5">Personalize os tons de destaque na roda cromática ou ative o modo OLED Puro / Modo Claro Executivo com alto contraste.</p>
+          <h3 class="text-base font-bold text-white">⏱️ Configuração do Pomodoro Deep Work & Trilha ENAMED</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Ajuste livremente os minutos dos seus blocos de foco (ex: 60m e 90m), tempo de descanso e a semana atual da Trilha.</p>
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-3 text-xs">
+            <div>
+              <label class="text-slate-400">Bloco Foco 1 (min)</label>
+              <input type="number" min="5" max="240" id="cfgPomoFocus1" onchange="savePomodoroCustomConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-white" />
+            </div>
+            <div>
+              <label class="text-slate-400">Bloco Foco 2 (min)</label>
+              <input type="number" min="5" max="240" id="cfgPomoFocus2" onchange="savePomodoroCustomConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-white" />
+            </div>
+            <div>
+              <label class="text-slate-400">Descanso Maior (min)</label>
+              <input type="number" min="1" max="120" id="cfgPomoBreak" onchange="savePomodoroCustomConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-amber-300" />
+            </div>
+            <div>
+              <label class="text-slate-400">Semana Atual Trilha</label>
+              <input type="number" min="1" max="60" id="cfgEnamedWeek" onchange="saveEnamedConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold accent-text" />
+            </div>
+            <div>
+              <label class="text-slate-400">Total Semanas Trilha</label>
+              <input type="number" min="1" max="100" id="cfgEnamedTotal" onchange="saveEnamedConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-slate-300" />
+            </div>
+          </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-800 text-xs">
           <div>
             <label class="text-slate-400 font-medium">Modo de Superfície (Fundo)</label>
             <select id="cfgSurfaceSelect" onchange="changeSurfaceMode(this.value)" class="w-full mt-1.5 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
@@ -830,9 +943,8 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-slate-800">
-          <!-- 3 Esquemas Pré-Montados -->
           <div class="space-y-2">
-            <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">3 Esquemas de Destaques Pré-Montados:</span>
+            <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">3 Esquemas Pré-Montados:</span>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <button onclick="applyThemePreset('ocean')" class="p-3 rounded-xl bg-slate-900 border border-slate-700 hover:border-emerald-500 transition text-left flex flex-col gap-1.5">
                 <div class="flex items-center gap-1.5">
@@ -840,7 +952,6 @@
                   <span class="w-3.5 h-3.5 rounded-full bg-[#6366f1]"></span>
                 </div>
                 <span class="text-xs font-semibold text-white">1. Esmeralda & Índigo</span>
-                <span class="text-[10px] text-slate-400">Original vibrante</span>
               </button>
 
               <button onclick="applyThemePreset('graphite')" class="p-3 rounded-xl bg-slate-900 border border-slate-700 hover:border-sky-400 transition text-left flex flex-col gap-1.5">
@@ -849,7 +960,6 @@
                   <span class="w-3.5 h-3.5 rounded-full bg-[#64748b]"></span>
                 </div>
                 <span class="text-xs font-semibold text-white">2. Azul & Aço</span>
-                <span class="text-[10px] text-slate-400">Minimalista e frio</span>
               </button>
 
               <button onclick="applyThemePreset('midnight')" class="p-3 rounded-xl bg-slate-900 border border-slate-700 hover:border-amber-400 transition text-left flex flex-col gap-1.5">
@@ -858,12 +968,10 @@
                   <span class="w-3.5 h-3.5 rounded-full bg-[#9333ea]"></span>
                 </div>
                 <span class="text-xs font-semibold text-white">3. Âmbar & Violeta</span>
-                <span class="text-[10px] text-slate-400">Contraste quente</span>
               </button>
             </div>
           </div>
 
-          <!-- Roda de Cores -->
           <div class="space-y-2">
             <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Roda de Cores (Toque para Escolher):</span>
             <div class="grid grid-cols-2 gap-3 bg-slate-900/70 p-3.5 rounded-xl border border-slate-800">
@@ -904,8 +1012,6 @@
       <!-- SUB-PAINEL 3: CONEXÃO GOOGLE DRIVE & BACKUPS -->
       <div id="sub-cloud" class="hidden glass-card p-6 space-y-4">
         <h3 class="text-base font-bold text-white">☁️ Sincronização Google Planilhas & Backups Locais</h3>
-        <p class="text-xs text-slate-400">O painel sincroniza automaticamente suas metas, áreas, caderno de erros e caixinhas com sua Planilha do Google Drive.</p>
-
         <div class="flex flex-col sm:flex-row gap-2">
           <input 
             type="url" 
@@ -921,10 +1027,10 @@
         <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-800 text-xs">
           <div class="flex flex-wrap items-center gap-2">
             <button onclick="pullFromCloud(true)" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-sky-300 rounded-xl font-medium border border-slate-700 transition">
-              ☁️↓ Baixar da Planilha Agora
+              ☁️↓ Baixar da Planilha
             </button>
             <button onclick="pushToCloud(true)" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-emerald-300 rounded-xl font-medium border border-slate-700 transition">
-              ☁️↑ Enviar Tudo p/ Planilha
+              ☁️↑ Enviar p/ Planilha
             </button>
             <button onclick="exportJSON()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-medium border border-slate-700 transition">
               ⬇️ Exportar .JSON
@@ -949,11 +1055,26 @@
   </main>
 
   <script>
-    // ==================== 1. CONFIGURAÇÃO DE SEMANA (DOMINGO A SÁBADO) ====================
+    // ==================== 1. CONFIGURAÇÃO BASE & DATAS ====================
     const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     const DEFAULT_AREAS = ['Clínica', 'Cirurgia', 'GO', 'Pediatria', 'Preventiva', 'Português (Concurso)', 'SUS / Legislação', 'Geral'];
     const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbz9fYDyV8f4LH31YsaXV5Y31uaCPuCY-OIE3dBt13a6DNVRGq7s040TCn2yGlprak73oQ/exec';
     const CHART_PALETTE = ['#10b981', '#6366f1', '#06b6d4', '#f59e0b', '#ec4899', '#3b82f6', '#a855f7', '#14b8a6', '#f43f5e'];
+
+    // Tags de Causa de Erro (Item C - Editáveis e Multi-selecionáveis)
+    const DEFAULT_ERROR_TAGS = [
+      { id: 't_lacuna', name: '🎯 Lacuna Teórica', category: 'knowledge' },
+      { id: 't_branco', name: '🧠 Branco / Decoreba', category: 'knowledge' },
+      { id: 't_conduta', name: '🩺 Conduta / Exame', category: 'knowledge' },
+      { id: 't_calculo', name: '📐 Cálculo / Fórmula', category: 'knowledge' },
+      { id: 't_desatencao', name: '⚠️ Desatenção / Leitura', category: 'operational' },
+      { id: 't_pegadinha', name: '🪤 Pegadinha de Banca', category: 'operational' },
+      { id: 't_duvida2', name: '🤔 Dúvida entre 2 (50/50)', category: 'operational' },
+      { id: 't_pressa', name: '⏳ Pressa / Cansaço', category: 'operational' }
+    ];
+
+    // Intervalos longos do Flash-Review (Semanas a Meses: 14 dias -> 30 dias -> 60 dias)
+    const SRS_INTERVAL_DAYS = [14, 30, 60];
 
     let selectedDayIndex = new Date().getDay();
     let activeTab = 'today';
@@ -977,6 +1098,18 @@
       });
     }
 
+    function addDaysToIso(baseIso, addDays) {
+      const parts = (baseIso || TODAY_ISO).split('-').map(Number);
+      const d = new Date(parts[0], parts[1] - 1, parts[2] + addDays, 12, 0, 0);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function formatIsoToBrShort(isoStr) {
+      if (!isoStr || typeof isoStr !== 'string') return 'Hoje';
+      const p = isoStr.split('-');
+      return p.length === 3 ? `${p[2]}/${p[1]}` : isoStr;
+    }
+
     const WEEK_DATES = getWeekDatesSundayToSaturday();
     const CURRENT_WEEK_SUNDAY_ISO = WEEK_DATES[0].iso;
     const TODAY_ISO = WEEK_DATES[selectedDayIndex].iso;
@@ -994,13 +1127,13 @@
       { id: 'qq4', label: '👶 Pediatria 20q', area: 'Pediatria', solved: 20 },
       { id: 'qq5', label: '🏥 Preventiva / SUS 20q', area: 'Preventiva', solved: 20 },
       { id: 'qq6', label: '📝 Bloco Concurso 15q', area: 'Português (Concurso)', solved: 15 },
-      { id: 'qq7', label: '🔥 Simulado 50q', area: 'Geral', solved: 50 }
+      { id: 'qq7', label: '🔥 Bloco Trilha 30q', area: 'Geral', solved: 30 }
     ];
 
     const DEFAULT_STUDY_BANKS = [
-      { id: 'sb1', name: '🎯 Rumo às 5.000 Questões (Residência & Concursos)', current: 0, target: 5000, unit: 'questões', autoType: 'questions', note: 'Soma automaticamente a cada bloco de questões resolvido' },
-      { id: 'sb2', name: '⏱️ Maratona 300 Horas Líquidas de Foco', current: 0, target: 300, unit: 'horas', autoType: 'hours', note: 'Alimentado pelas suas horas líquidas de estudo' },
-      { id: 'sb3', name: '📄 Provas Antigas / Simulados na Íntegra', current: 0, target: 40, unit: 'provas', autoType: 'manual', note: 'Meta de provas completas resolvidas até os exames' },
+      { id: 'sb1', name: '🎯 Rumo às 5.000 Questões (Trilha ENAMED & Concursos)', current: 0, target: 5000, unit: 'questões', autoType: 'questions', note: 'Soma automaticamente a cada bloco ou simulado resolvido' },
+      { id: 'sb2', name: '⏱️ Maratona 300 Horas Líquidas (Blocos 60-90m)', current: 0, target: 300, unit: 'horas', autoType: 'hours', note: 'Alimentado pelas suas horas líquidas de foco' },
+      { id: 'sb3', name: '🏟️ Simulados & Provas na Íntegra Resolvidas', current: 0, target: 42, unit: 'simulados', autoType: 'simulados', note: 'Meta de 1 simulado por semana da Trilha ENAMED' },
       { id: 'sb4', name: '🏋️ Consistência Física (150 Treinos no Ano)', current: 0, target: 150, unit: 'treinos', autoType: 'manual', note: 'Esquema 2 dias ON / 1 dia OFF' }
     ];
 
@@ -1017,7 +1150,7 @@
       },
       {
         id: 2,
-        name: 'Bloco de Questões & Revisão Ativa',
+        name: 'Bateria de Questões Trilha ENAMED',
         days: [false, false, false, false, false, false, false],
         scheduleMode: 'fixed',
         cycleOn: 5,
@@ -1037,7 +1170,7 @@
       },
       {
         id: 4,
-        name: 'Leitura / Estudo Dirigido',
+        name: 'Bloco Profundo (60-90m) + Revisão de Erros',
         days: [false, false, false, false, false, false, false],
         scheduleMode: 'fixed',
         cycleOn: 5,
@@ -1083,13 +1216,29 @@
       return `rgba(${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}, ${alpha})`;
     }
 
-    // ==================== 2. CARREGAMENTO DO ESTADO ====================
+    // ==================== 2. CARREGAMENTO DO ESTADO E RETROCOMPATIBILIDADE ====================
     let brandTitle = localStorage.getItem('habitBrandTitle') || 'Performance Studio';
+    let enamedWeek = Number(localStorage.getItem('habitEnamedWeek')) || 1;
+    let enamedTotalWeeks = Number(localStorage.getItem('habitEnamedTotalWeeks')) || 42;
+
+    // Configuração customizável do Pomodoro 60-90 min (Item 1)
+    let pomoConfig = safeParseJSON('habitPomoConfig', { focus1: 60, focus2: 90, breakMins: 15 });
+    pomoConfig.focus1 = Math.max(5, Number(pomoConfig.focus1) || 60);
+    pomoConfig.focus2 = Math.max(5, Number(pomoConfig.focus2) || 90);
+    pomoConfig.breakMins = Math.max(1, Number(pomoConfig.breakMins) || 15);
+
     let customAreas = safeParseJSON('habitCustomAreas', DEFAULT_AREAS);
     if (!Array.isArray(customAreas) || customAreas.length === 0) customAreas = [...DEFAULT_AREAS];
 
+    let customErrorTags = safeParseJSON('habitCustomErrorTags', DEFAULT_ERROR_TAGS);
+    if (!Array.isArray(customErrorTags) || customErrorTags.length === 0) customErrorTags = [...DEFAULT_ERROR_TAGS];
+
+    let selectedErrorTagsForForm = [];
+    let activeFlashSessionIds = [];
+
     let quickQButtons = safeParseJSON('habitQuickQButtons', DEFAULT_QUICK_Q_BUTTONS);
     let studyBanks = safeParseJSON('habitStudyBanks', DEFAULT_STUDY_BANKS);
+    let simuladosHistory = safeParseJSON('habitSimuladosHistory', []);
 
     let habits = safeParseJSON('habitDashboardData', defaultHabits);
     habits.forEach(h => {
@@ -1103,13 +1252,22 @@
 
     let studySeconds = safeParseJSON('habitStudySeconds', [0, 0, 0, 0, 0, 0, 0]);
     let pomodoroCycles = safeParseJSON('habitPomodoroCycles', [0, 0, 0, 0, 0, 0, 0]);
-    let dailyGoalHours = Number(localStorage.getItem('habitDailyGoalHours')) || 4;
+    let dailyGoalHours = Number(localStorage.getItem('habitDailyGoalHours')) || 3;
     let linkedHabitId = Number(localStorage.getItem('habitLinkedId')) || (habits[3] ? habits[3].id : (habits[0] ? habits[0].id : 0));
 
     let questionsSolved = safeParseJSON('habitQuestionsSolved', [0, 0, 0, 0, 0, 0, 0]);
     let questionsCorrect = safeParseJSON('habitQuestionsCorrect', [0, 0, 0, 0, 0, 0, 0]);
     let questionLogs = safeParseJSON('habitQuestionLogs', []);
     let errorNotebook = safeParseJSON('habitErrorNotebook', []);
+
+    // Normaliza esquemas antigos para suportar multi-tags e revisão espaçada de semanas/meses
+    errorNotebook.forEach(item => {
+      if (!Array.isArray(item.tags)) item.tags = [];
+      if (typeof item.srsStage !== 'number') item.srsStage = 0;
+      if (!item.nextReviewIso) item.nextReviewIso = TODAY_ISO;
+      if (!item.trilhaWeek) item.trilhaWeek = enamedWeek;
+    });
+
     let dailyQuestionsGoal = Number(localStorage.getItem('habitDailyQuestionsGoal')) || 30;
     let linkedQuestionHabitId = Number(localStorage.getItem('habitLinkedQuestionId')) || (habits[1] ? habits[1].id : 0);
     let busyDays = safeParseJSON('habitBusyDays', [false, false, false, false, false, false, false]);
@@ -1131,18 +1289,26 @@
     let currentRecommendedArea = null;
     let chartInstance = null;
     let areaDoughnutInstance = null;
+    let simuladosChartInstance = null;
 
-    let timerMode = 'focus25';
-    let timeLeft = 25 * 60;
+    // Estado Pomodoro (Inicializa com focus1 = 60m)
+    let timerMode = 'focus1';
+    let timeLeft = pomoConfig.focus1 * 60;
     let timerInterval = null;
     let isRunning = false;
     let lastTickTimestamp = null;
     let toastTimeout = null;
 
-    // ==================== 3. NAVEGAÇÃO POR ABAS & MODO BIBLIOTECA ====================
+    // Estado Cronômetro de Simulado
+    let simElapsedSeconds = 0;
+    let simTimerRunning = false;
+    let simTimerInterval = null;
+    let simLastTick = null;
+
+    // ==================== 3. NAVEGAÇÃO POR ABAS & TRILHA ENAMED ====================
     function switchTab(tabId) {
       activeTab = tabId;
-      ['today', 'questions', 'goals', 'week', 'studio'].forEach(id => {
+      ['today', 'questions', 'simulados', 'goals', 'week', 'studio'].forEach(id => {
         document.getElementById(`view-${id}`).classList.add('hidden');
         document.getElementById(`tab-${id}`).classList.remove('active');
       });
@@ -1151,7 +1317,11 @@
 
       setTimeout(() => {
         if (tabId === 'today' && chartInstance) chartInstance.resize();
-        if (tabId === 'questions') renderAreaDoughnutChart();
+        if (tabId === 'questions') renderRightQuestionChart();
+        if (tabId === 'simulados') {
+          renderSimuladosInputs();
+          renderSimuladosChart();
+        }
       }, 30);
     }
 
@@ -1164,6 +1334,19 @@
       document.getElementById(subId).classList.remove('hidden');
       const activeBtn = document.getElementById(`btn-${subId}`);
       if (activeBtn) activeBtn.className = 'px-3.5 py-2 rounded-xl accent-bg text-slate-950 font-bold';
+    }
+
+    function adjustEnamedWeek(delta) {
+      enamedWeek = Math.max(1, Math.min(enamedTotalWeeks, enamedWeek + delta));
+      saveState();
+      showToast(`Trilha ENAMED: Semana ${enamedWeek} de ${enamedTotalWeeks}`, '🧭');
+    }
+
+    function saveEnamedConfig() {
+      enamedWeek = Math.max(1, Number(document.getElementById('cfgEnamedWeek').value) || 1);
+      enamedTotalWeeks = Math.max(1, Number(document.getElementById('cfgEnamedTotal').value) || 42);
+      saveState();
+      showToast('Progresso da Trilha ENAMED atualizado!', '🧭');
     }
 
     function togglePrivacy() {
@@ -1221,7 +1404,8 @@
       if (pSecondary) pSecondary.value = themeConfig.secondary || '#6366f1';
 
       renderChart();
-      if (activeTab === 'questions') renderAreaDoughnutChart();
+      if (activeTab === 'questions') renderRightQuestionChart();
+      if (activeTab === 'simulados') renderSimuladosChart();
     }
 
     function changeSurfaceMode(surf) {
@@ -1264,8 +1448,11 @@
       }));
 
       return {
-        version: 7,
+        version: 8,
         brandTitle,
+        enamedWeek,
+        enamedTotalWeeks,
+        pomoConfig,
         weekStartIso: storedWeekStartIso,
         updatedAt: new Date().toISOString(),
         dailyGoalHours,
@@ -1277,8 +1464,10 @@
         questionsSolved,
         questionsCorrect,
         customAreas,
+        customErrorTags,
         quickQButtons,
         studyBanks,
+        simuladosHistory,
         questionLogs,
         errorNotebook,
         busyDays,
@@ -1300,15 +1489,35 @@
         cycleAnchor: h.cycleAnchor || TODAY_ISO
       }));
       if (data.brandTitle) brandTitle = data.brandTitle;
+      if (data.enamedWeek) enamedWeek = Number(data.enamedWeek) || 1;
+      if (data.enamedTotalWeeks) enamedTotalWeeks = Number(data.enamedTotalWeeks) || 42;
+      if (data.pomoConfig) {
+        pomoConfig = {
+          focus1: Math.max(5, Number(data.pomoConfig.focus1) || 60),
+          focus2: Math.max(5, Number(data.pomoConfig.focus2) || 90),
+          breakMins: Math.max(1, Number(data.pomoConfig.breakMins) || 15)
+        };
+        if (!isRunning) setTimerMode(timerMode);
+      }
       if (Array.isArray(data.studySeconds) && data.studySeconds.length === 7) studySeconds = data.studySeconds.map(v => Math.max(0, Number(v) || 0));
       if (Array.isArray(data.pomodoroCycles) && data.pomodoroCycles.length === 7) pomodoroCycles = data.pomodoroCycles.map(v => Math.max(0, Number(v) || 0));
       if (Array.isArray(data.questionsSolved) && data.questionsSolved.length === 7) questionsSolved = data.questionsSolved.map(v => Math.max(0, Number(v) || 0));
       if (Array.isArray(data.questionsCorrect) && data.questionsCorrect.length === 7) questionsCorrect = data.questionsCorrect.map(v => Math.max(0, Number(v) || 0));
       if (Array.isArray(data.customAreas) && data.customAreas.length > 0) customAreas = data.customAreas;
+      if (Array.isArray(data.customErrorTags) && data.customErrorTags.length > 0) customErrorTags = data.customErrorTags;
       if (Array.isArray(data.quickQButtons)) quickQButtons = data.quickQButtons;
       if (Array.isArray(data.studyBanks)) studyBanks = data.studyBanks;
+      if (Array.isArray(data.simuladosHistory)) simuladosHistory = data.simuladosHistory;
       if (Array.isArray(data.questionLogs)) questionLogs = data.questionLogs;
-      if (Array.isArray(data.errorNotebook)) errorNotebook = data.errorNotebook;
+      if (Array.isArray(data.errorNotebook)) {
+        errorNotebook = data.errorNotebook.map(item => ({
+          ...item,
+          tags: Array.isArray(item.tags) ? item.tags : [],
+          srsStage: typeof item.srsStage === 'number' ? item.srsStage : 0,
+          nextReviewIso: item.nextReviewIso || TODAY_ISO,
+          trilhaWeek: item.trilhaWeek || enamedWeek
+        }));
+      }
       if (Array.isArray(data.busyDays) && data.busyDays.length === 7) busyDays = data.busyDays.map(Boolean);
       if (Array.isArray(data.archivedWeeks)) archivedWeeks = data.archivedWeeks;
       if (data.dailyGoalHours) dailyGoalHours = Number(data.dailyGoalHours);
@@ -1325,6 +1534,9 @@
 
     function saveLocalOnly() {
       localStorage.setItem('habitBrandTitle', brandTitle);
+      localStorage.setItem('habitEnamedWeek', String(enamedWeek));
+      localStorage.setItem('habitEnamedTotalWeeks', String(enamedTotalWeeks));
+      localStorage.setItem('habitPomoConfig', JSON.stringify(pomoConfig));
       localStorage.setItem('habitDashboardData', JSON.stringify(habits));
       localStorage.setItem('habitStudySeconds', JSON.stringify(studySeconds));
       localStorage.setItem('habitPomodoroCycles', JSON.stringify(pomodoroCycles));
@@ -1333,8 +1545,10 @@
       localStorage.setItem('habitQuestionsSolved', JSON.stringify(questionsSolved));
       localStorage.setItem('habitQuestionsCorrect', JSON.stringify(questionsCorrect));
       localStorage.setItem('habitCustomAreas', JSON.stringify(customAreas));
+      localStorage.setItem('habitCustomErrorTags', JSON.stringify(customErrorTags));
       localStorage.setItem('habitQuickQButtons', JSON.stringify(quickQButtons));
       localStorage.setItem('habitStudyBanks', JSON.stringify(studyBanks));
+      localStorage.setItem('habitSimuladosHistory', JSON.stringify(simuladosHistory));
       localStorage.setItem('habitQuestionLogs', JSON.stringify(questionLogs));
       localStorage.setItem('habitErrorNotebook', JSON.stringify(errorNotebook));
       localStorage.setItem('habitDailyQuestionsGoal', String(dailyQuestionsGoal));
@@ -1360,18 +1574,18 @@
 
       if (lastSyncEl && lastCloudSync) lastSyncEl.textContent = `Último sync: ${lastCloudSync}`;
       if (!gasWebAppUrl) {
-        dot.className = 'w-2 h-2 rounded-full bg-slate-500';
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-slate-500';
         text.textContent = 'Local';
         return;
       }
       if (state === 'syncing') {
-        dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
-        text.textContent = customText || 'Sincronizando...';
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping';
+        text.textContent = customText || 'Sync...';
       } else if (state === 'ok') {
-        dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
-        text.textContent = customText || 'Planilha OK ✓';
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400';
+        text.textContent = customText || 'Planilha OK';
       } else if (state === 'error') {
-        dot.className = 'w-2 h-2 rounded-full bg-rose-500';
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-500';
         text.textContent = customText || 'Offline';
       }
     }
@@ -1428,7 +1642,7 @@
       }
       isPullingFromCloud = true;
       clearTimeout(cloudSyncTimeout);
-      updateCloudStatusUI('syncing', 'Lendo Planilha...');
+      updateCloudStatusUI('syncing', 'Lendo...');
       try {
         const response = await fetch(`${gasWebAppUrl}?t=${Date.now()}`);
         const resData = await response.json();
@@ -1440,7 +1654,7 @@
           const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
           lastCloudSync = `${new Date().toLocaleDateString('pt-BR')} às ${timeStr}`;
           localStorage.setItem('habitLastCloudSync', lastCloudSync);
-          updateCloudStatusUI('ok', `Sincronizado (${timeStr})`);
+          updateCloudStatusUI('ok', `OK (${timeStr})`);
           if (showNotification) showToast('Sincronizado com a Planilha Google!', '☁️');
           isPullingFromCloud = false;
           hasCompletedInitialPull = true;
@@ -1459,7 +1673,571 @@
       }
     }
 
-    // ==================== 6. ATALHOS RÁPIDOS DE 1-TOQUE & QUESTÕES ====================
+    // ==================== 6. ITEM C: MULTI-TAGS DE ERRO & CÁLCULO DE NOTA POTENCIAL ====================
+    function toggleTagManager() {
+      const panel = document.getElementById('tagManagerPanel');
+      panel.classList.toggle('hidden');
+      renderErrorTagsMultiPicker();
+    }
+
+    function toggleFormErrorTag(tagName) {
+      const idx = selectedErrorTagsForForm.indexOf(tagName);
+      if (idx === -1) selectedErrorTagsForForm.push(tagName);
+      else selectedErrorTagsForForm.splice(idx, 1);
+      renderErrorTagsMultiPicker();
+    }
+
+    function addCustomErrorTag() {
+      const input = document.getElementById('newTagInput');
+      const catSel = document.getElementById('newTagCategorySelect');
+      const name = (input.value || '').trim();
+      if (!name) return;
+      if (customErrorTags.some(t => t.name.toLowerCase() === name.toLowerCase())) {
+        return showToast('Essa tag já existe.', '⚠️');
+      }
+      customErrorTags.push({
+        id: 'tag_' + Date.now(),
+        name,
+        category: catSel.value === 'knowledge' ? 'knowledge' : 'operational'
+      });
+      input.value = '';
+      saveState();
+      showToast(`Tag "${name}" criada!`, '🏷️');
+    }
+
+    function editCustomErrorTag(index) {
+      const tag = customErrorTags[index];
+      if (!tag) return;
+      const oldName = tag.name;
+      const newName = prompt('Renomear Tag de Causa de Erro:', oldName);
+      if (newName === null) return;
+      const trimmed = newName.trim() || oldName;
+
+      const changeType = confirm(`Esta tag é uma falha OPERACIONAL / RECUPERÁVEL (Desatenção, Pegadinha, Dúvida entre 2, Pressa)?\n\nClique em OK para "Operacional" ou Cancelar para "Conhecimento / Teoria".`);
+      tag.name = trimmed;
+      tag.category = changeType ? 'operational' : 'knowledge';
+
+      // Atualiza nos logs e no caderno de erros caso o nome tenha mudado
+      questionLogs.forEach(log => {
+        if (Array.isArray(log.tags)) {
+          log.tags = log.tags.map(t => t === oldName ? trimmed : t);
+        }
+      });
+      errorNotebook.forEach(item => {
+        if (Array.isArray(item.tags)) {
+          item.tags = item.tags.map(t => t === oldName ? trimmed : t);
+        }
+      });
+      selectedErrorTagsForForm = selectedErrorTagsForForm.map(t => t === oldName ? trimmed : t);
+
+      saveState();
+      showToast(`Tag "${trimmed}" atualizada!`, '✏️');
+    }
+
+    function deleteCustomErrorTag(index) {
+      if (customErrorTags.length <= 1) return showToast('Mantenha pelo menos 1 tag.', '⚠️');
+      const target = customErrorTags[index];
+      if (confirm(`Remover a tag "${target.name}"?`)) {
+        customErrorTags.splice(index, 1);
+        selectedErrorTagsForForm = selectedErrorTagsForForm.filter(t => t !== target.name);
+        saveState();
+      }
+    }
+
+    function renderErrorTagsMultiPicker() {
+      const pickerEl = document.getElementById('errorTagsMultiPicker');
+      const managerEl = document.getElementById('customTagsManagerList');
+      const countLabel = document.getElementById('selectedTagsCountLabel');
+
+      if (countLabel) {
+        countLabel.textContent = `${selectedErrorTagsForForm.length} ${selectedErrorTagsForForm.length === 1 ? 'selecionada' : 'selecionadas'}`;
+      }
+
+      if (pickerEl) {
+        pickerEl.innerHTML = customErrorTags.map(tag => {
+          const isSelected = selectedErrorTagsForForm.includes(tag.name);
+          const isOp = tag.category === 'operational';
+          const activeClass = isSelected
+            ? (isOp ? 'bg-amber-500 text-slate-950 font-bold border-amber-400 shadow' : 'bg-rose-500 text-white font-bold border-rose-400 shadow')
+            : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800';
+          return `
+            <button type="button" onclick="toggleFormErrorTag('${escapeHtml(tag.name)}')" class="px-2.5 py-1 rounded-xl text-[11px] border transition flex items-center gap-1 ${activeClass}">
+              <span>${escapeHtml(tag.name)}</span>
+              ${isSelected ? '<span>✓</span>' : ''}
+            </button>
+          `;
+        }).join('');
+      }
+
+      if (managerEl) {
+        managerEl.innerHTML = customErrorTags.map((tag, idx) => `
+          <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-200">
+            <span>${escapeHtml(tag.name)}</span>
+            <span class="text-[9px] px-1 rounded ${tag.category === 'operational' ? 'bg-amber-500/20 text-amber-300' : 'bg-rose-500/20 text-rose-300'}">${tag.category === 'operational' ? 'Operacional' : 'Teoria'}</span>
+            <button type="button" onclick="editCustomErrorTag(${idx})" class="text-slate-400 hover:text-cyan-300 text-[10px] ml-1" title="Renomear ou mudar grupo">✏️</button>
+            <button type="button" onclick="deleteCustomErrorTag(${idx})" class="text-slate-500 hover:text-rose-400 text-[10px]" title="Excluir tag">✕</button>
+          </div>
+        `).join('');
+      }
+    }
+
+    // Calcula estatísticas das tags e a "Nota Potencial" (sem erros operacionais)
+    function computeAutopsyAndPotentialAccuracy() {
+      const totalQ = questionsSolved.reduce((a, b) => a + b, 0);
+      const totalC = questionsCorrect.reduce((a, b) => a + b, 0);
+      const realAcc = totalQ > 0 ? Math.round((totalC / totalQ) * 100) : 0;
+
+      const tagCounts = {};
+      customErrorTags.forEach(t => { tagCounts[t.name] = 0; });
+
+      let recoverableWrongQuestions = 0;
+
+      questionLogs.forEach(log => {
+        const wrongInBatch = Math.max(0, (Number(log.solved) || 0) - (Number(log.correct) || 0));
+        const tags = Array.isArray(log.tags) ? log.tags : [];
+        tags.forEach(tName => {
+          tagCounts[tName] = (tagCounts[tName] || 0) + 1;
+        });
+
+        if (wrongInBatch > 0 && tags.length > 0) {
+          let opCount = 0;
+          tags.forEach(tName => {
+            const tagObj = customErrorTags.find(ct => ct.name === tName);
+            if (!tagObj || tagObj.category === 'operational') opCount++;
+          });
+          const opRatio = opCount / tags.length;
+          recoverableWrongQuestions += Math.round(wrongInBatch * opRatio);
+        }
+      });
+
+      const potentialCorrect = Math.min(totalQ, totalC + recoverableWrongQuestions);
+      const potentialAcc = totalQ > 0 ? Math.round((potentialCorrect / totalQ) * 100) : 0;
+
+      return { totalQ, totalC, realAcc, potentialAcc, recoverableWrongQuestions, tagCounts };
+    }
+
+    // ==================== 7. ITEM B: FLASH-REVIEW ESPAÇADO LONGO (14d -> 30d -> 60d) ====================
+    function getDueErrorItems() {
+      return errorNotebook.filter(item => !item.reviewed && (item.nextReviewIso || TODAY_ISO) <= TODAY_ISO);
+    }
+
+    function advanceErrorItemSrs(id) {
+      const item = errorNotebook.find(e => e.id === id);
+      if (!item) return;
+
+      const currentStage = Number(item.srsStage) || 0;
+      if (currentStage < SRS_INTERVAL_DAYS.length) {
+        const waitDays = SRS_INTERVAL_DAYS[currentStage];
+        item.srsStage = currentStage + 1;
+        item.nextReviewIso = addDaysToIso(TODAY_ISO, waitDays);
+        showToast(`Revisado! Reaparecerá apenas daqui a ${waitDays} dias (${formatIsoToBrShort(item.nextReviewIso)}).`, '⚡');
+      } else {
+        item.srsStage = 3;
+        item.reviewed = true;
+        showToast('Ciclo de longo prazo concluído! Esquema dominado.', '🏆');
+      }
+
+      activeFlashSessionIds = activeFlashSessionIds.filter(x => x !== id);
+      if (activeFlashSessionIds.length > 0) renderFlashSessionDrawer();
+      else closeFlashReviewSession();
+
+      saveState();
+    }
+
+    function startFlashReviewSession() {
+      const dueList = getDueErrorItems();
+      const pool = dueList.length > 0 ? dueList : errorNotebook.filter(e => !e.reviewed);
+
+      if (pool.length === 0) {
+        return showToast('Você não tem micro-esquemas ativos para sortear no momento!', '🎉');
+      }
+
+      // Embaralha e sorteia até 5 micro-esquemas
+      const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, 5);
+      activeFlashSessionIds = shuffled.map(item => item.id);
+      document.getElementById('flashSessionDrawer').classList.remove('hidden');
+      renderFlashSessionDrawer();
+    }
+
+    function closeFlashReviewSession() {
+      activeFlashSessionIds = [];
+      document.getElementById('flashSessionDrawer').classList.add('hidden');
+    }
+
+    function renderFlashSessionDrawer() {
+      const grid = document.getElementById('flashSessionCardsGrid');
+      if (!grid) return;
+      const items = activeFlashSessionIds.map(id => errorNotebook.find(e => e.id === id)).filter(Boolean);
+
+      if (items.length === 0) {
+        closeFlashReviewSession();
+        return;
+      }
+
+      grid.innerHTML = items.map(item => {
+        const stg = Math.min(2, Number(item.srsStage) || 0);
+        const nextDays = SRS_INTERVAL_DAYS[stg];
+        const tagsHtml = (item.tags || []).map(t => `<span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-amber-300">${escapeHtml(t)}</span>`).join('');
+        return `
+          <div class="p-3.5 rounded-xl bg-slate-900 border border-amber-500/40 flex flex-col justify-between gap-3">
+            <div>
+              <div class="flex items-center justify-between gap-1 mb-1.5">
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">${escapeHtml(item.area)} • S${item.trilhaWeek || 1}</span>
+                <span class="text-[10px] font-mono text-slate-400">Estágio ${stg + 1}/3</span>
+              </div>
+              <p class="text-xs font-medium text-white leading-relaxed">${escapeHtml(item.topic)}</p>
+              <div class="flex flex-wrap gap-1 mt-2">${tagsHtml}</div>
+            </div>
+            <button onclick="advanceErrorItemSrs(${item.id})" class="w-full py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 font-semibold text-xs transition">
+              👁️ Li Agora → Agendar p/ +${nextDays} dias
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function editErrorTopicItem(id) {
+      const item = errorNotebook.find(e => e.id === id);
+      if (!item) return;
+      const newTopic = prompt('Editar micro-esquema / anotação:', item.topic);
+      if (newTopic === null || !newTopic.trim()) return;
+      item.topic = newTopic.trim();
+      saveState();
+      showToast('Micro-esquema atualizado!', '✏️');
+    }
+
+    function addStandaloneErrorTopic() {
+      const areaSelect = document.getElementById('qAreaSelect');
+      const defaultArea = areaSelect && areaSelect.value ? areaSelect.value : (customAreas[0] || 'Geral');
+      const topic = prompt(`Digite o micro-esquema breve (Área: ${defaultArea}):`);
+      if (!topic || !topic.trim()) return;
+
+      errorNotebook.unshift({
+        id: Date.now(),
+        dateStr: WEEK_DATES[selectedDayIndex].shortBr,
+        trilhaWeek: enamedWeek,
+        area: defaultArea,
+        topic: topic.trim(),
+        tags: [...selectedErrorTagsForForm],
+        batchScore: 'Esquema Direto',
+        srsStage: 0,
+        nextReviewIso: TODAY_ISO,
+        reviewed: false
+      });
+      saveState();
+      showToast('Micro-esquema salvo no Flash-Review!', '📓');
+    }
+
+    function deleteErrorItem(id) {
+      errorNotebook = errorNotebook.filter(e => e.id !== id);
+      saveState();
+    }
+
+    function renderErrorNotebook() {
+      const container = document.getElementById('errorNotebookContainer');
+      const dueBadge = document.getElementById('srsDueBadge');
+      const schedBadge = document.getElementById('srsScheduledBadge');
+      const navBadge = document.getElementById('navDueBadge');
+      const filterVal = document.getElementById('errorFilterSelect')?.value || 'due';
+
+      const activeItems = errorNotebook.filter(e => !e.reviewed);
+      const dueItems = getDueErrorItems();
+      const scheduledLaterCount = Math.max(0, activeItems.length - dueItems.length);
+
+      if (dueBadge) dueBadge.textContent = `${dueItems.length} ${dueItems.length === 1 ? 'maduro hoje' : 'maduros hoje'}`;
+      if (schedBadge) schedBadge.textContent = `${scheduledLaterCount} agendados p/ semanas/meses`;
+      if (document.getElementById('dueReviewsKPI')) {
+        document.getElementById('dueReviewsKPI').textContent = `${dueItems.length} ${dueItems.length === 1 ? 'esquema' : 'esquemas'}`;
+      }
+      if (navBadge) {
+        if (dueItems.length > 0) {
+          navBadge.textContent = dueItems.length;
+          navBadge.classList.remove('hidden');
+        } else {
+          navBadge.classList.add('hidden');
+        }
+      }
+
+      if (!container) return;
+
+      let listToRender = [];
+      if (filterVal === 'due') listToRender = dueItems;
+      else if (filterVal === 'mastered') listToRender = errorNotebook.filter(e => e.reviewed);
+      else listToRender = activeItems;
+
+      if (listToRender.length === 0) {
+        const emptyMsg = filterVal === 'due'
+          ? '🎉 Nenhum micro-esquema vencido para hoje! Seus outros esquemas estão maturando para daqui a 14, 30 ou 60 dias (mude o filtro acima para "Todos" se quiser vê-los).'
+          : 'Nenhum micro-esquema encontrado neste filtro.';
+        container.innerHTML = `<div class="col-span-full text-center py-6 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">${emptyMsg}</div>`;
+        return;
+      }
+
+      container.innerHTML = listToRender.map(item => {
+        const stg = Math.min(2, Number(item.srsStage) || 0);
+        const nextDays = SRS_INTERVAL_DAYS[stg];
+        const isDue = !item.reviewed && (item.nextReviewIso || TODAY_ISO) <= TODAY_ISO;
+        const tagsHtml = (item.tags || []).map(t => `<span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 border border-slate-700">${escapeHtml(t)}</span>`).join('');
+
+        return `
+          <div class="p-3.5 rounded-xl bg-slate-900/75 border ${item.reviewed ? 'border-slate-800/50 opacity-60' : (isDue ? 'border-amber-500/40' : 'border-slate-800')} flex flex-col justify-between gap-2.5 transition">
+            <div>
+              <div class="flex items-center justify-between gap-1 mb-1.5">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800/60">${escapeHtml(item.area)}</span>
+                  <span class="text-[10px] font-mono text-slate-400">S${item.trilhaWeek || 1} • ${escapeHtml(item.dateStr)}</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <button onclick="editErrorTopicItem(${item.id})" class="text-slate-400 hover:text-cyan-300 text-[10px] px-1" title="Editar esquema">✏️</button>
+                  <button onclick="deleteErrorItem(${item.id})" class="text-slate-500 hover:text-rose-400 text-xs px-1" title="Excluir">✕</button>
+                </div>
+              </div>
+              <p class="text-xs font-medium break-words leading-relaxed ${item.reviewed ? 'line-through text-slate-500' : 'text-slate-100'}">${escapeHtml(item.topic)}</p>
+              ${tagsHtml ? `<div class="flex flex-wrap gap-1 mt-2">${tagsHtml}</div>` : ''}
+            </div>
+
+            <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px]">
+              <span class="font-mono ${isDue ? 'text-amber-300 font-semibold' : 'text-slate-400'}">
+                ${item.reviewed ? '✅ Dominado' : (isDue ? '🔥 Maduro p/ ler hoje' : `⏳ Próxima: ${formatIsoToBrShort(item.nextReviewIso)}`)}
+              </span>
+              ${!item.reviewed ? `
+                <button onclick="advanceErrorItemSrs(${item.id})" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 font-semibold border border-emerald-500/30 transition">
+                  👁️ Li (+${nextDays}d)
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ==================== 8. ABA 🏟️ SIMULADOS (CRONÔMETRO DE PROVA & BOLETIM) ====================
+    function formatStopwatch(secs) {
+      const h = String(Math.floor(secs / 3600)).padStart(2, '0');
+      const m = String(Math.floor((secs % 3600) / 60)).padStart(2, '0');
+      const s = String(secs % 60).padStart(2, '0');
+      return `${h}:${m}:${s}`;
+    }
+
+    function toggleSimStopwatch() {
+      const btn = document.getElementById('simStopwatchBtn');
+      if (simTimerRunning) {
+        simTimerRunning = false;
+        clearInterval(simTimerInterval);
+        btn.textContent = '▶ Retomar';
+      } else {
+        simTimerRunning = true;
+        simLastTick = Date.now();
+        btn.textContent = '⏸ Pausar';
+        simTimerInterval = setInterval(() => {
+          const now = Date.now();
+          const delta = Math.floor((now - simLastTick) / 1000);
+          if (delta >= 1) {
+            simLastTick += delta * 1000;
+            simElapsedSeconds += delta;
+            document.getElementById('simStopwatchDisplay').textContent = formatStopwatch(simElapsedSeconds);
+          }
+        }, 1000);
+      }
+    }
+
+    function resetSimStopwatch() {
+      simTimerRunning = false;
+      clearInterval(simTimerInterval);
+      simElapsedSeconds = 0;
+      document.getElementById('simStopwatchDisplay').textContent = '00:00:00';
+      document.getElementById('simStopwatchBtn').textContent = '▶ Prova';
+    }
+
+    function renderSimuladosInputs() {
+      const grid = document.getElementById('simAreasInputsGrid');
+      const weekInput = document.getElementById('simTrilhaWeekInput');
+      if (weekInput) weekInput.value = enamedWeek;
+      if (!grid) return;
+
+      grid.innerHTML = customAreas.map((area, idx) => `
+        <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-2">
+          <span class="text-xs font-semibold text-slate-200 truncate">${escapeHtml(area)}</span>
+          <div class="flex items-center gap-1.5 shrink-0 font-mono text-xs">
+            <input type="number" min="0" max="200" placeholder="Certas" data-sim-area="${escapeHtml(area)}" data-sim-type="correct" oninput="updateSimLivePreview()" class="w-16 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-center accent-text font-bold">
+            <span class="text-slate-500">/</span>
+            <input type="number" min="0" max="200" placeholder="Total" data-sim-area="${escapeHtml(area)}" data-sim-type="solved" oninput="updateSimLivePreview()" class="w-16 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-center text-white font-bold">
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateSimLivePreview() {
+      const solvedInputs = document.querySelectorAll('[data-sim-type="solved"]');
+      const correctInputs = document.querySelectorAll('[data-sim-type="correct"]');
+      let totS = 0, totC = 0;
+      solvedInputs.forEach((sEl, idx) => {
+        const s = Math.max(0, Number(sEl.value) || 0);
+        const c = Math.max(0, Number(correctInputs[idx].value) || 0);
+        totS += s;
+        totC += Math.min(s, c);
+      });
+      const pct = totS > 0 ? Math.round((totC / totS) * 100) : 0;
+      const prev = document.getElementById('simLiveTotalPreview');
+      if (prev) prev.textContent = `Total: ${totC}/${totS} (${pct}%)`;
+    }
+
+    function saveSimuladoBoletim(event) {
+      event.preventDefault();
+      const title = document.getElementById('simTitleInput').value.trim() || `Simulado S${enamedWeek}`;
+      const tWeek = Number(document.getElementById('simTrilhaWeekInput').value) || enamedWeek;
+      const feedDaily = document.getElementById('simFeedDailyCheck').checked;
+
+      const solvedInputs = document.querySelectorAll('[data-sim-type="solved"]');
+      const correctInputs = document.querySelectorAll('[data-sim-type="correct"]');
+
+      let totalSolved = 0, totalCorrect = 0;
+      const breakdown = [];
+
+      solvedInputs.forEach((sEl, idx) => {
+        const areaName = sEl.getAttribute('data-sim-area');
+        const s = Math.max(0, Number(sEl.value) || 0);
+        const c = Math.max(0, Number(correctInputs[idx].value) || 0);
+        if (s > 0) {
+          const validC = Math.min(s, c);
+          totalSolved += s;
+          totalCorrect += validC;
+          breakdown.push({ area: areaName, solved: s, correct: validC });
+
+          if (feedDaily) {
+            questionLogs.push({
+              id: Date.now() + idx,
+              dayIdx: selectedDayIndex,
+              area: areaName,
+              solved: s,
+              correct: validC,
+              tags: []
+            });
+          }
+        }
+      });
+
+      if (totalSolved === 0) {
+        return showToast('Preencha as questões de pelo menos 1 área no boletim.', '⚠️');
+      }
+
+      const accuracy = Math.round((totalCorrect / totalSolved) * 100);
+      simuladosHistory.unshift({
+        id: Date.now(),
+        dateStr: WEEK_DATES[selectedDayIndex].shortBr,
+        title,
+        trilhaWeek: tWeek,
+        totalSolved,
+        totalCorrect,
+        accuracy,
+        durationFormatted: simElapsedSeconds > 0 ? formatStopwatch(simElapsedSeconds) : '—',
+        breakdown
+      });
+
+      if (feedDaily) {
+        questionsSolved[selectedDayIndex] = (questionsSolved[selectedDayIndex] || 0) + totalSolved;
+        questionsCorrect[selectedDayIndex] = (questionsCorrect[selectedDayIndex] || 0) + totalCorrect;
+        feedAutoStudyBanks('questions', totalSolved);
+        checkAutoCompleteQuestionHabit(selectedDayIndex);
+      }
+      feedAutoStudyBanks('simulados', 1);
+
+      document.getElementById('simTitleInput').value = '';
+      resetSimStopwatch();
+      renderSimuladosInputs();
+      updateSimLivePreview();
+      saveState();
+      showToast(`Simulado "${title}" registrado (${accuracy}% de acerto)!`, '🏆');
+    }
+
+    function deleteSimuladoItem(id) {
+      if (confirm('Excluir este simulado do histórico?')) {
+        simuladosHistory = simuladosHistory.filter(s => s.id !== id);
+        saveState();
+      }
+    }
+
+    function renderSimuladosChart() {
+      const ctx = document.getElementById('simuladosEvolutionChart');
+      const footer = document.getElementById('simSummaryFooter');
+      const histContainer = document.getElementById('simuladosHistoryContainer');
+      if (!ctx) return;
+      if (simuladosChartInstance) simuladosChartInstance.destroy();
+
+      const isLight = themeConfig.surface === 'light';
+      const tickColor = isLight ? '#475569' : '#94a3b8';
+
+      const ordered = [...simuladosHistory].reverse();
+      if (ordered.length === 0) {
+        footer.textContent = 'Nenhum simulado registrado ainda.';
+      } else {
+        const avg = Math.round(ordered.reduce((a, b) => a + b.accuracy, 0) / ordered.length);
+        footer.textContent = `${ordered.length} simulados realizados • Média Global: ${avg}%`;
+      }
+
+      simuladosChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ordered.length ? ordered.map(s => `S${s.trilhaWeek} (${s.dateStr})`) : ['Sem dados'],
+          datasets: [{
+            label: 'Nota do Simulado (%)',
+            data: ordered.length ? ordered.map(s => s.accuracy) : [0],
+            borderColor: themeConfig.primary,
+            backgroundColor: hexToRgba(themeConfig.primary, 0.15),
+            borderWidth: 3,
+            pointRadius: 4,
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, max: 100, ticks: { color: tickColor, callback: v => v + '%' } },
+            x: { ticks: { color: tickColor } }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+
+      if (histContainer) {
+        if (simuladosHistory.length === 0) {
+          histContainer.innerHTML = `<div class="text-center py-6 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">Nenhum boletim de simulado salvo ainda.</div>`;
+        } else {
+          const rows = simuladosHistory.map(s => {
+            const pills = (s.breakdown || []).map(b => `<span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">${escapeHtml(b.area)}: ${b.correct}/${b.solved} (${Math.round((b.correct/b.solved)*100)}%)</span>`).join(' ');
+            return `
+              <tr class="border-b border-slate-800/60 text-xs">
+                <td class="py-3 pr-3 font-mono text-slate-400">${escapeHtml(s.dateStr)} • S${s.trilhaWeek}</td>
+                <td class="py-3 pr-3 font-semibold text-white">${escapeHtml(s.title)}</td>
+                <td class="py-3 text-center font-mono font-bold accent-text">${s.totalCorrect}/${s.totalSolved} (${s.accuracy}%)</td>
+                <td class="py-3 text-center font-mono text-slate-400">${escapeHtml(s.durationFormatted)}</td>
+                <td class="py-3 pl-3">${pills}</td>
+                <td class="py-3 text-right"><button onclick="deleteSimuladoItem(${s.id})" class="text-slate-500 hover:text-rose-400 px-2">✕</button></td>
+              </tr>
+            `;
+          }).join('');
+          histContainer.innerHTML = `
+            <table class="w-full text-left border-collapse min-w-[600px]">
+              <thead>
+                <tr class="border-b border-slate-800 text-[11px] uppercase text-slate-400">
+                  <th class="py-2 pr-3">Data / Trilha</th>
+                  <th class="py-2 pr-3">Exame</th>
+                  <th class="py-2 text-center">Resultado</th>
+                  <th class="py-2 text-center">Tempo</th>
+                  <th class="py-2 pl-3">Desempenho por Área</th>
+                  <th class="py-2 text-right"></th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          `;
+        }
+      }
+    }
+
+    // ==================== 9. ATALHOS RÁPIDOS, CAIXINHAS E QUESTÕES ====================
     function renderQuickQButtons() {
       const cont = document.getElementById('quickQButtonsContainer');
       const studioList = document.getElementById('studioQuickQList');
@@ -1497,20 +2275,19 @@
       correctEl.value = '';
       correctEl.focus();
       autoPreviewAccuracy();
-      showToast(`Atalho "${qb.label}" carregado! Digite quantos acertos fez.`, '⚡');
+      showToast(`Atalho "${qb.label}" carregado!`, '⚡');
     }
 
     function promptNewQuickQButton() {
-      const area = prompt(`Qual Área/Matéria deste atalho?\n(Ex: ${customAreas.slice(0, 4).join(', ')})`, customAreas[0] || 'Clínica');
+      const area = prompt(`Qual Área/Matéria deste atalho?`, customAreas[0] || 'Clínica');
       if (!area) return;
-      const solved = parseInt(prompt('Quantidade padrão de questões do bloco:', '20') || '20', 10);
+      const solved = parseInt(prompt('Quantidade padrão de questões:', '20') || '20', 10);
       if (isNaN(solved) || solved <= 0) return;
       const label = prompt('Nome curto do botão:', `⚡ ${area.trim()} ${solved}q`) || `${area.trim()} ${solved}q`;
 
       if (!customAreas.includes(area.trim())) customAreas.push(area.trim());
       quickQButtons.push({ id: 'qq_' + Date.now(), label: label.trim(), area: area.trim(), solved });
       saveState();
-      showToast('Atalho rápido criado!', '⚡');
     }
 
     function deleteQuickQButton(id) {
@@ -1522,14 +2299,10 @@
       const s = Number(document.getElementById('qSolvedInput').value) || 0;
       const c = Number(document.getElementById('qCorrectInput').value) || 0;
       const prev = document.getElementById('liveBatchAccPreview');
-      if (s > 0 && c >= 0 && c <= s) {
-        prev.textContent = `${Math.round((c / s) * 100)}%`;
-      } else {
-        prev.textContent = '';
-      }
+      if (s > 0 && c >= 0 && c <= s) prev.textContent = `${Math.round((c / s) * 100)}%`;
+      else prev.textContent = '';
     }
 
-    // ==================== 7. CAIXINHAS / BOLSÕES ACUMULATIVOS DE LONGO PRAZO ====================
     function feedAutoStudyBanks(type, deltaValue) {
       studyBanks.forEach(bank => {
         if (bank.autoType === type) {
@@ -1583,13 +2356,11 @@
     }
 
     function openNewStudyBankPrompt() {
-      const name = prompt('Nome da nova Caixinha / Meta de Longo Prazo (Ex: 🎯 1.000 Questões de Português):');
+      const name = prompt('Nome da nova Meta de Longo Prazo:');
       if (!name) return;
-      const unit = prompt('Unidade de medida (Ex: questões, horas, provas, treinos):', 'questões') || 'questões';
+      const unit = prompt('Unidade (questões, horas, simulados, treinos):', 'questões') || 'questões';
       const target = parseFloat(prompt(`Meta Total em ${unit}:`, '1000') || '1000');
       const current = parseFloat(prompt(`Valor já acumulado hoje:`, '0') || '0');
-      const note = prompt('Observação / Estratégia:', 'Acumulativo até a prova') || '';
-
       studyBanks.push({
         id: 'sb_' + Date.now(),
         name: name.trim(),
@@ -1597,10 +2368,9 @@
         target: isNaN(target) || target <= 0 ? 100 : target,
         unit: unit.trim(),
         autoType: 'manual',
-        note: note.trim()
+        note: 'Acumulativo até a prova'
       });
       saveState();
-      showToast('Caixinha de longo prazo criada!', '🎯');
     }
 
     function promptEditStudyBank(id) {
@@ -1608,7 +2378,7 @@
       if (!b) return;
       const name = prompt('Nome da Meta:', b.name);
       if (name === null) return;
-      const cur = prompt(`Valor acumulado atual (${b.unit}):`, b.current);
+      const cur = prompt(`Valor acumulado (${b.unit}):`, b.current);
       if (cur === null) return;
       const tar = prompt(`Meta total (${b.unit}):`, b.target);
       if (tar === null) return;
@@ -1619,15 +2389,14 @@
     }
 
     function deleteStudyBank(id) {
-      if (!confirm('Excluir esta caixinha de longo prazo?')) return;
+      if (!confirm('Excluir esta caixinha?')) return;
       studyBanks = studyBanks.filter(x => x.id !== id);
       saveState();
     }
 
-    // ==================== 8. GERENCIADOR DE ÁREAS, RECOMENDADOR E CADERNO DE ERROS ====================
+    // ==================== 10. ÁREAS, RECOMENDADOR E REGISTRO DE QUESTÕES ====================
     function toggleAreaManager() {
-      const panel = document.getElementById('areaManagerPanel');
-      panel.classList.toggle('hidden');
+      document.getElementById('areaManagerPanel').classList.toggle('hidden');
       renderCustomAreasManager();
     }
 
@@ -1635,14 +2404,10 @@
       const input = document.getElementById('newAreaInput');
       const name = (input.value || '').trim();
       if (!name) return;
-      if (customAreas.some(a => a.toLowerCase() === name.toLowerCase())) {
-        showToast('Essa área já existe.', '⚠️');
-        return;
-      }
+      if (customAreas.some(a => a.toLowerCase() === name.toLowerCase())) return showToast('Essa área já existe.', '⚠️');
       customAreas.push(name);
       input.value = '';
       saveState();
-      showToast(`Área "${name}" adicionada!`, '📚');
     }
 
     function renameCustomArea(index) {
@@ -1658,13 +2423,11 @@
       errorNotebook.forEach(item => { if (item.area === oldName) item.area = trimmed; });
       quickQButtons.forEach(qb => { if (qb.area === oldName) qb.area = trimmed; });
       saveState();
-      showToast(`Renomeado para "${trimmed}"!`, '✏️');
     }
 
     function deleteCustomArea(index) {
       if (customAreas.length <= 1) return showToast('Mantenha pelo menos 1 área.', '⚠️');
-      const target = customAreas[index];
-      if (confirm(`Remover "${target}" da lista?`)) {
+      if (confirm(`Remover "${customAreas[index]}"?`)) {
         customAreas.splice(index, 1);
         saveState();
       }
@@ -1686,13 +2449,23 @@
       const badgeEl = document.getElementById('recBadge');
       const descEl = document.getElementById('recDescription');
       const btnEl = document.getElementById('recActionBtn');
+      const flashBtn = document.getElementById('recFlashBtn');
+
+      const dueCount = getDueErrorItems().length;
+      if (flashBtn) {
+        if (dueCount > 0) {
+          flashBtn.classList.remove('hidden');
+          flashBtn.textContent = `⚡ Sortear 5 Esquemas (${dueCount} maduros)`;
+        } else {
+          flashBtn.classList.add('hidden');
+        }
+      }
 
       const areaStats = getAreaStatsForWeek();
       const practicedAreas = customAreas.filter(a => areaStats[a] && areaStats[a].solved > 0);
       const untouchedAreas = customAreas.filter(a => !areaStats[a] || areaStats[a].solved === 0);
 
-      let weakestArea = null;
-      let lowestAcc = 101;
+      let weakestArea = null, lowestAcc = 101;
       practicedAreas.forEach(a => {
         const st = areaStats[a];
         const acc = Math.round((st.correct / st.solved) * 100);
@@ -1702,34 +2475,32 @@
         }
       });
 
-      const pendingErrors = errorNotebook.filter(e => !e.reviewed).length;
-
       if (weakestArea && weakestArea.acc < 70) {
         currentRecommendedArea = weakestArea.name;
         badgeEl.textContent = `🔴 Ponto Crítico (${weakestArea.acc}%)`;
         badgeEl.className = 'text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30';
-        descEl.innerHTML = `Sua menor precisão está em <b>${escapeHtml(weakestArea.name)}</b> (${weakestArea.correct}/${weakestArea.solved} — <b>${weakestArea.acc}%</b>). Atacar essa matéria hoje traz o maior ganho líquido na nota.`;
+        descEl.innerHTML = `Semana ${enamedWeek}/42: Sua menor precisão está em <b>${escapeHtml(weakestArea.name)}</b> (${weakestArea.correct}/${weakestArea.solved} — <b>${weakestArea.acc}%</b>). Priorize um bloco de questões desta matéria.`;
         btnEl.classList.remove('hidden');
         btnEl.textContent = `🎯 Focar em ${weakestArea.name}`;
       } else if (untouchedAreas.length > 0 && practicedAreas.length > 0) {
         currentRecommendedArea = untouchedAreas[0];
-        badgeEl.textContent = `🟡 Matéria Negligenciada`;
+        badgeEl.textContent = `🟡 Matéria Pendente`;
         badgeEl.className = 'text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30';
-        descEl.innerHTML = `Matérias praticadas acima de 70%, mas você ainda tem <b>0 questões</b> em <b>${escapeHtml(untouchedAreas[0])}</b> nesta semana.`;
+        descEl.innerHTML = `Semana ${enamedWeek}/42: Suas matérias praticadas estão ≥ 70%, mas você ainda está com <b>0 questões</b> em <b>${escapeHtml(untouchedAreas[0])}</b> nesta semana.`;
         btnEl.classList.remove('hidden');
         btnEl.textContent = `🎯 Iniciar ${untouchedAreas[0]}`;
       } else if (weakestArea) {
         currentRecommendedArea = weakestArea.name;
-        badgeEl.textContent = `🟢 Desempenho Sólido`;
+        badgeEl.textContent = `🟢 Ritmo Forte`;
         badgeEl.className = 'text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
-        descEl.innerHTML = `Todas as áreas praticadas estão ≥ 70%! Refine <b>${escapeHtml(weakestArea.name)}</b> (${weakestArea.acc}%)${pendingErrors > 0 ? ` ou revise seus <b>${pendingErrors} erros pendentes</b>.` : '.'}`;
+        descEl.innerHTML = `Semana ${enamedWeek}/42: Todas as áreas estão ≥ 70%! Refine <b>${escapeHtml(weakestArea.name)}</b> (${weakestArea.acc}%)${dueCount > 0 ? ` ou faça um Flash-Review dos seus <b>${dueCount} esquemas maduros</b>.` : '.'}`;
         btnEl.classList.remove('hidden');
         btnEl.textContent = `🎯 Praticar ${weakestArea.name}`;
       } else {
         currentRecommendedArea = customAreas[0] || 'Clínica';
-        badgeEl.textContent = `⚪ Aguardando Blocos`;
+        badgeEl.textContent = `🧭 Trilha Semana ${enamedWeek}/42`;
         badgeEl.className = 'text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400';
-        descEl.innerHTML = `Registre sua primeira bateria de questões na Aba 2 para ativar o diagnóstico automático por área.`;
+        descEl.innerHTML = `Registre seus blocos de questões da Semana ${enamedWeek} da Trilha ENAMED para ativar a Autópsia e o cálculo de Nota Potencial.`;
         btnEl.classList.add('hidden');
       }
     }
@@ -1744,80 +2515,6 @@
       }
     }
 
-    function addStandaloneErrorTopic() {
-      const areaSelect = document.getElementById('qAreaSelect');
-      const defaultArea = areaSelect && areaSelect.value ? areaSelect.value : (customAreas[0] || 'Geral');
-      const topic = prompt(`Tema/conceito que errou ou precisa revisar (Área: ${defaultArea}):`);
-      if (!topic || !topic.trim()) return;
-
-      errorNotebook.unshift({
-        id: Date.now(),
-        dateStr: WEEK_DATES[selectedDayIndex].shortBr,
-        area: defaultArea,
-        topic: topic.trim(),
-        batchScore: 'Avulso',
-        reviewed: false
-      });
-      saveState();
-      showToast('Salvo na Fila de Revisão!', '📓');
-    }
-
-    function toggleErrorReviewed(id) {
-      const item = errorNotebook.find(e => e.id === id);
-      if (item) {
-        item.reviewed = !item.reviewed;
-        saveState();
-      }
-    }
-
-    function deleteErrorItem(id) {
-      errorNotebook = errorNotebook.filter(e => e.id !== id);
-      saveState();
-    }
-
-    function clearReviewedErrors() {
-      const revCount = errorNotebook.filter(e => e.reviewed).length;
-      if (revCount === 0) return showToast('Nenhum item marcado como revisado.', '⚠️');
-      if (confirm(`Remover os ${revCount} tópicos já revisados?`)) {
-        errorNotebook = errorNotebook.filter(e => !e.reviewed);
-        saveState();
-      }
-    }
-
-    function renderErrorNotebook() {
-      const container = document.getElementById('errorNotebookContainer');
-      const badge = document.getElementById('errorQueueCountBadge');
-      if (!container || !badge) return;
-
-      const pendingCount = errorNotebook.filter(e => !e.reviewed).length;
-      badge.textContent = `${pendingCount} ${pendingCount === 1 ? 'pendente' : 'pendentes'}`;
-
-      if (errorNotebook.length === 0) {
-        container.innerHTML = `<div class="col-span-full text-center py-5 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">Nenhum erro pendente na fila.</div>`;
-        return;
-      }
-
-      container.innerHTML = errorNotebook.map(item => `
-        <div class="p-3 rounded-xl bg-slate-900/75 border ${item.reviewed ? 'border-slate-800/50 opacity-55' : 'border-rose-500/30'} flex items-start justify-between gap-2.5 transition">
-          <label class="flex items-start gap-2.5 cursor-pointer flex-1 min-w-0">
-            <input type="checkbox" class="hidden custom-checkbox" ${item.reviewed ? 'checked' : ''} onchange="toggleErrorReviewed(${item.id})">
-            <div class="w-4 h-4 mt-0.5 shrink-0 rounded border border-slate-600 flex items-center justify-center transition">
-              ${item.reviewed ? '<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>' : ''}
-            </div>
-            <div class="min-w-0 flex-1">
-              <div class="flex flex-wrap items-center gap-1.5 mb-1">
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800/60">${escapeHtml(item.area)}</span>
-                <span class="text-[10px] text-slate-500 font-mono">${escapeHtml(item.dateStr)} • ${escapeHtml(item.batchScore)}</span>
-              </div>
-              <p class="text-xs font-medium break-words ${item.reviewed ? 'line-through text-slate-500' : 'text-slate-100'}">${escapeHtml(item.topic)}</p>
-            </div>
-          </label>
-          <button onclick="deleteErrorItem(${item.id})" class="text-slate-600 hover:text-rose-400 text-xs px-1">✕</button>
-        </div>
-      `).join('');
-    }
-
-    // ==================== 9. QUESTÕES, POMODORO & HÁBITOS ====================
     function getEffectiveStudyGoalSeconds(dayIdx) {
       return dailyGoalHours * 3600 * (busyDays[dayIdx] ? 0.5 : 1);
     }
@@ -1872,8 +2569,17 @@
 
       const batchId = Date.now();
       const batchAcc = Math.round((correct / solved) * 100);
+      const chosenTags = [...selectedErrorTagsForForm];
 
-      questionLogs.push({ id: batchId, dayIdx: selectedDayIndex, area, solved, correct });
+      questionLogs.push({
+        id: batchId,
+        dayIdx: selectedDayIndex,
+        trilhaWeek: enamedWeek,
+        area,
+        solved,
+        correct,
+        tags: chosenTags
+      });
       feedAutoStudyBanks('questions', solved);
 
       if (errorTopic) {
@@ -1881,9 +2587,13 @@
           id: batchId + 1,
           logId: batchId,
           dateStr: WEEK_DATES[selectedDayIndex].shortBr,
+          trilhaWeek: enamedWeek,
           area,
           topic: errorTopic,
+          tags: chosenTags,
           batchScore: `${correct}/${solved} (${batchAcc}%)`,
+          srsStage: 0,
+          nextReviewIso: TODAY_ISO,
           reviewed: false
         });
       }
@@ -1891,11 +2601,12 @@
       solvedEl.value = '';
       correctEl.value = '';
       if (errorTopicEl) errorTopicEl.value = '';
+      selectedErrorTagsForForm = [];
       document.getElementById('liveBatchAccPreview').textContent = '';
 
       checkAutoCompleteQuestionHabit(selectedDayIndex);
       saveState();
-      showToast(`+${solved}q em ${area} (${batchAcc}%) registradas!`, '📝');
+      showToast(`+${solved}q em ${area} (${batchAcc}%)${errorTopic ? ' + Esquema salvo!' : '!'}`, '📝');
     }
 
     function undoLastQuestionBatch() {
@@ -1961,7 +2672,32 @@
       return map;
     }
 
-    // ==================== 10. POMODORO COM TIMESTAMP REAL ====================
+    // ==================== 11. ITEM 1: POMODORO DE ELITE CUSTOMIZÁVEL (60-90 MIN) ====================
+    function savePomodoroCustomConfig() {
+      pomoConfig.focus1 = Math.max(5, Number(document.getElementById('cfgPomoFocus1').value) || 60);
+      pomoConfig.focus2 = Math.max(5, Number(document.getElementById('cfgPomoFocus2').value) || 90);
+      pomoConfig.breakMins = Math.max(1, Number(document.getElementById('cfgPomoBreak').value) || 15);
+      if (!isRunning) setTimerMode(timerMode);
+      saveState();
+      showToast(`Pomodoro ajustado: ${pomoConfig.focus1}m / ${pomoConfig.focus2}m / Pausa ${pomoConfig.breakMins}m!`, '⏱️');
+    }
+
+    function renderPomodoroLabels() {
+      const b1 = document.getElementById('btn-focus1');
+      const b2 = document.getElementById('btn-focus2');
+      const bb = document.getElementById('btn-break');
+      if (b1) b1.textContent = `Foco ${pomoConfig.focus1}m`;
+      if (b2) b2.textContent = `Foco ${pomoConfig.focus2}m`;
+      if (bb) bb.textContent = `Pausa ${pomoConfig.breakMins}m`;
+
+      const f1In = document.getElementById('cfgPomoFocus1');
+      const f2In = document.getElementById('cfgPomoFocus2');
+      const brIn = document.getElementById('cfgPomoBreak');
+      if (f1In && document.activeElement !== f1In) f1In.value = pomoConfig.focus1;
+      if (f2In && document.activeElement !== f2In) f2In.value = pomoConfig.focus2;
+      if (brIn && document.activeElement !== brIn) brIn.value = pomoConfig.breakMins;
+    }
+
     function playBeep(freq = 880, duration = 0.4) {
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -2009,16 +2745,25 @@
     function setTimerMode(mode) {
       if (isRunning) pauseTimer();
       timerMode = mode;
-      ['focus25', 'focus50', 'break'].forEach(m => {
+      ['focus1', 'focus2', 'break'].forEach(m => {
         const btn = document.getElementById(`btn-${m}`);
-        btn.className = m === mode 
-          ? 'py-1.5 text-xs font-semibold rounded-lg secondary-bg text-white transition'
-          : 'py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition';
+        if (btn) {
+          btn.className = m === mode 
+            ? 'py-1.5 text-xs font-mono font-semibold rounded-lg secondary-bg text-white transition'
+            : 'py-1.5 text-xs font-mono font-semibold rounded-lg text-slate-400 hover:text-white transition';
+        }
       });
       const badge = document.getElementById('timerStatusBadge');
-      if (mode === 'focus25') { timeLeft = 25 * 60; badge.textContent = 'Foco 25m'; }
-      else if (mode === 'focus50') { timeLeft = 50 * 60; badge.textContent = 'Foco 50m'; }
-      else { timeLeft = 5 * 60; badge.textContent = 'Pausa 5m'; }
+      if (mode === 'focus1') {
+        timeLeft = pomoConfig.focus1 * 60;
+        if (badge) badge.textContent = `Foco ${pomoConfig.focus1}m`;
+      } else if (mode === 'focus2') {
+        timeLeft = pomoConfig.focus2 * 60;
+        if (badge) badge.textContent = `Foco ${pomoConfig.focus2}m`;
+      } else {
+        timeLeft = pomoConfig.breakMins * 60;
+        if (badge) badge.textContent = `Pausa ${pomoConfig.breakMins}m`;
+      }
       updateTimerDisplay();
     }
 
@@ -2044,7 +2789,7 @@
       const effectiveDelta = Math.min(elapsedSeconds, timeLeft);
       timeLeft -= effectiveDelta;
 
-      if (timerMode === 'focus25' || timerMode === 'focus50') {
+      if (timerMode === 'focus1' || timerMode === 'focus2') {
         studySeconds[selectedDayIndex] = (studySeconds[selectedDayIndex] || 0) + effectiveDelta;
         feedAutoStudyBanks('hours', effectiveDelta / 3600);
         const autoChecked = checkAutoCompleteStudyHabit(selectedDayIndex);
@@ -2063,15 +2808,15 @@
 
       if (timeLeft <= 0) {
         playBeep(880, 0.6);
-        if (timerMode === 'focus25' || timerMode === 'focus50') {
+        if (timerMode === 'focus1' || timerMode === 'focus2') {
           pomodoroCycles[selectedDayIndex] = (pomodoroCycles[selectedDayIndex] || 0) + 1;
           checkAutoCompleteStudyHabit(selectedDayIndex);
           saveState();
-          sendDesktopNotification('Bloco Concluído! ✅', 'Hora de fazer uma pausa.');
+          sendDesktopNotification('Bloco Profundo Concluído! ✅', `Excelente! Aproveite seu descanso de ${pomoConfig.breakMins} minutos.`);
           setTimerMode('break');
         } else {
-          sendDesktopNotification('Fim da Pausa! 🚀', 'Hora de retomar o foco.');
-          setTimerMode('focus25');
+          sendDesktopNotification('Fim do Descanso! 🚀', 'Pronto para o próximo bloco de questões.');
+          setTimerMode('focus1');
         }
       }
     }
@@ -2128,7 +2873,7 @@
       return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
     }
 
-    // ==================== 11. HÁBITOS, ARQUIVAMENTO E BACKUPS ====================
+    // ==================== 12. HÁBITOS, ARQUIVAMENTO E BACKUPS ====================
     function selectDay(index) {
       selectedDayIndex = index;
       renderAll();
@@ -2329,7 +3074,7 @@
 
     function archiveAndResetWeek() {
       const stats = getWeeklyStatsSummary();
-      const defaultLabel = `Semana ${WEEK_DATES[0].shortBr} a ${WEEK_DATES[6].shortBr}`;
+      const defaultLabel = `Semana ${enamedWeek}/42 (${WEEK_DATES[0].shortBr} a ${WEEK_DATES[6].shortBr})`;
       const weekLabel = prompt('Período para arquivar no histórico:', defaultLabel);
       if (weekLabel === null) return;
 
@@ -2353,17 +3098,19 @@
       questionsSolved = [0, 0, 0, 0, 0, 0, 0];
       questionsCorrect = [0, 0, 0, 0, 0, 0, 0];
       questionLogs = [];
+      // Preserva os micro-esquemas ativos no ciclo espaçado de semanas/meses
       errorNotebook = errorNotebook.filter(item => !item.reviewed);
       busyDays = [false, false, false, false, false, false, false];
+      if (enamedWeek < enamedTotalWeeks) enamedWeek++;
       storedWeekStartIso = CURRENT_WEEK_SUNDAY_ISO;
       document.getElementById('newWeekBanner').classList.add('hidden');
 
       saveState();
-      showToast('Semana arquivada! Caixinhas e erros pendentes preservados.', '📦');
+      showToast(`Semana arquivada! Avançado para a Semana ${enamedWeek} da Trilha.`, '📦');
     }
 
     function resetWeekOnly() {
-      if (confirm('Zerar a semana atual sem arquivar? (Suas Caixinhas de Longo Prazo não serão afetadas)')) {
+      if (confirm('Zerar a semana atual sem arquivar? (Suas Caixinhas, Simulados e Micro-Esquemas não serão afetados)')) {
         habits.forEach(h => h.days = [false, false, false, false, false, false, false]);
         studySeconds = [0, 0, 0, 0, 0, 0, 0];
         pomodoroCycles = [0, 0, 0, 0, 0, 0, 0];
@@ -2404,7 +3151,7 @@
       }
     }
 
-    // ==================== 12. EXPORTAÇÃO E IMPORTAÇÃO ====================
+    // ==================== 13. EXPORTAÇÃO E IMPORTAÇÃO ====================
     function triggerDownload(content, filename, mimeType) {
       const blob = new Blob([content], { type: mimeType });
       const url = URL.createObjectURL(blob);
@@ -2467,7 +3214,7 @@
       reader.readAsText(file);
     }
 
-    // ==================== 13. RENDERIZAÇÃO DE COMPONENTES E GRÁFICOS ====================
+    // ==================== 14. RENDERIZAÇÃO DE COMPONENTES E GRÁFICOS ====================
     function renderDaySelector() {
       const container = document.getElementById('daySelector');
       const isBusyToday = busyDays[selectedDayIndex];
@@ -2557,6 +3304,7 @@
       }
 
       renderCustomAreasManager();
+      renderErrorTagsMultiPicker();
       renderQuickQButtons();
 
       const effectiveQGoal = getEffectiveQuestionGoal(selectedDayIndex);
@@ -2590,38 +3338,63 @@
       }
     }
 
-    function renderAreaDoughnutChart() {
+    // Gráfico Direito da Aba de Questões: Alterna entre Autópsia de Erros e Volume por Área
+    function renderRightQuestionChart() {
       const ctx = document.getElementById('areaDoughnutChart');
       if (!ctx) return;
       if (areaDoughnutInstance) areaDoughnutInstance.destroy();
 
+      const mode = document.getElementById('rightChartModeSelect')?.value || 'autopsy';
       const isLight = themeConfig.surface === 'light';
       const legendColor = isLight ? '#334155' : '#94a3b8';
 
-      const areaStats = getAreaStatsForWeek();
-      const activeAreas = Object.keys(areaStats).filter(a => areaStats[a].solved > 0);
-      const totalWeekQ = activeAreas.reduce((acc, a) => acc + areaStats[a].solved, 0);
+      const autopsy = computeAutopsyAndPotentialAccuracy();
+      document.getElementById('boxRealAcc').textContent = `${autopsy.realAcc}%`;
+      document.getElementById('boxPotentialAcc').textContent = `${autopsy.potentialAcc}%`;
 
-      document.getElementById('doughnutFooterText').textContent = `Volume acumulado na semana: ${totalWeekQ} questões`;
+      const gain = Math.max(0, autopsy.potentialAcc - autopsy.realAcc);
+      document.getElementById('autopsyInsightText').innerHTML = gain > 0
+        ? `💡 Eliminando erros operacionais (Desatenção/Pegadinha/Pressa), você recupera <b>+${gain}% na nota geral</b> (${autopsy.recoverableWrongQuestions} questões).`
+        : `Marque as tags ao registrar seus blocos para diagnosticar quantos pontos estão escapando por desatenção.`;
 
-      const labels = activeAreas.length > 0 ? activeAreas : ['Sem registros'];
-      const vals = activeAreas.length > 0 ? activeAreas.map(a => areaStats[a].solved) : [1];
-      const colors = activeAreas.length > 0 ? activeAreas.map((_, i) => CHART_PALETTE[i % CHART_PALETTE.length]) : [isLight ? '#cbd5e1' : '#334155'];
+      if (mode === 'autopsy') {
+        const activeTags = Object.keys(autopsy.tagCounts).filter(t => autopsy.tagCounts[t] > 0);
+        const totalTags = activeTags.reduce((acc, t) => acc + autopsy.tagCounts[t], 0);
+        document.getElementById('doughnutFooterText').textContent = `Ocorrências de tags diagnosticadas na semana: ${totalTags}`;
 
-      areaDoughnutInstance = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels,
-          datasets: [{ data: vals, backgroundColor: colors, borderWidth: 0 }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'right', labels: { color: legendColor, font: { size: 11, family: 'Inter' } } }
+        const labels = activeTags.length > 0 ? activeTags : ['Sem tags marcadas'];
+        const vals = activeTags.length > 0 ? activeTags.map(t => autopsy.tagCounts[t]) : [1];
+        const colors = activeTags.length > 0 ? activeTags.map((_, i) => CHART_PALETTE[i % CHART_PALETTE.length]) : [isLight ? '#cbd5e1' : '#334155'];
+
+        areaDoughnutInstance = new Chart(ctx, {
+          type: 'doughnut',
+          data: { labels, datasets: [{ data: vals, backgroundColor: colors, borderWidth: 0 }] },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'right', labels: { color: legendColor, font: { size: 10, family: 'Inter' } } } }
           }
-        }
-      });
+        });
+      } else {
+        const areaStats = getAreaStatsForWeek();
+        const activeAreas = Object.keys(areaStats).filter(a => areaStats[a].solved > 0);
+        const totalWeekQ = activeAreas.reduce((acc, a) => acc + areaStats[a].solved, 0);
+        document.getElementById('doughnutFooterText').textContent = `Volume acumulado na semana: ${totalWeekQ} questões`;
+
+        const labels = activeAreas.length > 0 ? activeAreas : ['Sem registros'];
+        const vals = activeAreas.length > 0 ? activeAreas.map(a => areaStats[a].solved) : [1];
+        const colors = activeAreas.length > 0 ? activeAreas.map((_, i) => CHART_PALETTE[i % CHART_PALETTE.length]) : [isLight ? '#cbd5e1' : '#334155'];
+
+        areaDoughnutInstance = new Chart(ctx, {
+          type: 'doughnut',
+          data: { labels, datasets: [{ data: vals, backgroundColor: colors, borderWidth: 0 }] },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'right', labels: { color: legendColor, font: { size: 11, family: 'Inter' } } } }
+          }
+        });
+      }
     }
 
     function renderHabitList() {
@@ -2776,11 +3549,20 @@
 
     function renderKPIs() {
       const stats = getWeeklyStatsSummary();
+      const autopsy = computeAutopsyAndPotentialAccuracy();
       const todaySecs = studySeconds[selectedDayIndex] || 0;
       const cyclesToday = pomodoroCycles[selectedDayIndex] || 0;
       const qToday = questionsSolved[selectedDayIndex] || 0;
       const cToday = questionsCorrect[selectedDayIndex] || 0;
       const accToday = qToday > 0 ? Math.round((cToday / qToday) * 100) : 0;
+
+      const enamedPct = Math.round((enamedWeek / enamedTotalWeeks) * 100);
+      document.getElementById('enamedHeaderLabel').textContent = `Semana ${enamedWeek} / ${enamedTotalWeeks} (${enamedPct}%)`;
+
+      const enamedWIn = document.getElementById('cfgEnamedWeek');
+      const enamedTIn = document.getElementById('cfgEnamedTotal');
+      if (enamedWIn && document.activeElement !== enamedWIn) enamedWIn.value = enamedWeek;
+      if (enamedTIn && document.activeElement !== enamedTIn) enamedTIn.value = enamedTotalWeeks;
 
       document.getElementById('streakCount').textContent = `${stats.streak} ${stats.streak === 1 ? 'dia' : 'dias'}`;
       document.getElementById('streakSubtext').textContent = busyDays[selectedDayIndex] ? 'Hoje: Meta 60%' : 'Meta: 80% do dia';
@@ -2788,9 +3570,9 @@
       document.getElementById('weeklyStudyTime').textContent = `Semana: ${formatHoursMinutes(stats.totalSecs)}`;
       document.getElementById('dailyQuestionsKPI').textContent = `${qToday} (${accToday}%)`;
       document.getElementById('weeklyQuestionsKPI').textContent = `Semana: ${stats.totalQ} (${stats.weeklyQAcc}%)`;
+      document.getElementById('potentialAccuracyKPI').textContent = `${autopsy.potentialAcc}%`;
+      document.getElementById('potentialSubtext').textContent = `Real: ${autopsy.realAcc}% (+${Math.max(0, autopsy.potentialAcc - autopsy.realAcc)}% recup.)`;
       document.getElementById('PomodoroCyclesToday').textContent = `${cyclesToday} ${cyclesToday === 1 ? 'bloco' : 'blocos'}`;
-      document.getElementById('weeklyRate').textContent = `${stats.weeklyRate}%`;
-      document.getElementById('totalCompleted').textContent = `${stats.totalDone} / ${stats.totalScheduled}`;
     }
 
     function renderArchives() {
@@ -2920,6 +3702,7 @@
       const gasInput = document.getElementById('gasUrlInput');
       if (gasInput && document.activeElement !== gasInput) gasInput.value = gasWebAppUrl;
 
+      renderPomodoroLabels();
       updateNotificationButtonUI();
       updateCloudStatusUI(gasWebAppUrl ? 'ok' : 'off');
       renderDaySelector();
@@ -2934,10 +3717,12 @@
       renderKPIs();
       renderArchives();
       renderChart();
-      if (activeTab === 'questions') renderAreaDoughnutChart();
+      if (activeTab === 'questions') renderRightQuestionChart();
+      if (activeTab === 'simulados') renderSimuladosChart();
     }
 
     applyThemeVariables();
+    setTimerMode('focus1');
     checkNewWeekRollover();
     renderAll();
     if (gasWebAppUrl) {
