@@ -9,9 +9,9 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#0b0f19" id="metaThemeColor" />
 
-  <title>Performance Studio • Questões, Revisão & Simulados</title>
+  <title>Performance Studio • Questões, Revisão, Simulados & Protocolo 33</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
@@ -206,6 +206,21 @@
     </div>
   </div>
 
+  <!-- MODAL GENÉRICO INTERNO (Substitui prompt/confirm nativos) -->
+  <div id="appModalOverlay" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card max-w-md w-full p-5 space-y-4 border border-slate-700 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 id="appModalTitle" class="text-sm font-bold text-white">Configurar</h3>
+        <button type="button" onclick="closeAppModal()" class="text-xs text-slate-400 hover:text-white">✕</button>
+      </div>
+      <div id="appModalBody" class="space-y-3 text-xs text-slate-300"></div>
+      <div id="appModalFooter" class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+        <button type="button" onclick="closeAppModal()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium">Cancelar</button>
+        <button type="button" id="appModalConfirmBtn" class="px-4 py-1.5 rounded-xl accent-bg text-slate-950 text-xs font-bold">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- TOP STICKY HEADER -->
   <header class="sticky top-0 z-30 backdrop-blur-md bg-slate-900/90 border-b border-slate-800 px-4 py-2.5">
     <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2.5">
@@ -221,18 +236,31 @@
               <span id="cloudStatusText">Local</span>
             </span>
           </div>
-          <!-- Barra Compacta da Trilha ENAMED 42 Semanas -->
-          <div class="flex items-center gap-1.5 mt-0.5 text-[11px] text-slate-400">
-            <span>🧭 Trilha ENAMED:</span>
-            <button onclick="adjustEnamedWeek(-1)" class="px-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-[10px]">-</button>
-            <strong id="enamedHeaderLabel" class="font-mono accent-text">Semana 1 / 42 (2%)</strong>
-            <button onclick="adjustEnamedWeek(1)" class="px-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-[10px]">+</button>
+          <!-- Barra Compacta Dupla: Trilha ENAMED + Protocolo 33 -->
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5 text-[11px] text-slate-400">
+            <div class="flex items-center gap-1">
+              <span>🧭 ENAMED:</span>
+              <button onclick="adjustEnamedWeek(-1)" class="px-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-[10px]">-</button>
+              <strong id="enamedHeaderLabel" class="font-mono accent-text">S1/42 (2%)</strong>
+              <button onclick="adjustEnamedWeek(1)" class="px-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-[10px]">+</button>
+            </div>
+            <span class="text-slate-700 hidden sm:inline">|</span>
+            <div class="flex items-center gap-1">
+              <span>🎖️ Prot. 33:</span>
+              <button onclick="adjustProtocoloWeek(-1)" class="px-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-[10px]">-</button>
+              <strong id="p33HeaderLabel" class="font-mono text-amber-400">S1/33 • Treino A</strong>
+              <button onclick="adjustProtocoloWeek(1)" class="px-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-[10px]">+</button>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Controles Rápidos Globais -->
       <div class="flex items-center gap-1.5 flex-wrap">
+        <button id="shiftCycleBtn" onclick="shiftAllCyclesForPlantao(1)" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition flex items-center gap-1 bg-slate-800/90 text-rose-300 border-slate-700 hover:border-rose-500/50" title="Regra Anti-Plantão: Desloca todos os ciclos ON/OFF em +1 dia sem quebrar sua sequência">
+          <span>🏥</span> <span class="hidden sm:inline">Plantão (+1d Ciclo)</span>
+        </button>
+
         <button id="busyDayBtn" onclick="toggleBusyDay()" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition flex items-center gap-1 bg-slate-800/90 text-slate-300 border-slate-700 hover:border-amber-500/50" title="Reduz metas do dia selecionado pela metade">
           <span>⚡</span> <span id="busyDayBtnText">Dia Corrido: OFF</span>
         </button>
@@ -251,11 +279,12 @@
       </div>
     </div>
 
-    <!-- NAVEGAÇÃO DE ABAS ULTRA-COMPACTAS (6 ABAS CURTAS) -->
+    <!-- NAVEGAÇÃO DE ABAS ULTRA-COMPACTAS -->
     <nav class="max-w-7xl mx-auto mt-2.5 flex gap-1 overflow-x-auto border-b border-slate-800/80 text-xs">
       <button onclick="switchTab('today')" id="tab-today" class="tab-btn active px-3 py-2 whitespace-nowrap">📊 Hoje</button>
       <button onclick="switchTab('questions')" id="tab-questions" class="tab-btn px-3 py-2 whitespace-nowrap">📝 Questões <span id="navDueBadge" class="hidden ml-1 px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-mono text-[10px]">0</span></button>
       <button onclick="switchTab('simulados')" id="tab-simulados" class="tab-btn px-3 py-2 whitespace-nowrap">🏟️ Simulados</button>
+      <button onclick="switchTab('forja')" id="tab-forja" class="tab-btn px-3 py-2 whitespace-nowrap">🎖️ Protocolo 33 (TAF)</button>
       <button onclick="switchTab('goals')" id="tab-goals" class="tab-btn px-3 py-2 whitespace-nowrap">🎯 Metas</button>
       <button onclick="switchTab('week')" id="tab-week" class="tab-btn px-3 py-2 whitespace-nowrap">📅 Semana</button>
       <button onclick="switchTab('studio')" id="tab-studio" class="tab-btn px-3 py-2 whitespace-nowrap">⚙️ Estúdio</button>
@@ -271,7 +300,7 @@
         <span class="text-2xl">📅</span>
         <div>
           <h3 class="text-xs md:text-sm font-bold text-amber-300">Uma nova semana começou (Domingo)!</h3>
-          <p class="text-xs text-slate-300">Deseja arquivar os números da semana anterior no histórico? (Seus Micro-Esquemas de revisão espaçada, Simulados e Caixinhas serão preservados).</p>
+          <p class="text-xs text-slate-300">Deseja arquivar os números da semana anterior no histórico? (Seus Micro-Esquemas de revisão espaçada, Simulados, TAF e Caixinhas serão preservados).</p>
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
@@ -344,7 +373,45 @@
         </div>
       </div>
 
-      <!-- Algoritmo de Prioridade do Dia -->
+      <!-- BARRA COMPACTA DO PROTOCOLO 33 (ACESSO DIRETO AO DOC + CHECK 1-TOQUE) -->
+      <div class="glass-card p-4 border border-amber-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div class="flex items-start sm:items-center gap-3">
+          <div class="text-2xl">🎖️</div>
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-amber-400">Protocolo 33 // Forja Operacional</span>
+              <span id="p33PhaseBadge" class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">🟢 Fase 1 (Sem 1-8)</span>
+              <span id="p33WorkoutCounterBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">0 / 132 treinos</span>
+            </div>
+            <p id="p33TodaySummary" class="text-xs text-slate-300 mt-1">
+              Próxima missão: <b>Semana 1 • Treino A</b> (Cadência 2 ON / 1 OFF). Acesse a ficha completa no documento oficial.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 shrink-0">
+          <select id="p33NextSessionSelect" onchange="setProtocoloNextSession(this.value)" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-xs font-mono font-bold text-amber-300 focus:outline-none cursor-pointer" title="Selecionar sessão atual (A, B, C ou D)">
+            <option value="A">Sessão: Treino A</option>
+            <option value="B">Sessão: Treino B</option>
+            <option value="C">Sessão: Treino C</option>
+            <option value="D">Sessão: Treino D</option>
+          </select>
+
+          <a id="p33DocDirectLink" href="https://docs.google.com/document/d/1gx0xAgff2UCc8jWqXTsRPNnv9H7LpWrAvxI_1q459U8/edit" target="_blank" rel="noopener noreferrer" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 transition flex items-center gap-1.5">
+            📄 Abrir Ficha (Google Doc) ↗
+          </a>
+
+          <a id="p33MobileDirectLink" href="https://drive.google.com/file/d/1V5piwO6-N_tCiAA_zEh62_6bkwilXBkI/view" target="_blank" rel="noopener noreferrer" class="px-2.5 py-2 rounded-xl text-xs font-medium bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center gap-1" title="Versão compacta de bolso para celular">
+            📱 Bolso
+          </a>
+
+          <button onclick="completeProtocoloWorkout()" class="px-3.5 py-2 rounded-xl text-xs font-bold accent-bg text-slate-950 transition shadow-lg">
+            ✅ Concluir <span id="p33CompleteBtnLabel">Treino A</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Algoritmo de Prioridade do Dia (Estudos) -->
       <div class="glass-card p-4 border border-cyan-500/25 flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div class="flex items-start md:items-center gap-3">
           <div class="text-2xl">🧠</div>
@@ -464,12 +531,16 @@
           </div>
         </div>
 
-        <!-- Checklist Diário com Ciclos ON/OFF (4 Colunas) -->
+        <!-- Checklist Diário com Ciclos ON/OFF & Regra Anti-Plantão (4 Colunas) -->
         <div class="lg:col-span-4 glass-card p-6 flex flex-col justify-between space-y-4">
           <div>
             <div class="flex items-center justify-between mb-1">
               <h2 class="text-base font-bold text-white">Hábitos & Rotina do Dia</h2>
-              <span class="text-xs font-mono accent-text font-bold" id="dailyProgressText">0/0 ativos</span>
+              <div class="flex items-center gap-1.5">
+                <button onclick="shiftAllCyclesForPlantao(-1)" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300" title="Recuar ciclo ON/OFF em 1 dia">-1d</button>
+                <button onclick="shiftAllCyclesForPlantao(1)" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30" title="Plantão pesado (<5h sono): adiar ciclo ON/OFF em +1 dia">🏥 +1d</button>
+                <span class="text-xs font-mono accent-text font-bold" id="dailyProgressText">0/0 ativos</span>
+              </div>
             </div>
             <p class="text-[11px] text-slate-400 mb-3">Clique em <b>📅 Dias</b> para alternar entre dias fixos ou ciclo (ex: <b>2 ON / 1 OFF</b>).</p>
 
@@ -574,6 +645,7 @@
               <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2 py-1 rounded-lg">
                 <span class="text-slate-400">Meta:</span>
                 <select id="dailyQGoalSelect" onchange="updateDailyQuestionGoal(this.value)" class="bg-transparent text-cyan-300 font-mono font-bold focus:outline-none cursor-pointer">
+                  <option value="10" class="bg-slate-900">10/d</option>
                   <option value="15" class="bg-slate-900">15/d</option>
                   <option value="20" class="bg-slate-900">20/d</option>
                   <option value="30" class="bg-slate-900">30/d</option>
@@ -601,7 +673,7 @@
             </div>
           </div>
 
-          <!-- Gaveta Gerenciadora de Tags de Erro (Item C - Alterar/Criar Tags) -->
+          <!-- Gaveta Gerenciadora de Tags de Erro -->
           <div id="tagManagerPanel" class="hidden p-3.5 rounded-xl bg-slate-950/90 border border-amber-500/30 space-y-3">
             <div class="flex items-center justify-between">
               <span class="text-xs font-semibold text-amber-300">🏷️ Gerenciar Tags de Causa de Erro (Toque em ✏️ para renomear ou trocar tipo)</span>
@@ -653,7 +725,7 @@
               </div>
             </div>
 
-            <!-- SELETOR MULTI-TAG DE CAUSAS DE ERRO (Toque para marcar 1, 2 ou mais) -->
+            <!-- SELETOR MULTI-TAG DE CAUSAS DE ERRO -->
             <div class="space-y-1.5">
               <div class="flex items-center justify-between text-[11px]">
                 <span class="text-slate-400 font-medium">🏷️ Causas dos Erros neste Bloco (Marque 1, 2 ou mais):</span>
@@ -721,7 +793,7 @@
 
       </div>
 
-      <!-- ITEM B: FLASH-REVIEW ESPAÇADO DE LONGO PRAZO (CICLO 14 DIAS -> 30 DIAS -> 60 DIAS) -->
+      <!-- FLASH-REVIEW ESPAÇADO DE LONGO PRAZO (CICLO 14 DIAS -> 30 DIAS -> 60 DIAS) -->
       <div class="glass-card p-6 space-y-4">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div>
@@ -839,7 +911,126 @@
 
     </section>
 
-    <!-- ==================== ABA 4: 🎯 METAS (CAIXINHAS DE LONGO PRAZO) ==================== -->
+    <!-- ==================== ABA 4: 🎖️ PROTOCOLO 33 (PORTÃO DE FASE & CERTIFICAÇÃO TAF) ==================== -->
+    <section id="view-forja" class="hidden space-y-6">
+
+      <!-- Cabeçalho de Acesso Direto aos Documentos do Protocolo 33 -->
+      <div class="glass-card p-6 border border-amber-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="space-y-1.5">
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 class="text-lg font-bold text-white">🎖️ Protocolo 33 // Forja Operacional (132 Treinos)</h2>
+            <span id="forjaPhasePill" class="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">🟢 Fase 1</span>
+          </div>
+          <p class="text-xs text-slate-300">
+            Cadência <b>2 ON / 1 OFF</b> (A ➔ B ➔ OFF ➔ C ➔ D ➔ OFF) • 70 min/sessão • Do Pace 8:00/km aos <b>2.700m em 12 min (4:26/km)</b>.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+          <a id="forjaMainDocBtn" href="https://docs.google.com/document/d/1gx0xAgff2UCc8jWqXTsRPNnv9H7LpWrAvxI_1q459U8/edit" target="_blank" rel="noopener noreferrer" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition shadow-lg flex items-center gap-1.5">
+            📄 Abrir Documento Oficial (Protocolo 33) ↗
+          </a>
+          <a id="forjaMobileDocBtn" href="https://drive.google.com/file/d/1V5piwO6-N_tCiAA_zEh62_6bkwilXBkI/view" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 font-semibold text-xs transition flex items-center gap-1.5">
+            📱 Versão Celular (.md) ↗
+          </a>
+        </div>
+      </div>
+
+      <!-- Controle de Sessão Atual + Portões de Fase -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Painel Esquerdo: Controle de Semana/Sessão + Registro de Testes TAF (7 Colunas) -->
+        <div class="lg:col-span-7 glass-card p-6 space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-800">
+            <div>
+              <h3 class="text-base font-bold text-white">🏆 Certificação de Fase & Simulados TAF</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Registre seus testes das Semanas 8, 16, 24 e 33 para avaliar a <b>Regra do Portão de Fase (Tolerância de 5%)</b>.</p>
+            </div>
+            <span class="text-xs font-mono px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-amber-300" id="forjaCurrentStatusText">Semana 1/33 • Treino A</span>
+          </div>
+
+          <form onsubmit="saveTafTestRecord(event)" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div>
+                <label class="text-slate-400">Marco / Fase Avaliada</label>
+                <select id="tafPhaseSelect" onchange="updateTafTargetPreview()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-amber-300 font-semibold focus:outline-none">
+                  <option value="1">🟢 Fase 1 (Semana 8)</option>
+                  <option value="2">🔵 Fase 2 (Semana 16)</option>
+                  <option value="3">🟠 Fase 3 (Semana 24)</option>
+                  <option value="4">🔴 Fase 4 Final (Semana 33)</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-slate-400">Barra Fixa Estrita (reps)</label>
+                <input type="number" id="tafPullupsInput" min="0" max="50" required placeholder="Meta F1: 5" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="text-slate-400">Flexões Militares (reps)</label>
+                <input type="number" id="tafPushupsInput" min="0" max="150" required placeholder="Meta F1: 20" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-white focus:outline-none">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div>
+                <label class="text-slate-400">Abdominal Supra (reps)</label>
+                <input type="number" id="tafAbsInput" min="0" max="150" required placeholder="Meta F1: 35" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="text-slate-400">Corrida 12 min (Metros)</label>
+                <input type="number" id="tafRunMetersInput" min="500" max="4500" step="10" required placeholder="Meta F1: 1850" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-cyan-300 focus:outline-none">
+              </div>
+              <div>
+                <label class="text-slate-400">Observação / Prancha / Toalha</label>
+                <input type="text" id="tafNotesInput" placeholder="Ex: Prancha 2:30, Toalha 45s" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none">
+              </div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+              <span id="tafTargetHelperText" class="text-slate-300 font-mono">🎯 Meta Fase 1 (Sem 8): 5 Barras | 20 Flexões | 35 Abs | 1.850m (6:29/km)</span>
+              <button type="submit" class="px-4 py-2 rounded-xl accent-bg text-slate-950 font-bold text-xs transition shrink-0">
+                🏅 Salvar Certificação TAF
+              </button>
+            </div>
+          </form>
+
+          <!-- Guia Rápido das 4 Metas de Fase -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
+            <div class="p-3 rounded-xl bg-slate-900/70 border border-emerald-500/30 text-xs">
+              <div class="font-bold text-emerald-400">🟢 Fase 1 (Sem 8)</div>
+              <div class="font-mono text-[11px] text-slate-300 mt-1">5 Barras • 20 Flex</div>
+              <div class="font-mono text-[11px] text-cyan-300">1.850m (6:29/km)</div>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-900/70 border border-sky-500/30 text-xs">
+              <div class="font-bold text-sky-400">🔵 Fase 2 (Sem 16)</div>
+              <div class="font-mono text-[11px] text-slate-300 mt-1">8 Barras • 28 Flex</div>
+              <div class="font-mono text-[11px] text-cyan-300">2.150m (5:35/km)</div>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-900/70 border border-amber-500/30 text-xs">
+              <div class="font-bold text-amber-400">🟠 Fase 3 (Sem 24)</div>
+              <div class="font-mono text-[11px] text-slate-300 mt-1">10 Barras • 35 Flex</div>
+              <div class="font-mono text-[11px] text-cyan-300">2.450m (4:53/km)</div>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-900/70 border border-rose-500/30 text-xs">
+              <div class="font-bold text-rose-400">🔴 Fase 4 (Sem 33)</div>
+              <div class="font-mono text-[11px] text-slate-300 mt-1">12 Barras • 40+ Flex</div>
+              <div class="font-mono text-[11px] text-cyan-300">2.700m (4:26/km)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Painel Direito: Histórico de Certificações e Status do Portão (5 Colunas) -->
+        <div class="lg:col-span-5 glass-card p-6 flex flex-col justify-between space-y-4">
+          <div>
+            <h3 class="text-base font-bold text-white">🚦 Histórico do Portão de Fase (TAF)</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Avaliação automática: <b>🟢 Sinal Verde</b> (meta ou até -5%) vs. <b>⚠️ Retenção</b> (repetir 2 semanas).</p>
+          </div>
+          <div id="tafHistoryContainer" class="space-y-2.5 max-h-96 overflow-y-auto pr-1"></div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ==================== ABA 5: 🎯 METAS (CAIXINHAS DE LONGO PRAZO) ==================== -->
     <section id="view-goals" class="hidden space-y-6">
       <div class="glass-card p-6 space-y-5">
         <div class="flex flex-wrap justify-between items-center gap-3">
@@ -856,7 +1047,7 @@
       </div>
     </section>
 
-    <!-- ==================== ABA 5: 📅 SEMANA (MATRIZ & HISTÓRICO) ==================== -->
+    <!-- ==================== ABA 6: 📅 SEMANA (MATRIZ & HISTÓRICO) ==================== -->
     <section id="view-week" class="hidden space-y-6">
 
       <div class="glass-card p-6 overflow-x-auto">
@@ -885,23 +1076,23 @@
 
     </section>
 
-    <!-- ==================== ABA 6: ⚙️ ESTÚDIO DE PERSONALIZAÇÃO ==================== -->
+    <!-- ==================== ABA 7: ⚙️ ESTÚDIO DE PERSONALIZAÇÃO ==================== -->
     <section id="view-studio" class="hidden space-y-6">
 
       <div class="flex flex-wrap gap-2 border-b border-slate-800 pb-3 text-xs">
-        <button onclick="switchStudioSubTab('sub-appearance')" id="btn-sub-appearance" class="px-3.5 py-2 rounded-xl accent-bg text-slate-950 font-bold">🎨 1. Pomodoro (60-90m), Trilha & Temas</button>
+        <button onclick="switchStudioSubTab('sub-appearance')" id="btn-sub-appearance" class="px-3.5 py-2 rounded-xl accent-bg text-slate-950 font-bold">🎨 1. Pomodoro, Trilha, Protocolo 33 & Temas</button>
         <button onclick="switchStudioSubTab('sub-shortcuts')" id="btn-sub-shortcuts" class="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300">⚡ 2. Atalhos Rápidos & Tags</button>
         <button onclick="switchStudioSubTab('sub-cloud')" id="btn-sub-cloud" class="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300">☁️ 3. Planilha Google & Backups</button>
       </div>
 
-      <!-- SUB-PAINEL 1: POMODORO CUSTOMIZÁVEL (60-90M), TRILHA 42 SEMANAS & CORES -->
+      <!-- SUB-PAINEL 1: POMODORO CUSTOMIZÁVEL (60-90M), TRILHA 42 SEMANAS, PROTOCOLO 33 & CORES -->
       <div id="sub-appearance" class="glass-card p-6 space-y-6">
         
         <!-- Configuração do Pomodoro 60-90m e Trilha ENAMED -->
         <div>
-          <h3 class="text-base font-bold text-white">⏱️ Configuração do Pomodoro Deep Work & Trilha ENAMED</h3>
-          <p class="text-xs text-slate-400 mt-0.5">Ajuste livremente os minutos dos seus blocos de foco (ex: 60m e 90m), tempo de descanso e a semana atual da Trilha.</p>
-          <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-3 text-xs">
+          <h3 class="text-base font-bold text-white">⏱️ Configuração do Pomodoro Deep Work, Trilha ENAMED & Protocolo 33</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Ajuste livremente os minutos dos seus blocos de foco (ex: 60m e 90m), tempo de descanso, semana atual e links diretos.</p>
+          <div class="grid grid-cols-2 sm:grid-cols-6 gap-3 mt-3 text-xs">
             <div>
               <label class="text-slate-400">Bloco Foco 1 (min)</label>
               <input type="number" min="5" max="240" id="cfgPomoFocus1" onchange="savePomodoroCustomConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-white" />
@@ -915,12 +1106,27 @@
               <input type="number" min="1" max="120" id="cfgPomoBreak" onchange="savePomodoroCustomConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-amber-300" />
             </div>
             <div>
-              <label class="text-slate-400">Semana Atual Trilha</label>
+              <label class="text-slate-400">Semana ENAMED</label>
               <input type="number" min="1" max="60" id="cfgEnamedWeek" onchange="saveEnamedConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold accent-text" />
             </div>
             <div>
-              <label class="text-slate-400">Total Semanas Trilha</label>
+              <label class="text-slate-400">Total Sem. ENAMED</label>
               <input type="number" min="1" max="100" id="cfgEnamedTotal" onchange="saveEnamedConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-slate-300" />
+            </div>
+            <div>
+              <label class="text-slate-400">Semana Prot. 33</label>
+              <input type="number" min="1" max="33" id="cfgProtocoloWeek" onchange="saveProtocoloConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-amber-400" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 text-xs">
+            <div>
+              <label class="text-slate-400">Link Direto do Documento Oficial (Protocolo 33 Google Doc)</label>
+              <input type="url" id="cfgProtocoloDocUrl" onchange="saveProtocoloConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-cyan-300" />
+            </div>
+            <div>
+              <label class="text-slate-400">Hábito Auto-Marcado ao Concluir Treino do Protocolo 33</label>
+              <select id="cfgLinkedWorkoutHabitSelect" onchange="saveProtocoloConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-amber-300 font-semibold"></select>
             </div>
           </div>
         </div>
@@ -1057,11 +1263,19 @@
   <script>
     // ==================== 1. CONFIGURAÇÃO BASE & DATAS ====================
     const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-    const DEFAULT_AREAS = ['Clínica', 'Cirurgia', 'GO', 'Pediatria', 'Preventiva', 'Português (Concurso)', 'SUS / Legislação', 'Geral'];
-    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbz9fYDyV8f4LH31YsaXV5Y31uaCPuCY-OIE3dBt13a6DNVRGq7s040TCn2yGlprak73oQ/exec';
+    const DEFAULT_AREAS = ['Clínica🩺', 'Cirurgia 🔪', 'GO 🤰', 'Pediatria 🧸', 'Preventiva 🦎', 'Português 📓', 'Prova antiga', 'Geral'];
+    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbyp8TM__GQLo0cz9jkf5ACHU6MZhRUfI8JkFOtSSY4_H7RFz4uUAL0-8ZroFyzn6pTJYA/exec';
+    const DEFAULT_PROTOCOLO_DOC_URL = 'https://docs.google.com/document/d/1gx0xAgff2UCc8jWqXTsRPNnv9H7LpWrAvxI_1q459U8/edit';
+    const DEFAULT_PROTOCOLO_MOBILE_URL = 'https://drive.google.com/file/d/1V5piwO6-N_tCiAA_zEh62_6bkwilXBkI/view';
     const CHART_PALETTE = ['#10b981', '#6366f1', '#06b6d4', '#f59e0b', '#ec4899', '#3b82f6', '#a855f7', '#14b8a6', '#f43f5e'];
 
-    // Tags de Causa de Erro (Item C - Editáveis e Multi-selecionáveis)
+    const TAF_PHASE_TARGETS = {
+      1: { label: '🟢 Fase 1 (Sem 8)', week: 8, pullups: 5, pushups: 20, abs: 35, runMeters: 1850, pace: '6:29/km' },
+      2: { label: '🔵 Fase 2 (Sem 16)', week: 16, pullups: 8, pushups: 28, abs: 50, runMeters: 2150, pace: '5:35/km' },
+      3: { label: '🟠 Fase 3 (Sem 24)', week: 24, pullups: 10, pushups: 35, abs: 60, runMeters: 2450, pace: '4:53/km' },
+      4: { label: '🔴 Fase 4 Final (Sem 33)', week: 33, pullups: 11, pushups: 40, abs: 70, runMeters: 2700, pace: '4:26/km' }
+    };
+
     const DEFAULT_ERROR_TAGS = [
       { id: 't_lacuna', name: '🎯 Lacuna Teórica', category: 'knowledge' },
       { id: 't_branco', name: '🧠 Branco / Decoreba', category: 'knowledge' },
@@ -1073,11 +1287,52 @@
       { id: 't_pressa', name: '⏳ Pressa / Cansaço', category: 'operational' }
     ];
 
-    // Intervalos longos do Flash-Review (Semanas a Meses: 14 dias -> 30 dias -> 60 dias)
     const SRS_INTERVAL_DAYS = [14, 30, 60];
 
     let selectedDayIndex = new Date().getDay();
     let activeTab = 'today';
+
+    function safeGetStorage(key, fallback = '') {
+      try {
+        const val = localStorage.getItem(key);
+        return val !== null ? val : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function safeSetStorage(key, val) {
+      try {
+        localStorage.setItem(key, val);
+      } catch (e) {}
+    }
+
+    function safeParseJSON(key, fallback) {
+      try {
+        const raw = safeGetStorage(key, '');
+        return raw ? JSON.parse(raw) : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function openAppModal({ title, bodyHtml, confirmText = 'Confirmar', onConfirm }) {
+      const overlay = document.getElementById('appModalOverlay');
+      document.getElementById('appModalTitle').textContent = title || 'Configurar';
+      document.getElementById('appModalBody').innerHTML = bodyHtml || '';
+      const confirmBtn = document.getElementById('appModalConfirmBtn');
+      confirmBtn.textContent = confirmText;
+      confirmBtn.onclick = () => {
+        if (onConfirm) onConfirm();
+      };
+      overlay.classList.remove('hidden');
+      const firstInput = overlay.querySelector('input, select');
+      if (firstInput) setTimeout(() => firstInput.focus(), 50);
+    }
+
+    function closeAppModal() {
+      document.getElementById('appModalOverlay').classList.add('hidden');
+    }
 
     function getWeekDatesSundayToSaturday() {
       const now = new Date();
@@ -1121,83 +1376,65 @@
     };
 
     const DEFAULT_QUICK_Q_BUTTONS = [
-      { id: 'qq1', label: '🩺 Clínica 20q', area: 'Clínica', solved: 20 },
-      { id: 'qq2', label: '🔪 Cirurgia 20q', area: 'Cirurgia', solved: 20 },
-      { id: 'qq3', label: '🤰 GO 20q', area: 'GO', solved: 20 },
-      { id: 'qq4', label: '👶 Pediatria 20q', area: 'Pediatria', solved: 20 },
-      { id: 'qq5', label: '🏥 Preventiva / SUS 20q', area: 'Preventiva', solved: 20 },
-      { id: 'qq6', label: '📝 Bloco Concurso 15q', area: 'Português (Concurso)', solved: 15 },
-      { id: 'qq7', label: '🔥 Bloco Trilha 30q', area: 'Geral', solved: 30 }
+      { id: 'qq1', label: '🩺 Clínica 20q', area: 'Clínica🩺', solved: 20 },
+      { id: 'qq2', label: '🔪 Cirurgia 20q', area: 'Cirurgia 🔪', solved: 20 },
+      { id: 'qq3', label: '🤰 GO 20q', area: 'GO 🤰', solved: 20 },
+      { id: 'qq4', label: '🧸 Pediatria 20q', area: 'Pediatria 🧸', solved: 20 },
+      { id: 'qq5', label: '🦎 Preventiva / SUS 20q', area: 'Preventiva 🦎', solved: 20 },
+      { id: 'qq6', label: '📓 Bloco Concurso 15q', area: 'Português 📓', solved: 15 },
+      { id: 'qq7', label: '🔥 Simulado 50q', area: 'Geral', solved: 50 },
+      { id: 'qq8', label: '⚡ Prova antiga 100q', area: 'Prova antiga', solved: 100 }
     ];
 
     const DEFAULT_STUDY_BANKS = [
-      { id: 'sb1', name: '🎯 Rumo às 5.000 Questões (Trilha ENAMED & Concursos)', current: 0, target: 5000, unit: 'questões', autoType: 'questions', note: 'Soma automaticamente a cada bloco ou simulado resolvido' },
-      { id: 'sb2', name: '⏱️ Maratona 300 Horas Líquidas (Blocos 60-90m)', current: 0, target: 300, unit: 'horas', autoType: 'hours', note: 'Alimentado pelas suas horas líquidas de foco' },
-      { id: 'sb3', name: '🏟️ Simulados & Provas na Íntegra Resolvidas', current: 0, target: 42, unit: 'simulados', autoType: 'simulados', note: 'Meta de 1 simulado por semana da Trilha ENAMED' },
-      { id: 'sb4', name: '🏋️ Consistência Física (150 Treinos no Ano)', current: 0, target: 150, unit: 'treinos', autoType: 'manual', note: 'Esquema 2 dias ON / 1 dia OFF' }
+      { id: 'sb1', name: '🎯 Rumo às 5.000 Questões (Residência & Concursos)', current: 158, target: 5000, unit: 'questões', autoType: 'questions', note: 'Soma automaticamente a cada bloco ou simulado resolvido' },
+      { id: 'sb2', name: '⏱️ Maratona 300 Horas Líquidas de Foco', current: 1.87, target: 300, unit: 'horas', autoType: 'hours', note: 'Alimentado pelas suas horas líquidas de estudo' },
+      { id: 'sb3', name: '📄 Provas Antigas / Simulados na Íntegra', current: 0, target: 40, unit: 'provas', autoType: 'simulados', note: 'Meta de provas completas resolvidas até os exames' },
+      { id: 'sb4', name: '🏋️ Protocolo 33 // Forja Operacional (132 Treinos)', current: 0, target: 132, unit: 'treinos', autoType: 'workouts', note: 'Soma automaticamente ao concluir cada sessão A, B, C ou D' }
     ];
 
     const defaultHabits = [
       {
-        id: 1,
-        name: 'Treino Funcional / Força',
+        id: 1792680210824,
+        name: 'Estudo',
+        days: [false, false, false, false, false, false, false],
+        scheduleMode: 'cycle',
+        cycleOn: 3,
+        cycleOff: 1,
+        cycleAnchor: '2026-10-26',
+        scheduledDays: [false, true, true, true, true, true, true]
+      },
+      {
+        id: 1792689976919,
+        name: 'Treino',
         days: [false, false, false, false, false, false, false],
         scheduleMode: 'cycle',
         cycleOn: 2,
         cycleOff: 1,
-        cycleAnchor: TODAY_ISO,
-        scheduledDays: [true, true, false, true, true, false, true]
+        cycleAnchor: '2026-10-26',
+        scheduledDays: [true, false, true, false, true, true, false]
       },
       {
-        id: 2,
-        name: 'Bateria de Questões Trilha ENAMED',
+        id: 1792692829100,
+        name: 'Questões',
         days: [false, false, false, false, false, false, false],
         scheduleMode: 'fixed',
-        cycleOn: 5,
+        cycleOn: 2,
         cycleOff: 1,
-        cycleAnchor: TODAY_ISO,
-        scheduledDays: [false, true, true, true, true, true, true]
+        cycleAnchor: '2026-10-26',
+        scheduledDays: [false, true, true, true, true, true, false]
       },
       {
-        id: 3,
-        name: 'Hidratação (3L) + Creatina',
+        id: 1792720966835,
+        name: 'Corrida',
         days: [false, false, false, false, false, false, false],
-        scheduleMode: 'fixed',
+        scheduleMode: 'cycle',
         cycleOn: 1,
-        cycleOff: 0,
-        cycleAnchor: TODAY_ISO,
-        scheduledDays: [true, true, true, true, true, true, true]
-      },
-      {
-        id: 4,
-        name: 'Bloco Profundo (60-90m) + Revisão de Erros',
-        days: [false, false, false, false, false, false, false],
-        scheduleMode: 'fixed',
-        cycleOn: 5,
-        cycleOff: 1,
-        cycleAnchor: TODAY_ISO,
-        scheduledDays: [false, true, true, true, true, true, true]
-      },
-      {
-        id: 5,
-        name: 'Rotina de Autocuidado & Sono (7h+)',
-        days: [false, false, false, false, false, false, false],
-        scheduleMode: 'fixed',
-        cycleOn: 1,
-        cycleOff: 0,
-        cycleAnchor: TODAY_ISO,
-        scheduledDays: [true, true, true, true, true, true, true]
+        cycleOff: 3,
+        cycleAnchor: '2026-10-28',
+        scheduledDays: [true, false, false, false, true, false, false]
       }
     ];
-
-    function safeParseJSON(key, fallback) {
-      try {
-        const raw = localStorage.getItem(key);
-        return raw ? JSON.parse(raw) : fallback;
-      } catch (e) {
-        return fallback;
-      }
-    }
 
     function escapeHtml(str) {
       return String(str || '')
@@ -1216,16 +1453,48 @@
       return `rgba(${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}, ${alpha})`;
     }
 
-    // ==================== 2. CARREGAMENTO DO ESTADO E RETROCOMPATIBILIDADE ====================
-    let brandTitle = localStorage.getItem('habitBrandTitle') || 'Performance Studio';
-    let enamedWeek = Number(localStorage.getItem('habitEnamedWeek')) || 1;
-    let enamedTotalWeeks = Number(localStorage.getItem('habitEnamedTotalWeeks')) || 42;
+    function resolveMatchingAreaName(rawName) {
+      const clean = (rawName || '').trim();
+      if (!clean) return customAreas[0] || 'Geral';
+      if (customAreas.includes(clean)) return clean;
+      const base = clean.replace(/[^\p{L}\p{N}\s/()-]/gu, '').trim().toLowerCase();
+      if (base) {
+        const match = customAreas.find(a => {
+          const aBase = a.replace(/[^\p{L}\p{N}\s/()-]/gu, '').trim().toLowerCase();
+          return aBase === base || aBase.startsWith(base) || base.startsWith(aBase);
+        });
+        if (match) return match;
+      }
+      return clean;
+    }
 
-    // Configuração customizável do Pomodoro 60-90 min (Item 1)
-    let pomoConfig = safeParseJSON('habitPomoConfig', { focus1: 60, focus2: 90, breakMins: 15 });
-    pomoConfig.focus1 = Math.max(5, Number(pomoConfig.focus1) || 60);
-    pomoConfig.focus2 = Math.max(5, Number(pomoConfig.focus2) || 90);
-    pomoConfig.breakMins = Math.max(1, Number(pomoConfig.breakMins) || 15);
+    // ==================== 2. CARREGAMENTO DO ESTADO E RETROCOMPATIBILIDADE ====================
+    let brandTitle = safeGetStorage('habitBrandTitle', 'Performance Studio');
+    let enamedWeek = Number(safeGetStorage('habitEnamedWeek', '2')) || 2;
+    let enamedTotalWeeks = Number(safeGetStorage('habitEnamedTotalWeeks', '42')) || 42;
+
+    let protocoloConfig = safeParseJSON('habitProtocoloConfig', {
+      week: 1,
+      totalWeeks: 33,
+      nextSession: 'A',
+      completedWorkouts: 0,
+      docUrl: DEFAULT_PROTOCOLO_DOC_URL,
+      mobileDocUrl: DEFAULT_PROTOCOLO_MOBILE_URL,
+      linkedWorkoutHabitId: 1792689976919
+    });
+    protocoloConfig.week = Math.max(1, Math.min(33, Number(protocoloConfig.week) || 1));
+    protocoloConfig.totalWeeks = 33;
+    if (!['A', 'B', 'C', 'D'].includes(protocoloConfig.nextSession)) protocoloConfig.nextSession = 'A';
+    if (!protocoloConfig.docUrl) protocoloConfig.docUrl = DEFAULT_PROTOCOLO_DOC_URL;
+    if (!protocoloConfig.mobileDocUrl) protocoloConfig.mobileDocUrl = DEFAULT_PROTOCOLO_MOBILE_URL;
+
+    let tafHistory = safeParseJSON('habitTafHistory', []);
+    if (!Array.isArray(tafHistory)) tafHistory = [];
+
+    let pomoConfig = safeParseJSON('habitPomoConfig', { focus1: 90, focus2: 60, breakMins: 20 });
+    pomoConfig.focus1 = Math.max(5, Number(pomoConfig.focus1) || 90);
+    pomoConfig.focus2 = Math.max(5, Number(pomoConfig.focus2) || 60);
+    pomoConfig.breakMins = Math.max(1, Number(pomoConfig.breakMins) || 20);
 
     let customAreas = safeParseJSON('habitCustomAreas', DEFAULT_AREAS);
     if (!Array.isArray(customAreas) || customAreas.length === 0) customAreas = [...DEFAULT_AREAS];
@@ -1238,6 +1507,15 @@
 
     let quickQButtons = safeParseJSON('habitQuickQButtons', DEFAULT_QUICK_Q_BUTTONS);
     let studyBanks = safeParseJSON('habitStudyBanks', DEFAULT_STUDY_BANKS);
+    studyBanks.forEach(b => {
+      if (b.id === 'sb4' || (b.unit === 'treinos' && b.autoType === 'manual')) {
+        b.autoType = 'workouts';
+      }
+      if (b.id === 'sb3' && b.autoType === 'manual') {
+        b.autoType = 'simulados';
+      }
+    });
+
     let simuladosHistory = safeParseJSON('habitSimuladosHistory', []);
 
     let habits = safeParseJSON('habitDashboardData', defaultHabits);
@@ -1250,17 +1528,21 @@
       if (!h.cycleAnchor) h.cycleAnchor = TODAY_ISO;
     });
 
+    if (!protocoloConfig.linkedWorkoutHabitId) {
+      const foundTreino = habits.find(h => h.name.toLowerCase().includes('treino'));
+      protocoloConfig.linkedWorkoutHabitId = foundTreino ? foundTreino.id : (habits[0] ? habits[0].id : 0);
+    }
+
     let studySeconds = safeParseJSON('habitStudySeconds', [0, 0, 0, 0, 0, 0, 0]);
     let pomodoroCycles = safeParseJSON('habitPomodoroCycles', [0, 0, 0, 0, 0, 0, 0]);
-    let dailyGoalHours = Number(localStorage.getItem('habitDailyGoalHours')) || 3;
-    let linkedHabitId = Number(localStorage.getItem('habitLinkedId')) || (habits[3] ? habits[3].id : (habits[0] ? habits[0].id : 0));
+    let dailyGoalHours = Number(safeGetStorage('habitDailyGoalHours', '1.5')) || 1.5;
+    let linkedHabitId = Number(safeGetStorage('habitLinkedId', '')) || (habits[0] ? habits[0].id : 0);
 
     let questionsSolved = safeParseJSON('habitQuestionsSolved', [0, 0, 0, 0, 0, 0, 0]);
     let questionsCorrect = safeParseJSON('habitQuestionsCorrect', [0, 0, 0, 0, 0, 0, 0]);
     let questionLogs = safeParseJSON('habitQuestionLogs', []);
     let errorNotebook = safeParseJSON('habitErrorNotebook', []);
 
-    // Normaliza esquemas antigos para suportar multi-tags e revisão espaçada de semanas/meses
     errorNotebook.forEach(item => {
       if (!Array.isArray(item.tags)) item.tags = [];
       if (typeof item.srsStage !== 'number') item.srsStage = 0;
@@ -1268,17 +1550,23 @@
       if (!item.trilhaWeek) item.trilhaWeek = enamedWeek;
     });
 
-    let dailyQuestionsGoal = Number(localStorage.getItem('habitDailyQuestionsGoal')) || 30;
-    let linkedQuestionHabitId = Number(localStorage.getItem('habitLinkedQuestionId')) || (habits[1] ? habits[1].id : 0);
+    let dailyQuestionsGoal = Number(safeGetStorage('habitDailyQuestionsGoal', '10')) || 10;
+    let linkedQuestionHabitId = Number(safeGetStorage('habitLinkedQuestionId', '')) || (habits[2] ? habits[2].id : 0);
     let busyDays = safeParseJSON('habitBusyDays', [false, false, false, false, false, false, false]);
     let archivedWeeks = safeParseJSON('habitArchivedWeeks', []);
-    let storedWeekStartIso = localStorage.getItem('habitWeekStartIso') || CURRENT_WEEK_SUNDAY_ISO;
+    let storedWeekStartIso = safeGetStorage('habitWeekStartIso', CURRENT_WEEK_SUNDAY_ISO);
+    let localUpdatedAt = safeGetStorage('habitUpdatedAt', '');
 
     let themeConfig = safeParseJSON('habitThemeConfig', THEME_PRESETS.ocean);
     if (!themeConfig.surface) themeConfig.surface = 'dark';
 
-    let gasWebAppUrl = localStorage.getItem('habitGasWebAppUrl') || DEFAULT_GAS_URL;
-    let lastCloudSync = localStorage.getItem('habitLastCloudSync') || '';
+    let storedGasUrl = safeGetStorage('habitGasWebAppUrl', '');
+    if (!storedGasUrl || storedGasUrl.includes('AKfycbz9fYDyV8f4LH31YsaXV5Y31uaCPuCY-OIE3dBt13a6DNVRGq7s040TCn2yGlprak73oQ')) {
+      storedGasUrl = DEFAULT_GAS_URL;
+      safeSetStorage('habitGasWebAppUrl', DEFAULT_GAS_URL);
+    }
+    let gasWebAppUrl = storedGasUrl;
+    let lastCloudSync = safeGetStorage('habitLastCloudSync', '');
     let cloudSyncTimeout = null;
     let isPullingFromCloud = false;
     let hasCompletedInitialPull = false;
@@ -1291,7 +1579,6 @@
     let areaDoughnutInstance = null;
     let simuladosChartInstance = null;
 
-    // Estado Pomodoro (Inicializa com focus1 = 60m)
     let timerMode = 'focus1';
     let timeLeft = pomoConfig.focus1 * 60;
     let timerInterval = null;
@@ -1299,18 +1586,19 @@
     let lastTickTimestamp = null;
     let toastTimeout = null;
 
-    // Estado Cronômetro de Simulado
     let simElapsedSeconds = 0;
     let simTimerRunning = false;
     let simTimerInterval = null;
     let simLastTick = null;
 
-    // ==================== 3. NAVEGAÇÃO POR ABAS & TRILHA ENAMED ====================
+    // ==================== 3. NAVEGAÇÃO POR ABAS, TRILHA ENAMED & PROTOCOLO 33 ====================
     function switchTab(tabId) {
       activeTab = tabId;
-      ['today', 'questions', 'simulados', 'goals', 'week', 'studio'].forEach(id => {
-        document.getElementById(`view-${id}`).classList.add('hidden');
-        document.getElementById(`tab-${id}`).classList.remove('active');
+      ['today', 'questions', 'simulados', 'forja', 'goals', 'week', 'studio'].forEach(id => {
+        const v = document.getElementById(`view-${id}`);
+        const t = document.getElementById(`tab-${id}`);
+        if (v) v.classList.add('hidden');
+        if (t) t.classList.remove('active');
       });
       document.getElementById(`view-${tabId}`).classList.remove('hidden');
       document.getElementById(`tab-${tabId}`).classList.add('active');
@@ -1321,6 +1609,9 @@
         if (tabId === 'simulados') {
           renderSimuladosInputs();
           renderSimuladosChart();
+        }
+        if (tabId === 'forja') {
+          renderProtocoloSection();
         }
       }, 30);
     }
@@ -1349,6 +1640,242 @@
       showToast('Progresso da Trilha ENAMED atualizado!', '🧭');
     }
 
+    function getProtocoloPhaseInfo(w) {
+      if (w <= 8) return { phase: 1, name: '🟢 Fase 1: Calibração Tendínea', short: '🟢 Fase 1 (Sem 1-8)', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' };
+      if (w <= 16) return { phase: 2, name: '🔵 Fase 2: Força Estrutural & Pegada', short: '🔵 Fase 2 (Sem 9-16)', color: 'bg-sky-500/20 text-sky-300 border-sky-500/30' };
+      if (w <= 24) return { phase: 3, name: '🟠 Fase 3: Densidade & Escadas', short: '🟠 Fase 3 (Sem 17-24)', color: 'bg-amber-500/20 text-amber-300 border-amber-500/30' };
+      return { phase: 4, name: '🔴 Fase 4: Conversão Tática 2.700m', short: '🔴 Fase 4 (Sem 25-33)', color: 'bg-rose-500/20 text-rose-300 border-rose-500/30' };
+    }
+
+    function adjustProtocoloWeek(delta) {
+      protocoloConfig.week = Math.max(1, Math.min(33, (Number(protocoloConfig.week) || 1) + delta));
+      saveState();
+      showToast(`Protocolo 33: Semana ${protocoloConfig.week} / 33`, '🎖️');
+    }
+
+    function setProtocoloNextSession(sess) {
+      if (!['A', 'B', 'C', 'D'].includes(sess)) return;
+      protocoloConfig.nextSession = sess;
+      saveState();
+      showToast(`Próxima sessão definida: Treino ${sess}`, '🏋️');
+    }
+
+    function saveProtocoloConfig() {
+      const wIn = document.getElementById('cfgProtocoloWeek');
+      const docIn = document.getElementById('cfgProtocoloDocUrl');
+      const habIn = document.getElementById('cfgLinkedWorkoutHabitSelect');
+      if (wIn) protocoloConfig.week = Math.max(1, Math.min(33, Number(wIn.value) || 1));
+      if (docIn && docIn.value.trim()) protocoloConfig.docUrl = docIn.value.trim();
+      if (habIn) protocoloConfig.linkedWorkoutHabitId = Number(habIn.value) || 0;
+      saveState();
+      showToast('Configurações do Protocolo 33 salvas!', '🎖️');
+    }
+
+    function completeProtocoloWorkout() {
+      const curSess = protocoloConfig.nextSession || 'A';
+      const curWeek = Number(protocoloConfig.week) || 1;
+      const order = ['A', 'B', 'C', 'D'];
+      const nextIdx = (order.indexOf(curSess) + 1) % 4;
+      const nextSess = order[nextIdx];
+
+      protocoloConfig.completedWorkouts = Math.max(0, (Number(protocoloConfig.completedWorkouts) || 0) + 1);
+      protocoloConfig.nextSession = nextSess;
+      if (nextSess === 'A' && curWeek < 33) {
+        protocoloConfig.week = curWeek + 1;
+      }
+
+      feedAutoStudyBanks('workouts', 1);
+
+      const targetHabit = habits.find(h => h.id === Number(protocoloConfig.linkedWorkoutHabitId)) || habits.find(h => h.name.toLowerCase().includes('treino'));
+      if (targetHabit && !targetHabit.days[selectedDayIndex]) {
+        targetHabit.days[selectedDayIndex] = true;
+      }
+
+      if (curSess === 'B' || curSess === 'D') {
+        const runHabit = habits.find(h => h.name.toLowerCase().includes('corrida'));
+        if (runHabit && !runHabit.days[selectedDayIndex]) {
+          runHabit.days[selectedDayIndex] = true;
+        }
+      }
+
+      playBeep(987.77, 0.45);
+      saveState();
+      showToast(`Treino ${curSess} (Semana ${curWeek}) concluído! Próximo: Treino ${protocoloConfig.nextSession} (S${protocoloConfig.week}).`, '🎖️');
+    }
+
+    function shiftAllCyclesForPlantao(deltaDays) {
+      let count = 0;
+      habits.forEach(h => {
+        if (h.scheduleMode === 'cycle') {
+          h.cycleAnchor = addDaysToIso(h.cycleAnchor || TODAY_ISO, deltaDays);
+          count++;
+        }
+      });
+      if (count === 0) {
+        return showToast('Nenhum hábito está em modo Ciclo ON/OFF no momento.', '⚠️');
+      }
+      saveState();
+      const label = deltaDays > 0 ? `+${deltaDays} dia (Dia Flutuante Pós-Plantão aplicado)` : `${deltaDays} dia`;
+      showToast(`Ciclos ON/OFF deslocados em ${label}!`, '🏥');
+    }
+
+    function updateTafTargetPreview() {
+      const phase = Number(document.getElementById('tafPhaseSelect')?.value) || 1;
+      const t = TAF_PHASE_TARGETS[phase] || TAF_PHASE_TARGETS[1];
+      const helper = document.getElementById('tafTargetHelperText');
+      if (helper) {
+        helper.textContent = `🎯 Meta ${t.label}: ${t.pullups} Barras | ${t.pushups} Flexões | ${t.abs} Abs | ${t.runMeters}m (${t.pace})`;
+      }
+    }
+
+    function saveTafTestRecord(event) {
+      event.preventDefault();
+      const phase = Number(document.getElementById('tafPhaseSelect').value) || 1;
+      const pullups = Math.max(0, Number(document.getElementById('tafPullupsInput').value) || 0);
+      const pushups = Math.max(0, Number(document.getElementById('tafPushupsInput').value) || 0);
+      const abs = Math.max(0, Number(document.getElementById('tafAbsInput').value) || 0);
+      const runMeters = Math.max(0, Number(document.getElementById('tafRunMetersInput').value) || 0);
+      const notes = (document.getElementById('tafNotesInput').value || '').trim();
+
+      const target = TAF_PHASE_TARGETS[phase] || TAF_PHASE_TARGETS[1];
+      const minPullups = Math.floor(target.pullups * 0.95);
+      const minRun = Math.round(target.runMeters * 0.95);
+      const passedGate = pullups >= minPullups && runMeters >= minRun;
+
+      const paceTotalSecs = runMeters > 0 ? Math.round((12 * 60) / (runMeters / 1000)) : 0;
+      const paceMins = Math.floor(paceTotalSecs / 60);
+      const paceSecs = String(paceTotalSecs % 60).padStart(2, '0');
+      const paceStr = runMeters > 0 ? `${paceMins}:${paceSecs}/km` : '—';
+
+      tafHistory.unshift({
+        id: Date.now(),
+        dateStr: WEEK_DATES[selectedDayIndex].shortBr,
+        protocoloWeek: protocoloConfig.week,
+        phase,
+        phaseLabel: target.label,
+        pullups,
+        pushups,
+        abs,
+        runMeters,
+        paceStr,
+        notes,
+        passedGate
+      });
+
+      document.getElementById('tafPullupsInput').value = '';
+      document.getElementById('tafPushupsInput').value = '';
+      document.getElementById('tafAbsInput').value = '';
+      document.getElementById('tafRunMetersInput').value = '';
+      document.getElementById('tafNotesInput').value = '';
+
+      saveState();
+      showToast(passedGate ? '🟢 Sinal Verde no Portão de Fase! Apto a avançar.' : '⚠️ Retenção de 5% acionada: repita as 2 últimas semanas da fase.', passedGate ? '🏆' : '⚠️');
+    }
+
+    function deleteTafRecord(id) {
+      tafHistory = tafHistory.filter(r => r.id !== id);
+      saveState();
+    }
+
+    function renderProtocoloSection() {
+      const w = Number(protocoloConfig.week) || 1;
+      const sess = protocoloConfig.nextSession || 'A';
+      const pInfo = getProtocoloPhaseInfo(w);
+
+      const workoutBank = studyBanks.find(b => b.autoType === 'workouts' || b.id === 'sb4');
+      const totalDoneWorkouts = workoutBank ? Math.round(Number(workoutBank.current) || 0) : (protocoloConfig.completedWorkouts || 0);
+
+      const headerLbl = document.getElementById('p33HeaderLabel');
+      if (headerLbl) headerLbl.textContent = `S${w}/33 • Treino ${sess}`;
+
+      const phaseBadge = document.getElementById('p33PhaseBadge');
+      if (phaseBadge) {
+        phaseBadge.textContent = pInfo.short;
+        phaseBadge.className = `text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border ${pInfo.color}`;
+      }
+
+      const counterBadge = document.getElementById('p33WorkoutCounterBadge');
+      if (counterBadge) counterBadge.textContent = `${totalDoneWorkouts} / 132 treinos`;
+
+      const isDeload = [4, 12, 20, 28].includes(w);
+      const isTestWeek = [8, 16, 24, 33].includes(w);
+      const weekTag = isDeload ? '🛡️ Semana de Deload Tênsil' : (isTestWeek ? '🏆 Semana de Certificação TAF' : '🔥 Semana de Construção');
+
+      const summaryEl = document.getElementById('p33TodaySummary');
+      if (summaryEl) {
+        summaryEl.innerHTML = `Próxima sessão: <b>Semana ${w} • Treino ${sess}</b> (${weekTag}). Abra o documento para ver sua ficha completa.`;
+      }
+
+      const selEl = document.getElementById('p33NextSessionSelect');
+      if (selEl) selEl.value = sess;
+
+      const btnLbl = document.getElementById('p33CompleteBtnLabel');
+      if (btnLbl) btnLbl.textContent = `Treino ${sess}`;
+
+      const docLinks = ['p33DocDirectLink', 'forjaMainDocBtn'];
+      docLinks.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.href = protocoloConfig.docUrl || DEFAULT_PROTOCOLO_DOC_URL;
+      });
+
+      const mobLinks = ['p33MobileDirectLink', 'forjaMobileDocBtn'];
+      mobLinks.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.href = protocoloConfig.mobileDocUrl || DEFAULT_PROTOCOLO_MOBILE_URL;
+      });
+
+      const forjaPill = document.getElementById('forjaPhasePill');
+      if (forjaPill) {
+        forjaPill.textContent = pInfo.name;
+        forjaPill.className = `text-xs font-mono font-bold px-2.5 py-0.5 rounded-full border ${pInfo.color}`;
+      }
+
+      const statusTxt = document.getElementById('forjaCurrentStatusText');
+      if (statusTxt) statusTxt.textContent = `Semana ${w}/33 • Próximo: Treino ${sess}`;
+
+      const cfgW = document.getElementById('cfgProtocoloWeek');
+      if (cfgW && document.activeElement !== cfgW) cfgW.value = w;
+      const cfgDoc = document.getElementById('cfgProtocoloDocUrl');
+      if (cfgDoc && document.activeElement !== cfgDoc) cfgDoc.value = protocoloConfig.docUrl || DEFAULT_PROTOCOLO_DOC_URL;
+
+      const cfgHab = document.getElementById('cfgLinkedWorkoutHabitSelect');
+      if (cfgHab) {
+        cfgHab.innerHTML = habits.length === 0
+          ? '<option value="0">Nenhum</option>'
+          : habits.map(h => `<option value="${h.id}" ${h.id === Number(protocoloConfig.linkedWorkoutHabitId) ? 'selected' : ''}>${escapeHtml(h.name)}</option>`).join('');
+      }
+
+      updateTafTargetPreview();
+
+      const histCont = document.getElementById('tafHistoryContainer');
+      if (histCont) {
+        if (tafHistory.length === 0) {
+          histCont.innerHTML = `<div class="text-center py-8 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">Nenhum teste de certificação TAF registrado ainda (Semanas 8, 16, 24 e 33).</div>`;
+        } else {
+          histCont.innerHTML = tafHistory.map(r => `
+            <div class="p-3.5 rounded-xl bg-slate-900/80 border ${r.passedGate ? 'border-emerald-500/40' : 'border-amber-500/40'} space-y-1.5 text-xs">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-white">${escapeHtml(r.phaseLabel)} • ${escapeHtml(r.dateStr)}</span>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${r.passedGate ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}">
+                    ${r.passedGate ? '🟢 SINAL VERDE' : '⚠️ RETENÇÃO (-5%)'}
+                  </span>
+                  <button onclick="deleteTafRecord(${r.id})" class="text-slate-500 hover:text-rose-400 px-1">✕</button>
+                </div>
+              </div>
+              <div class="flex flex-wrap gap-2 font-mono text-[11px] text-slate-300 pt-1">
+                <span class="px-2 py-0.5 rounded bg-slate-800">🧗 ${r.pullups} barras</span>
+                <span class="px-2 py-0.5 rounded bg-slate-800">💥 ${r.pushups} flexões</span>
+                <span class="px-2 py-0.5 rounded bg-slate-800">🧱 ${r.abs} abs</span>
+                <span class="px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">🏃 ${r.runMeters}m (${escapeHtml(r.paceStr)})</span>
+              </div>
+              ${r.notes ? `<p class="text-[11px] text-slate-400 pt-0.5">${escapeHtml(r.notes)}</p>` : ''}
+            </div>
+          `).join('');
+        }
+      }
+    }
+
     function togglePrivacy() {
       document.body.classList.toggle('privacy-blur');
       const isBlur = document.body.classList.contains('privacy-blur');
@@ -1358,7 +1885,7 @@
     function updateBrandTitle(val) {
       brandTitle = (val || '').trim() || 'Performance Studio';
       document.getElementById('brandTitle').textContent = brandTitle;
-      localStorage.setItem('habitBrandTitle', brandTitle);
+      safeSetStorage('habitBrandTitle', brandTitle);
     }
 
     // ==================== 4. CÁLCULO DE CICLOS ON/OFF E ESTÚDIO VISUAL ====================
@@ -1448,13 +1975,15 @@
       }));
 
       return {
-        version: 8,
+        version: 9,
         brandTitle,
         enamedWeek,
         enamedTotalWeeks,
+        protocoloConfig,
+        tafHistory,
         pomoConfig,
         weekStartIso: storedWeekStartIso,
-        updatedAt: new Date().toISOString(),
+        updatedAt: localUpdatedAt || new Date().toISOString(),
         dailyGoalHours,
         linkedHabitId,
         dailyQuestionsGoal,
@@ -1491,6 +2020,15 @@
       if (data.brandTitle) brandTitle = data.brandTitle;
       if (data.enamedWeek) enamedWeek = Number(data.enamedWeek) || 1;
       if (data.enamedTotalWeeks) enamedTotalWeeks = Number(data.enamedTotalWeeks) || 42;
+      if (data.protocoloConfig) {
+        protocoloConfig = {
+          ...protocoloConfig,
+          ...data.protocoloConfig,
+          week: Math.max(1, Math.min(33, Number(data.protocoloConfig.week) || 1)),
+          nextSession: ['A', 'B', 'C', 'D'].includes(data.protocoloConfig.nextSession) ? data.protocoloConfig.nextSession : 'A'
+        };
+      }
+      if (Array.isArray(data.tafHistory)) tafHistory = data.tafHistory;
       if (data.pomoConfig) {
         pomoConfig = {
           focus1: Math.max(5, Number(data.pomoConfig.focus1) || 60),
@@ -1506,7 +2044,12 @@
       if (Array.isArray(data.customAreas) && data.customAreas.length > 0) customAreas = data.customAreas;
       if (Array.isArray(data.customErrorTags) && data.customErrorTags.length > 0) customErrorTags = data.customErrorTags;
       if (Array.isArray(data.quickQButtons)) quickQButtons = data.quickQButtons;
-      if (Array.isArray(data.studyBanks)) studyBanks = data.studyBanks;
+      if (Array.isArray(data.studyBanks)) {
+        studyBanks = data.studyBanks.map(b => ({
+          ...b,
+          autoType: (b.id === 'sb4' || (b.unit === 'treinos' && b.autoType === 'manual')) ? 'workouts' : ((b.id === 'sb3' && b.autoType === 'manual') ? 'simulados' : b.autoType)
+        }));
+      }
       if (Array.isArray(data.simuladosHistory)) simuladosHistory = data.simuladosHistory;
       if (Array.isArray(data.questionLogs)) questionLogs = data.questionLogs;
       if (Array.isArray(data.errorNotebook)) {
@@ -1525,6 +2068,7 @@
       if (data.dailyQuestionsGoal) dailyQuestionsGoal = Number(data.dailyQuestionsGoal);
       if (data.linkedQuestionHabitId !== undefined) linkedQuestionHabitId = Number(data.linkedQuestionHabitId);
       if (data.weekStartIso) storedWeekStartIso = data.weekStartIso;
+      if (data.updatedAt) localUpdatedAt = data.updatedAt;
       if (data.themeConfig && data.themeConfig.primary) {
         themeConfig = data.themeConfig;
         applyThemeVariables();
@@ -1532,35 +2076,41 @@
       return true;
     }
 
-    function saveLocalOnly() {
-      localStorage.setItem('habitBrandTitle', brandTitle);
-      localStorage.setItem('habitEnamedWeek', String(enamedWeek));
-      localStorage.setItem('habitEnamedTotalWeeks', String(enamedTotalWeeks));
-      localStorage.setItem('habitPomoConfig', JSON.stringify(pomoConfig));
-      localStorage.setItem('habitDashboardData', JSON.stringify(habits));
-      localStorage.setItem('habitStudySeconds', JSON.stringify(studySeconds));
-      localStorage.setItem('habitPomodoroCycles', JSON.stringify(pomodoroCycles));
-      localStorage.setItem('habitDailyGoalHours', String(dailyGoalHours));
-      localStorage.setItem('habitLinkedId', String(linkedHabitId));
-      localStorage.setItem('habitQuestionsSolved', JSON.stringify(questionsSolved));
-      localStorage.setItem('habitQuestionsCorrect', JSON.stringify(questionsCorrect));
-      localStorage.setItem('habitCustomAreas', JSON.stringify(customAreas));
-      localStorage.setItem('habitCustomErrorTags', JSON.stringify(customErrorTags));
-      localStorage.setItem('habitQuickQButtons', JSON.stringify(quickQButtons));
-      localStorage.setItem('habitStudyBanks', JSON.stringify(studyBanks));
-      localStorage.setItem('habitSimuladosHistory', JSON.stringify(simuladosHistory));
-      localStorage.setItem('habitQuestionLogs', JSON.stringify(questionLogs));
-      localStorage.setItem('habitErrorNotebook', JSON.stringify(errorNotebook));
-      localStorage.setItem('habitDailyQuestionsGoal', String(dailyQuestionsGoal));
-      localStorage.setItem('habitLinkedQuestionId', String(linkedQuestionHabitId));
-      localStorage.setItem('habitBusyDays', JSON.stringify(busyDays));
-      localStorage.setItem('habitArchivedWeeks', JSON.stringify(archivedWeeks));
-      localStorage.setItem('habitWeekStartIso', storedWeekStartIso);
-      localStorage.setItem('habitThemeConfig', JSON.stringify(themeConfig));
+    function saveLocalOnly(touchTimestamp = true) {
+      if (touchTimestamp) {
+        localUpdatedAt = new Date().toISOString();
+        safeSetStorage('habitUpdatedAt', localUpdatedAt);
+      }
+      safeSetStorage('habitBrandTitle', brandTitle);
+      safeSetStorage('habitEnamedWeek', String(enamedWeek));
+      safeSetStorage('habitEnamedTotalWeeks', String(enamedTotalWeeks));
+      safeSetStorage('habitProtocoloConfig', JSON.stringify(protocoloConfig));
+      safeSetStorage('habitTafHistory', JSON.stringify(tafHistory));
+      safeSetStorage('habitPomoConfig', JSON.stringify(pomoConfig));
+      safeSetStorage('habitDashboardData', JSON.stringify(habits));
+      safeSetStorage('habitStudySeconds', JSON.stringify(studySeconds));
+      safeSetStorage('habitPomodoroCycles', JSON.stringify(pomodoroCycles));
+      safeSetStorage('habitDailyGoalHours', String(dailyGoalHours));
+      safeSetStorage('habitLinkedId', String(linkedHabitId));
+      safeSetStorage('habitQuestionsSolved', JSON.stringify(questionsSolved));
+      safeSetStorage('habitQuestionsCorrect', JSON.stringify(questionsCorrect));
+      safeSetStorage('habitCustomAreas', JSON.stringify(customAreas));
+      safeSetStorage('habitCustomErrorTags', JSON.stringify(customErrorTags));
+      safeSetStorage('habitQuickQButtons', JSON.stringify(quickQButtons));
+      safeSetStorage('habitStudyBanks', JSON.stringify(studyBanks));
+      safeSetStorage('habitSimuladosHistory', JSON.stringify(simuladosHistory));
+      safeSetStorage('habitQuestionLogs', JSON.stringify(questionLogs));
+      safeSetStorage('habitErrorNotebook', JSON.stringify(errorNotebook));
+      safeSetStorage('habitDailyQuestionsGoal', String(dailyQuestionsGoal));
+      safeSetStorage('habitLinkedQuestionId', String(linkedQuestionHabitId));
+      safeSetStorage('habitBusyDays', JSON.stringify(busyDays));
+      safeSetStorage('habitArchivedWeeks', JSON.stringify(archivedWeeks));
+      safeSetStorage('habitWeekStartIso', storedWeekStartIso);
+      safeSetStorage('habitThemeConfig', JSON.stringify(themeConfig));
     }
 
     function saveState(skipCloud = false) {
-      saveLocalOnly();
+      saveLocalOnly(true);
       renderAll();
       if (!skipCloud && gasWebAppUrl && !isPullingFromCloud) {
         scheduleCloudPush();
@@ -1598,7 +2148,7 @@
         return;
       }
       gasWebAppUrl = url;
-      localStorage.setItem('habitGasWebAppUrl', gasWebAppUrl);
+      safeSetStorage('habitGasWebAppUrl', gasWebAppUrl);
       showToast('URL salva! Sincronizando com a Planilha...', '☁️');
       pullFromCloud(true);
     }
@@ -1623,7 +2173,7 @@
         if (resData.status === 'saved') {
           const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
           lastCloudSync = `${new Date().toLocaleDateString('pt-BR')} às ${timeStr}`;
-          localStorage.setItem('habitLastCloudSync', lastCloudSync);
+          safeSetStorage('habitLastCloudSync', lastCloudSync);
           updateCloudStatusUI('ok', `Salvo (${timeStr})`);
           if (showNotification) showToast('Dados salvos na Planilha Google!', '☁️');
         } else {
@@ -1647,13 +2197,23 @@
         const response = await fetch(`${gasWebAppUrl}?t=${Date.now()}`);
         const resData = await response.json();
         if (resData.status === 'ok' && resData.hasData && resData.data) {
+          const cloudTime = resData.data.updatedAt ? Date.parse(resData.data.updatedAt) : 0;
+          const localTime = localUpdatedAt ? Date.parse(localUpdatedAt) : 0;
+
+          if (!showNotification && localTime > cloudTime + 5000) {
+            isPullingFromCloud = false;
+            hasCompletedInitialPull = true;
+            await pushToCloud(false);
+            return;
+          }
+
           applyPayloadToState(resData.data);
-          saveLocalOnly();
+          saveLocalOnly(false);
           checkNewWeekRollover();
           renderAll();
           const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
           lastCloudSync = `${new Date().toLocaleDateString('pt-BR')} às ${timeStr}`;
-          localStorage.setItem('habitLastCloudSync', lastCloudSync);
+          safeSetStorage('habitLastCloudSync', lastCloudSync);
           updateCloudStatusUI('ok', `OK (${timeStr})`);
           if (showNotification) showToast('Sincronizado com a Planilha Google!', '☁️');
           isPullingFromCloud = false;
@@ -1673,7 +2233,7 @@
       }
     }
 
-    // ==================== 6. ITEM C: MULTI-TAGS DE ERRO & CÁLCULO DE NOTA POTENCIAL ====================
+    // ==================== 6. MULTI-TAGS DE ERRO & CÁLCULO DE NOTA POTENCIAL ====================
     function toggleTagManager() {
       const panel = document.getElementById('tagManagerPanel');
       panel.classList.toggle('hidden');
@@ -1709,39 +2269,50 @@
       const tag = customErrorTags[index];
       if (!tag) return;
       const oldName = tag.name;
-      const newName = prompt('Renomear Tag de Causa de Erro:', oldName);
-      if (newName === null) return;
-      const trimmed = newName.trim() || oldName;
 
-      const changeType = confirm(`Esta tag é uma falha OPERACIONAL / RECUPERÁVEL (Desatenção, Pegadinha, Dúvida entre 2, Pressa)?\n\nClique em OK para "Operacional" ou Cancelar para "Conhecimento / Teoria".`);
-      tag.name = trimmed;
-      tag.category = changeType ? 'operational' : 'knowledge';
+      openAppModal({
+        title: '✏️ Editar Tag de Causa de Erro',
+        bodyHtml: `
+          <div>
+            <label class="text-slate-400">Nome da Tag</label>
+            <input type="text" id="modalTagName" value="${escapeHtml(oldName)}" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
+          </div>
+          <div>
+            <label class="text-slate-400">Categoria na Autópsia</label>
+            <select id="modalTagCat" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-amber-300 font-semibold">
+              <option value="operational" ${tag.category === 'operational' ? 'selected' : ''}>⚡ Operacional / Recuperável (Desatenção, Pegadinha)</option>
+              <option value="knowledge" ${tag.category === 'knowledge' ? 'selected' : ''}>📚 Conhecimento / Teoria</option>
+            </select>
+          </div>
+        `,
+        onConfirm: () => {
+          const trimmed = (document.getElementById('modalTagName').value || '').trim() || oldName;
+          const cat = document.getElementById('modalTagCat').value;
+          tag.name = trimmed;
+          tag.category = cat === 'knowledge' ? 'knowledge' : 'operational';
 
-      // Atualiza nos logs e no caderno de erros caso o nome tenha mudado
-      questionLogs.forEach(log => {
-        if (Array.isArray(log.tags)) {
-          log.tags = log.tags.map(t => t === oldName ? trimmed : t);
+          questionLogs.forEach(log => {
+            if (Array.isArray(log.tags)) log.tags = log.tags.map(t => t === oldName ? trimmed : t);
+          });
+          errorNotebook.forEach(item => {
+            if (Array.isArray(item.tags)) item.tags = item.tags.map(t => t === oldName ? trimmed : t);
+          });
+          selectedErrorTagsForForm = selectedErrorTagsForForm.map(t => t === oldName ? trimmed : t);
+
+          closeAppModal();
+          saveState();
+          showToast(`Tag "${trimmed}" atualizada!`, '✏️');
         }
       });
-      errorNotebook.forEach(item => {
-        if (Array.isArray(item.tags)) {
-          item.tags = item.tags.map(t => t === oldName ? trimmed : t);
-        }
-      });
-      selectedErrorTagsForForm = selectedErrorTagsForForm.map(t => t === oldName ? trimmed : t);
-
-      saveState();
-      showToast(`Tag "${trimmed}" atualizada!`, '✏️');
     }
 
     function deleteCustomErrorTag(index) {
       if (customErrorTags.length <= 1) return showToast('Mantenha pelo menos 1 tag.', '⚠️');
       const target = customErrorTags[index];
-      if (confirm(`Remover a tag "${target.name}"?`)) {
-        customErrorTags.splice(index, 1);
-        selectedErrorTagsForForm = selectedErrorTagsForForm.filter(t => t !== target.name);
-        saveState();
-      }
+      customErrorTags.splice(index, 1);
+      selectedErrorTagsForForm = selectedErrorTagsForForm.filter(t => t !== target.name);
+      saveState();
+      showToast(`Tag "${target.name}" removida.`, '🗑️');
     }
 
     function renderErrorTagsMultiPicker() {
@@ -1781,7 +2352,6 @@
       }
     }
 
-    // Calcula estatísticas das tags e a "Nota Potencial" (sem erros operacionais)
     function computeAutopsyAndPotentialAccuracy() {
       const totalQ = questionsSolved.reduce((a, b) => a + b, 0);
       const totalC = questionsCorrect.reduce((a, b) => a + b, 0);
@@ -1816,7 +2386,7 @@
       return { totalQ, totalC, realAcc, potentialAcc, recoverableWrongQuestions, tagCounts };
     }
 
-    // ==================== 7. ITEM B: FLASH-REVIEW ESPAÇADO LONGO (14d -> 30d -> 60d) ====================
+    // ==================== 7. FLASH-REVIEW ESPAÇADO LONGO (14d -> 30d -> 60d) ====================
     function getDueErrorItems() {
       return errorNotebook.filter(item => !item.reviewed && (item.nextReviewIso || TODAY_ISO) <= TODAY_ISO);
     }
@@ -1852,7 +2422,6 @@
         return showToast('Você não tem micro-esquemas ativos para sortear no momento!', '🎉');
       }
 
-      // Embaralha e sorteia até 5 micro-esquemas
       const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, 5);
       activeFlashSessionIds = shuffled.map(item => item.id);
       document.getElementById('flashSessionDrawer').classList.remove('hidden');
@@ -1899,33 +2468,64 @@
     function editErrorTopicItem(id) {
       const item = errorNotebook.find(e => e.id === id);
       if (!item) return;
-      const newTopic = prompt('Editar micro-esquema / anotação:', item.topic);
-      if (newTopic === null || !newTopic.trim()) return;
-      item.topic = newTopic.trim();
-      saveState();
-      showToast('Micro-esquema atualizado!', '✏️');
+      openAppModal({
+        title: '✏️ Editar Micro-Esquema',
+        bodyHtml: `
+          <div>
+            <label class="text-slate-400">Conceito / Anotação Breve</label>
+            <input type="text" id="modalErrorTopicInput" value="${escapeHtml(item.topic)}" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
+          </div>
+        `,
+        onConfirm: () => {
+          const val = (document.getElementById('modalErrorTopicInput').value || '').trim();
+          if (val) {
+            item.topic = val;
+            closeAppModal();
+            saveState();
+            showToast('Micro-esquema atualizado!', '✏️');
+          }
+        }
+      });
     }
 
     function addStandaloneErrorTopic() {
       const areaSelect = document.getElementById('qAreaSelect');
       const defaultArea = areaSelect && areaSelect.value ? areaSelect.value : (customAreas[0] || 'Geral');
-      const topic = prompt(`Digite o micro-esquema breve (Área: ${defaultArea}):`);
-      if (!topic || !topic.trim()) return;
-
-      errorNotebook.unshift({
-        id: Date.now(),
-        dateStr: WEEK_DATES[selectedDayIndex].shortBr,
-        trilhaWeek: enamedWeek,
-        area: defaultArea,
-        topic: topic.trim(),
-        tags: [...selectedErrorTagsForForm],
-        batchScore: 'Esquema Direto',
-        srsStage: 0,
-        nextReviewIso: TODAY_ISO,
-        reviewed: false
+      openAppModal({
+        title: '📓 Novo Micro-Esquema (Flash-Review)',
+        bodyHtml: `
+          <div>
+            <label class="text-slate-400">Área / Matéria</label>
+            <select id="modalStandaloneArea" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-cyan-300 font-semibold">
+              ${customAreas.map(a => `<option value="${escapeHtml(a)}" ${a === defaultArea ? 'selected' : ''}>${escapeHtml(a)}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label class="text-slate-400">Micro-Esquema / Regra de Bolso</label>
+            <input type="text" id="modalStandaloneTopic" placeholder="Ex: Critérios de Light, Tríade de Beck..." class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
+          </div>
+        `,
+        onConfirm: () => {
+          const area = document.getElementById('modalStandaloneArea').value || defaultArea;
+          const topic = (document.getElementById('modalStandaloneTopic').value || '').trim();
+          if (!topic) return;
+          errorNotebook.unshift({
+            id: Date.now(),
+            dateStr: WEEK_DATES[selectedDayIndex].shortBr,
+            trilhaWeek: enamedWeek,
+            area,
+            topic,
+            tags: [...selectedErrorTagsForForm],
+            batchScore: 'Esquema Direto',
+            srsStage: 0,
+            nextReviewIso: TODAY_ISO,
+            reviewed: false
+          });
+          closeAppModal();
+          saveState();
+          showToast('Micro-esquema salvo no Flash-Review!', '📓');
+        }
       });
-      saveState();
-      showToast('Micro-esquema salvo no Flash-Review!', '📓');
     }
 
     function deleteErrorItem(id) {
@@ -2055,7 +2655,7 @@
       if (weekInput) weekInput.value = enamedWeek;
       if (!grid) return;
 
-      grid.innerHTML = customAreas.map((area, idx) => `
+      grid.innerHTML = customAreas.map((area) => `
         <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-2">
           <span class="text-xs font-semibold text-slate-200 truncate">${escapeHtml(area)}</span>
           <div class="flex items-center gap-1.5 shrink-0 font-mono text-xs">
@@ -2151,10 +2751,8 @@
     }
 
     function deleteSimuladoItem(id) {
-      if (confirm('Excluir este simulado do histórico?')) {
-        simuladosHistory = simuladosHistory.filter(s => s.id !== id);
-        saveState();
-      }
+      simuladosHistory = simuladosHistory.filter(s => s.id !== id);
+      saveState();
     }
 
     function renderSimuladosChart() {
@@ -2265,29 +2863,49 @@
       const qb = quickQButtons.find(x => x.id === id);
       if (!qb) return;
       switchTab('questions');
-      if (!customAreas.includes(qb.area)) {
-        customAreas.push(qb.area);
+      const matchedArea = resolveMatchingAreaName(qb.area);
+      if (!customAreas.includes(matchedArea)) {
+        customAreas.push(matchedArea);
         renderQuestionBar();
       }
-      document.getElementById('qAreaSelect').value = qb.area;
+      document.getElementById('qAreaSelect').value = matchedArea;
       document.getElementById('qSolvedInput').value = qb.solved;
       const correctEl = document.getElementById('qCorrectInput');
       correctEl.value = '';
       correctEl.focus();
       autoPreviewAccuracy();
-      showToast(`Atalho "${qb.label}" carregado!`, '⚡');
+      showToast(`Atalho "${qb.label}" carregado (${matchedArea})!`, '⚡');
     }
 
     function promptNewQuickQButton() {
-      const area = prompt(`Qual Área/Matéria deste atalho?`, customAreas[0] || 'Clínica');
-      if (!area) return;
-      const solved = parseInt(prompt('Quantidade padrão de questões:', '20') || '20', 10);
-      if (isNaN(solved) || solved <= 0) return;
-      const label = prompt('Nome curto do botão:', `⚡ ${area.trim()} ${solved}q`) || `${area.trim()} ${solved}q`;
-
-      if (!customAreas.includes(area.trim())) customAreas.push(area.trim());
-      quickQButtons.push({ id: 'qq_' + Date.now(), label: label.trim(), area: area.trim(), solved });
-      saveState();
+      openAppModal({
+        title: '⚡ Novo Atalho Rápido de Questões',
+        bodyHtml: `
+          <div>
+            <label class="text-slate-400">Área / Disciplina</label>
+            <select id="modalQQArea" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-cyan-300 font-semibold">
+              ${customAreas.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label class="text-slate-400">Quantidade Padrão de Questões</label>
+            <input type="number" id="modalQQSolved" value="20" min="1" max="500" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
+          </div>
+          <div>
+            <label class="text-slate-400">Rótulo do Botão</label>
+            <input type="text" id="modalQQLabel" placeholder="Ex: 🩺 Clínica 20q" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
+          </div>
+        `,
+        onConfirm: () => {
+          const area = document.getElementById('modalQQArea').value || customAreas[0];
+          const solved = Math.max(1, parseInt(document.getElementById('modalQQSolved').value || '20', 10));
+          const label = (document.getElementById('modalQQLabel').value || '').trim() || `⚡ ${area} ${solved}q`;
+          quickQButtons.push({ id: 'qq_' + Date.now(), label, area, solved });
+          closeAppModal();
+          saveState();
+          showToast('Atalho rápido criado!', '⚡');
+        }
+      });
     }
 
     function deleteQuickQButton(id) {
@@ -2356,40 +2974,81 @@
     }
 
     function openNewStudyBankPrompt() {
-      const name = prompt('Nome da nova Meta de Longo Prazo:');
-      if (!name) return;
-      const unit = prompt('Unidade (questões, horas, simulados, treinos):', 'questões') || 'questões';
-      const target = parseFloat(prompt(`Meta Total em ${unit}:`, '1000') || '1000');
-      const current = parseFloat(prompt(`Valor já acumulado hoje:`, '0') || '0');
-      studyBanks.push({
-        id: 'sb_' + Date.now(),
-        name: name.trim(),
-        current: isNaN(current) ? 0 : current,
-        target: isNaN(target) || target <= 0 ? 100 : target,
-        unit: unit.trim(),
-        autoType: 'manual',
-        note: 'Acumulativo até a prova'
+      openAppModal({
+        title: '🎯 Nova Meta de Longo Prazo (Caixinha)',
+        bodyHtml: `
+          <div>
+            <label class="text-slate-400">Nome da Meta</label>
+            <input type="text" id="modalBankName" placeholder="Ex: 🏃 500 km de Corrida no Ano" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-slate-400">Unidade</label>
+              <input type="text" id="modalBankUnit" value="questões" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
+            </div>
+            <div>
+              <label class="text-slate-400">Meta Final</label>
+              <input type="number" id="modalBankTarget" value="1000" min="1" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
+            </div>
+          </div>
+          <div>
+            <label class="text-slate-400">Valor Já Acumulado</label>
+            <input type="number" id="modalBankCurrent" value="0" min="0" step="0.1" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
+          </div>
+        `,
+        onConfirm: () => {
+          const name = (document.getElementById('modalBankName').value || '').trim();
+          if (!name) return;
+          const unit = (document.getElementById('modalBankUnit').value || 'questões').trim();
+          const target = Math.max(1, parseFloat(document.getElementById('modalBankTarget').value || '1000'));
+          const current = Math.max(0, parseFloat(document.getElementById('modalBankCurrent').value || '0'));
+          studyBanks.push({
+            id: 'sb_' + Date.now(),
+            name,
+            current,
+            target,
+            unit,
+            autoType: 'manual',
+            note: 'Acumulativo até a prova'
+          });
+          closeAppModal();
+          saveState();
+        }
       });
-      saveState();
     }
 
     function promptEditStudyBank(id) {
       const b = studyBanks.find(x => x.id === id);
       if (!b) return;
-      const name = prompt('Nome da Meta:', b.name);
-      if (name === null) return;
-      const cur = prompt(`Valor acumulado (${b.unit}):`, b.current);
-      if (cur === null) return;
-      const tar = prompt(`Meta total (${b.unit}):`, b.target);
-      if (tar === null) return;
-      b.name = name.trim() || b.name;
-      b.current = Math.max(0, parseFloat(cur) || 0);
-      b.target = Math.max(1, parseFloat(tar) || 100);
-      saveState();
+      openAppModal({
+        title: '✏️ Editar Meta de Longo Prazo',
+        bodyHtml: `
+          <div>
+            <label class="text-slate-400">Nome da Meta</label>
+            <input type="text" id="modalEditBankName" value="${escapeHtml(b.name)}" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-slate-400">Acumulado (${escapeHtml(b.unit)})</label>
+              <input type="number" id="modalEditBankCur" value="${b.current}" step="0.01" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
+            </div>
+            <div>
+              <label class="text-slate-400">Meta Total (${escapeHtml(b.unit)})</label>
+              <input type="number" id="modalEditBankTar" value="${b.target}" step="1" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
+            </div>
+          </div>
+        `,
+        onConfirm: () => {
+          b.name = (document.getElementById('modalEditBankName').value || '').trim() || b.name;
+          b.current = Math.max(0, parseFloat(document.getElementById('modalEditBankCur').value) || 0);
+          b.target = Math.max(1, parseFloat(document.getElementById('modalEditBankTar').value) || 100);
+          closeAppModal();
+          saveState();
+        }
+      });
     }
 
     function deleteStudyBank(id) {
-      if (!confirm('Excluir esta caixinha?')) return;
       studyBanks = studyBanks.filter(x => x.id !== id);
       saveState();
     }
@@ -2413,24 +3072,31 @@
     function renameCustomArea(index) {
       const oldName = customAreas[index];
       if (!oldName) return;
-      const newName = prompt(`Renomear "${oldName}" para:`, oldName);
-      if (newName === null) return;
-      const trimmed = newName.trim();
-      if (!trimmed || trimmed === oldName) return;
-
-      customAreas[index] = trimmed;
-      questionLogs.forEach(log => { if (log.area === oldName) log.area = trimmed; });
-      errorNotebook.forEach(item => { if (item.area === oldName) item.area = trimmed; });
-      quickQButtons.forEach(qb => { if (qb.area === oldName) qb.area = trimmed; });
-      saveState();
+      openAppModal({
+        title: '✏️ Renomear Área / Disciplina',
+        bodyHtml: `
+          <div>
+            <label class="text-slate-400">Novo nome para "${escapeHtml(oldName)}"</label>
+            <input type="text" id="modalRenameAreaInput" value="${escapeHtml(oldName)}" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
+          </div>
+        `,
+        onConfirm: () => {
+          const trimmed = (document.getElementById('modalRenameAreaInput').value || '').trim();
+          if (!trimmed || trimmed === oldName) { closeAppModal(); return; }
+          customAreas[index] = trimmed;
+          questionLogs.forEach(log => { if (log.area === oldName) log.area = trimmed; });
+          errorNotebook.forEach(item => { if (item.area === oldName) item.area = trimmed; });
+          quickQButtons.forEach(qb => { if (qb.area === oldName) qb.area = trimmed; });
+          closeAppModal();
+          saveState();
+        }
+      });
     }
 
     function deleteCustomArea(index) {
       if (customAreas.length <= 1) return showToast('Mantenha pelo menos 1 área.', '⚠️');
-      if (confirm(`Remover "${customAreas[index]}"?`)) {
-        customAreas.splice(index, 1);
-        saveState();
-      }
+      customAreas.splice(index, 1);
+      saveState();
     }
 
     function renderCustomAreasManager() {
@@ -2497,7 +3163,7 @@
         btnEl.classList.remove('hidden');
         btnEl.textContent = `🎯 Praticar ${weakestArea.name}`;
       } else {
-        currentRecommendedArea = customAreas[0] || 'Clínica';
+        currentRecommendedArea = customAreas[0] || 'Clínica🩺';
         badgeEl.textContent = `🧭 Trilha Semana ${enamedWeek}/42`;
         badgeEl.className = 'text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400';
         descEl.innerHTML = `Registre seus blocos de questões da Semana ${enamedWeek} da Trilha ENAMED para ativar a Autópsia e o cálculo de Nota Potencial.`;
@@ -2629,15 +3295,14 @@
 
     function clearTodayQuestions() {
       if (questionsSolved[selectedDayIndex] === 0) return;
-      if (confirm(`Zerar questões de ${DAYS[selectedDayIndex]}?`)) {
-        const removedTotal = questionsSolved[selectedDayIndex] || 0;
-        questionsSolved[selectedDayIndex] = 0;
-        questionsCorrect[selectedDayIndex] = 0;
-        feedAutoStudyBanks('questions', -removedTotal);
-        questionLogs = questionLogs.filter(log => log.dayIdx !== selectedDayIndex);
-        checkAutoCompleteQuestionHabit(selectedDayIndex);
-        saveState();
-      }
+      const removedTotal = questionsSolved[selectedDayIndex] || 0;
+      questionsSolved[selectedDayIndex] = 0;
+      questionsCorrect[selectedDayIndex] = 0;
+      feedAutoStudyBanks('questions', -removedTotal);
+      questionLogs = questionLogs.filter(log => log.dayIdx !== selectedDayIndex);
+      checkAutoCompleteQuestionHabit(selectedDayIndex);
+      saveState();
+      showToast(`Questões de ${DAYS[selectedDayIndex]} zeradas.`, '🧹');
     }
 
     function updateDailyQuestionGoal(val) {
@@ -2664,7 +3329,7 @@
       const map = {};
       customAreas.forEach(a => { map[a] = { solved: 0, correct: 0 }; });
       questionLogs.forEach(log => {
-        const area = log.area || 'Geral';
+        const area = resolveMatchingAreaName(log.area || 'Geral');
         if (!map[area]) map[area] = { solved: 0, correct: 0 };
         map[area].solved += (Number(log.solved) || 0);
         map[area].correct += (Number(log.correct) || 0);
@@ -2672,7 +3337,7 @@
       return map;
     }
 
-    // ==================== 11. ITEM 1: POMODORO DE ELITE CUSTOMIZÁVEL (60-90 MIN) ====================
+    // ==================== 11. POMODORO DE ELITE CUSTOMIZÁVEL (60-90 MIN) ====================
     function savePomodoroCustomConfig() {
       pomoConfig.focus1 = Math.max(5, Number(document.getElementById('cfgPomoFocus1').value) || 60);
       pomoConfig.focus2 = Math.max(5, Number(document.getElementById('cfgPomoFocus2').value) || 90);
@@ -2796,7 +3461,7 @@
         if (autoChecked || studySeconds[selectedDayIndex] % 60 < effectiveDelta) {
           saveState();
         } else if (studySeconds[selectedDayIndex] % 10 < effectiveDelta) {
-          saveLocalOnly();
+          saveLocalOnly(true);
           renderAll();
         } else {
           renderKPIs();
@@ -2890,11 +3555,23 @@
     function renameHabit(habitId) {
       const habit = habits.find(h => h.id === habitId);
       if (!habit) return;
-      const newName = prompt('Renomear hábito:', habit.name);
-      if (newName !== null && newName.trim() !== '') {
-        habit.name = newName.trim();
-        saveState();
-      }
+      openAppModal({
+        title: '✏️ Renomear Hábito',
+        bodyHtml: `
+          <div>
+            <label class="text-slate-400">Nome do Hábito</label>
+            <input type="text" id="modalRenameHabitInput" value="${escapeHtml(habit.name)}" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
+          </div>
+        `,
+        onConfirm: () => {
+          const val = (document.getElementById('modalRenameHabitInput').value || '').trim();
+          if (val) {
+            habit.name = val;
+            closeAppModal();
+            saveState();
+          }
+        }
+      });
     }
 
     function moveHabit(index, direction) {
@@ -3061,13 +3738,13 @@
         document.getElementById('newWeekBanner').classList.remove('hidden');
       } else {
         storedWeekStartIso = CURRENT_WEEK_SUNDAY_ISO;
-        localStorage.setItem('habitWeekStartIso', CURRENT_WEEK_SUNDAY_ISO);
+        safeSetStorage('habitWeekStartIso', CURRENT_WEEK_SUNDAY_ISO);
       }
     }
 
     function dismissNewWeekBanner() {
       storedWeekStartIso = CURRENT_WEEK_SUNDAY_ISO;
-      localStorage.setItem('habitWeekStartIso', CURRENT_WEEK_SUNDAY_ISO);
+      safeSetStorage('habitWeekStartIso', CURRENT_WEEK_SUNDAY_ISO);
       document.getElementById('newWeekBanner').classList.add('hidden');
       saveState();
     }
@@ -3075,60 +3752,76 @@
     function archiveAndResetWeek() {
       const stats = getWeeklyStatsSummary();
       const defaultLabel = `Semana ${enamedWeek}/42 (${WEEK_DATES[0].shortBr} a ${WEEK_DATES[6].shortBr})`;
-      const weekLabel = prompt('Período para arquivar no histórico:', defaultLabel);
-      if (weekLabel === null) return;
 
-      archivedWeeks.unshift({
-        id: Date.now(),
-        label: weekLabel.trim() || defaultLabel,
-        archivedAt: new Date().toISOString(),
-        weeklyRate: stats.weeklyRate,
-        totalDone: stats.totalDone,
-        totalScheduled: stats.totalScheduled,
-        totalStudySeconds: stats.totalSecs,
-        totalQuestions: stats.totalQ,
-        totalCorrect: stats.totalC,
-        questionAccuracy: stats.weeklyQAcc,
-        streak: stats.streak
+      openAppModal({
+        title: '📦 Arquivar Semana e Avançar Trilha',
+        bodyHtml: `
+          <div>
+            <label class="text-slate-400">Identificação do Período no Histórico</label>
+            <input type="text" id="modalArchiveWeekLabel" value="${escapeHtml(defaultLabel)}" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
+          </div>
+          <p class="text-[11px] text-slate-400">Seus Micro-Esquemas ativos, Simulados, Certificações TAF e Caixinhas serão preservados.</p>
+        `,
+        confirmText: '📦 Arquivar Agora',
+        onConfirm: () => {
+          const weekLabel = (document.getElementById('modalArchiveWeekLabel').value || '').trim() || defaultLabel;
+          archivedWeeks.unshift({
+            id: Date.now(),
+            label: weekLabel,
+            archivedAt: new Date().toISOString(),
+            weeklyRate: stats.weeklyRate,
+            totalDone: stats.totalDone,
+            totalScheduled: stats.totalScheduled,
+            totalStudySeconds: stats.totalSecs,
+            totalQuestions: stats.totalQ,
+            totalCorrect: stats.totalC,
+            questionAccuracy: stats.weeklyQAcc,
+            streak: stats.streak
+          });
+
+          habits.forEach(h => h.days = [false, false, false, false, false, false, false]);
+          studySeconds = [0, 0, 0, 0, 0, 0, 0];
+          pomodoroCycles = [0, 0, 0, 0, 0, 0, 0];
+          questionsSolved = [0, 0, 0, 0, 0, 0, 0];
+          questionsCorrect = [0, 0, 0, 0, 0, 0, 0];
+          questionLogs = [];
+          errorNotebook = errorNotebook.filter(item => !item.reviewed);
+          busyDays = [false, false, false, false, false, false, false];
+          if (enamedWeek < enamedTotalWeeks) enamedWeek++;
+          storedWeekStartIso = CURRENT_WEEK_SUNDAY_ISO;
+          document.getElementById('newWeekBanner').classList.add('hidden');
+
+          closeAppModal();
+          saveState();
+          showToast(`Semana arquivada! Avançado para a Semana ${enamedWeek} da Trilha.`, '📦');
+        }
       });
-
-      habits.forEach(h => h.days = [false, false, false, false, false, false, false]);
-      studySeconds = [0, 0, 0, 0, 0, 0, 0];
-      pomodoroCycles = [0, 0, 0, 0, 0, 0, 0];
-      questionsSolved = [0, 0, 0, 0, 0, 0, 0];
-      questionsCorrect = [0, 0, 0, 0, 0, 0, 0];
-      questionLogs = [];
-      // Preserva os micro-esquemas ativos no ciclo espaçado de semanas/meses
-      errorNotebook = errorNotebook.filter(item => !item.reviewed);
-      busyDays = [false, false, false, false, false, false, false];
-      if (enamedWeek < enamedTotalWeeks) enamedWeek++;
-      storedWeekStartIso = CURRENT_WEEK_SUNDAY_ISO;
-      document.getElementById('newWeekBanner').classList.add('hidden');
-
-      saveState();
-      showToast(`Semana arquivada! Avançado para a Semana ${enamedWeek} da Trilha.`, '📦');
     }
 
     function resetWeekOnly() {
-      if (confirm('Zerar a semana atual sem arquivar? (Suas Caixinhas, Simulados e Micro-Esquemas não serão afetados)')) {
-        habits.forEach(h => h.days = [false, false, false, false, false, false, false]);
-        studySeconds = [0, 0, 0, 0, 0, 0, 0];
-        pomodoroCycles = [0, 0, 0, 0, 0, 0, 0];
-        questionsSolved = [0, 0, 0, 0, 0, 0, 0];
-        questionsCorrect = [0, 0, 0, 0, 0, 0, 0];
-        questionLogs = [];
-        busyDays = [false, false, false, false, false, false, false];
-        storedWeekStartIso = CURRENT_WEEK_SUNDAY_ISO;
-        document.getElementById('newWeekBanner').classList.add('hidden');
-        saveState();
-      }
+      openAppModal({
+        title: '🧹 Zerar Semana Atual',
+        bodyHtml: `<p>Deseja zerar os dados da semana atual sem arquivar? (Suas Caixinhas, Simulados, Certificações TAF e Micro-Esquemas não serão afetados).</p>`,
+        confirmText: 'Zerar Semana',
+        onConfirm: () => {
+          habits.forEach(h => h.days = [false, false, false, false, false, false, false]);
+          studySeconds = [0, 0, 0, 0, 0, 0, 0];
+          pomodoroCycles = [0, 0, 0, 0, 0, 0, 0];
+          questionsSolved = [0, 0, 0, 0, 0, 0, 0];
+          questionsCorrect = [0, 0, 0, 0, 0, 0, 0];
+          questionLogs = [];
+          busyDays = [false, false, false, false, false, false, false];
+          storedWeekStartIso = CURRENT_WEEK_SUNDAY_ISO;
+          document.getElementById('newWeekBanner').classList.add('hidden');
+          closeAppModal();
+          saveState();
+        }
+      });
     }
 
     function deleteArchivedWeek(id) {
-      if (confirm('Excluir este registro do histórico?')) {
-        archivedWeeks = archivedWeeks.filter(w => w.id !== id);
-        saveState();
-      }
+      archivedWeeks = archivedWeeks.filter(w => w.id !== id);
+      saveState();
     }
 
     function updateNotificationButtonUI() {
@@ -3289,13 +3982,6 @@
       const qGoalSelect = document.getElementById('dailyQGoalSelect');
       if (qGoalSelect) qGoalSelect.value = String(dailyQuestionsGoal);
 
-      const linkedQSelect = document.getElementById('linkedQHabitSelect');
-      if (linkedQSelect) {
-        linkedQSelect.innerHTML = habits.length === 0
-          ? '<option value="0" class="bg-slate-900">Nenhum</option>'
-          : habits.map(h => `<option value="${h.id}" class="bg-slate-900" ${h.id === Number(linkedQuestionHabitId) ? 'selected' : ''}>${escapeHtml(h.name)}</option>`).join('');
-      }
-
       const areaSelect = document.getElementById('qAreaSelect');
       if (areaSelect) {
         const prev = areaSelect.value;
@@ -3338,7 +4024,6 @@
       }
     }
 
-    // Gráfico Direito da Aba de Questões: Alterna entre Autópsia de Erros e Volume por Área
     function renderRightQuestionChart() {
       const ctx = document.getElementById('areaDoughnutChart');
       if (!ctx) return;
@@ -3413,6 +4098,7 @@
         const isScheduled = isHabitActiveOnDay(habit, selectedDayIndex);
         const isStudyLinked = habit.id === Number(linkedHabitId);
         const isQLinked = habit.id === Number(linkedQuestionHabitId);
+        const isWorkoutLinked = habit.id === Number(protocoloConfig.linkedWorkoutHabitId);
         const isEditingDays = editingScheduleHabitId === habit.id;
         const isCycle = habit.scheduleMode === 'cycle';
 
@@ -3468,6 +4154,7 @@
                   ${!isScheduled && !isDone ? '<span class="ml-1 text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">OFF</span>' : ''}
                   ${isStudyLinked ? '<span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded">⚡H</span>' : ''}
                   ${isQLinked ? '<span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 bg-cyan-500/20 text-cyan-300 rounded">⚡Q</span>' : ''}
+                  ${isWorkoutLinked ? '<span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 bg-amber-500/20 text-amber-300 rounded">🎖️P33</span>' : ''}
                 </div>
               </label>
               <div class="flex items-center gap-1 shrink-0">
@@ -3557,7 +4244,7 @@
       const accToday = qToday > 0 ? Math.round((cToday / qToday) * 100) : 0;
 
       const enamedPct = Math.round((enamedWeek / enamedTotalWeeks) * 100);
-      document.getElementById('enamedHeaderLabel').textContent = `Semana ${enamedWeek} / ${enamedTotalWeeks} (${enamedPct}%)`;
+      document.getElementById('enamedHeaderLabel').textContent = `S${enamedWeek}/${enamedTotalWeeks} (${enamedPct}%)`;
 
       const enamedWIn = document.getElementById('cfgEnamedWeek');
       const enamedTIn = document.getElementById('cfgEnamedTotal');
@@ -3706,6 +4393,7 @@
       updateNotificationButtonUI();
       updateCloudStatusUI(gasWebAppUrl ? 'ok' : 'off');
       renderDaySelector();
+      renderProtocoloSection();
       renderRecommendationBanner();
       renderGoalBar();
       renderQuestionBar();
