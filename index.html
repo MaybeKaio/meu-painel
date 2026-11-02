@@ -176,21 +176,6 @@
     .timer-glow {
       text-shadow: 0 0 25px color-mix(in srgb, var(--accent-primary) 35%, transparent);
     }
-    input[type="color"] {
-      -webkit-appearance: none;
-      border: none;
-      width: 32px;
-      height: 32px;
-      border-radius: 9999px;
-      cursor: pointer;
-      padding: 0;
-      background: transparent;
-    }
-    input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-    input[type="color"]::-webkit-color-swatch {
-      border: 2px solid rgba(148, 163, 184, 0.5);
-      border-radius: 9999px;
-    }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #64748b; border-radius: 3px; }
@@ -206,7 +191,7 @@
     </div>
   </div>
 
-  <!-- MODAL GENÉRICO INTERNO (Substitui prompt/confirm nativos) -->
+  <!-- MODAL GENÉRICO INTERNO -->
   <div id="appModalOverlay" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="glass-card max-w-md w-full p-5 space-y-4 border border-slate-700 shadow-2xl">
       <div class="flex items-center justify-between">
@@ -255,14 +240,14 @@
         </div>
       </div>
 
-      <!-- Controles Rápidos Globais -->
+      <!-- Controles Rápidos Globais Minimalistas -->
       <div class="flex items-center gap-1.5 flex-wrap">
         <button id="shiftCycleBtn" onclick="shiftAllCyclesForPlantao(1)" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition flex items-center gap-1 bg-slate-800/90 text-rose-300 border-slate-700 hover:border-rose-500/50" title="Regra Anti-Plantão: Desloca todos os ciclos ON/OFF em +1 dia sem quebrar sua sequência">
-          <span>🏥</span> <span class="hidden sm:inline">Plantão (+1d Ciclo)</span>
+          <span>🏥</span> <span class="hidden sm:inline">Plantão (+1d)</span>
         </button>
 
         <button id="busyDayBtn" onclick="toggleBusyDay()" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition flex items-center gap-1 bg-slate-800/90 text-slate-300 border-slate-700 hover:border-amber-500/50" title="Reduz metas do dia selecionado pela metade">
-          <span>⚡</span> <span id="busyDayBtnText">Dia Corrido: OFF</span>
+          <span>⚡</span> <span id="busyDayBtnText">-50% Meta</span>
         </button>
 
         <button onclick="togglePrivacy()" class="text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 transition" title="Modo Biblioteca (Borrar Métricas e Erros)">
@@ -279,14 +264,13 @@
       </div>
     </div>
 
-    <!-- NAVEGAÇÃO DE ABAS ULTRA-COMPACTAS -->
+    <!-- NAVEGAÇÃO MINIMALISTA (6 ABAS DIRETAS) -->
     <nav class="max-w-7xl mx-auto mt-2.5 flex gap-1 overflow-x-auto border-b border-slate-800/80 text-xs">
       <button onclick="switchTab('today')" id="tab-today" class="tab-btn active px-3 py-2 whitespace-nowrap">📊 Hoje</button>
       <button onclick="switchTab('questions')" id="tab-questions" class="tab-btn px-3 py-2 whitespace-nowrap">📝 Questões <span id="navDueBadge" class="hidden ml-1 px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-mono text-[10px]">0</span></button>
       <button onclick="switchTab('simulados')" id="tab-simulados" class="tab-btn px-3 py-2 whitespace-nowrap">🏟️ Simulados</button>
-      <button onclick="switchTab('forja')" id="tab-forja" class="tab-btn px-3 py-2 whitespace-nowrap">🎖️ Protocolo 33 (TAF)</button>
-      <button onclick="switchTab('goals')" id="tab-goals" class="tab-btn px-3 py-2 whitespace-nowrap">🎯 Metas</button>
-      <button onclick="switchTab('week')" id="tab-week" class="tab-btn px-3 py-2 whitespace-nowrap">📅 Semana</button>
+      <button onclick="switchTab('forja')" id="tab-forja" class="tab-btn px-3 py-2 whitespace-nowrap">🎖️ Protocolo 33</button>
+      <button onclick="switchTab('week')" id="tab-week" class="tab-btn px-3 py-2 whitespace-nowrap">📅 Semana & Metas</button>
       <button onclick="switchTab('studio')" id="tab-studio" class="tab-btn px-3 py-2 whitespace-nowrap">⚙️ Estúdio</button>
     </nav>
   </header>
@@ -300,7 +284,7 @@
         <span class="text-2xl">📅</span>
         <div>
           <h3 class="text-xs md:text-sm font-bold text-amber-300">Uma nova semana começou (Domingo)!</h3>
-          <p class="text-xs text-slate-300">Deseja arquivar os números da semana anterior no histórico? (Seus Micro-Esquemas de revisão espaçada, Simulados, TAF e Caixinhas serão preservados).</p>
+          <p class="text-xs text-slate-300">Deseja arquivar os números da semana anterior no histórico? (Seus Micro-Esquemas de revisão espaçada, Simulados, TAF e Acumulados serão preservados).</p>
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
@@ -313,13 +297,17 @@
       </div>
     </div>
 
-    <!-- BARRA GLOBAL DE SELEÇÃO DO DIA (DOM A SÁB) -->
-    <div class="glass-card p-3 flex flex-col md:flex-row items-center justify-between gap-3">
-      <div class="flex items-center gap-2">
-        <span class="text-xs font-medium text-slate-400">Dia em edição:</span>
-        <span id="selectedDayLabel" class="text-xs font-bold font-mono px-2.5 py-1 bg-slate-800 accent-text rounded-lg">Hoje</span>
+    <!-- BARRA GLOBAL DE SELEÇÃO DO DIA (DOM A SÁB) + BOLSÕES COMPACTOS DE LONGO PRAZO -->
+    <div class="glass-card p-3 flex flex-col lg:flex-row items-center justify-between gap-3">
+      <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-between lg:justify-start">
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs font-medium text-slate-400">Dia:</span>
+          <span id="selectedDayLabel" class="text-xs font-bold font-mono px-2.5 py-1 bg-slate-800 accent-text rounded-lg">Hoje</span>
+        </div>
+        <!-- Pílulas Acumulativas de Longo Prazo (Substitui a antiga aba inteira de Metas) -->
+        <div id="compactBanksBar" class="flex flex-wrap items-center gap-1.5 text-[11px] font-mono"></div>
       </div>
-      <div class="grid grid-cols-7 gap-1.5 w-full md:w-auto" id="daySelector"></div>
+      <div class="grid grid-cols-7 gap-1.5 w-full lg:w-auto" id="daySelector"></div>
     </div>
 
     <!-- ==================== ABA 1: 📊 HOJE ==================== -->
@@ -370,6 +358,43 @@
             <span class="text-[10px] text-slate-500">Ciclo 14d / 30d / 60d</span>
           </div>
           <div class="text-2xl">⚡</div>
+        </div>
+      </div>
+
+      <!-- NOVO: PAINEL DE INTELIGÊNCIA & EFICIÊNCIA OPERACIONAL (TEMPO × QUESTÕES) -->
+      <div class="glass-card p-4 border border-indigo-500/25 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="text-base">📐</span>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-indigo-300">Análise de Eficiência Operacional (Tempo de Foco × Questões)</h2>
+          </div>
+          <span id="efficiencyStatusBadge" class="text-[10px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300">Calculando ritmo...</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div class="p-3 rounded-xl bg-slate-900/75 border border-slate-800">
+            <span class="text-[10px] text-slate-400 uppercase font-semibold">Ritmo Médio / Questão</span>
+            <div class="text-base sm:text-lg font-bold font-mono text-white mt-0.5 metric-val" id="metricMinPerQ">— min/q</div>
+            <span class="text-[10px] text-slate-500" id="metricMinPerQSub">Alvo ideal: ≤ 3,0 min/q</span>
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-900/75 border border-slate-800">
+            <span class="text-[10px] text-slate-400 uppercase font-semibold">Rendimento por Hora</span>
+            <div class="text-base sm:text-lg font-bold font-mono text-cyan-400 mt-0.5 metric-val" id="metricQPerHour">0 q/h</div>
+            <span class="text-[10px] text-slate-500" id="metricQPerHourSub">Densidade de resolução</span>
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-900/75 border border-slate-800">
+            <span class="text-[10px] text-slate-400 uppercase font-semibold">Aproveitamento Líquido</span>
+            <div class="text-base sm:text-lg font-bold font-mono accent-text mt-0.5 metric-val" id="metricCorrectPerHour">0 certas/h</div>
+            <span class="text-[10px] text-slate-500" id="metricCorrectPerHourSub">Acertos reais por hora</span>
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-900/75 border border-slate-800">
+            <span class="text-[10px] text-slate-400 uppercase font-semibold">Projeção 5.000 Questões</span>
+            <div class="text-base sm:text-lg font-bold font-mono text-amber-400 mt-0.5 metric-val" id="metricEta5000">—</div>
+            <span class="text-[10px] text-slate-500" id="metricEta5000Sub">No ritmo da semana atual</span>
+          </div>
         </div>
       </div>
 
@@ -435,74 +460,69 @@
         </div>
       </div>
 
-      <!-- Barra de Progresso de Horas Líquidas do Dia -->
-      <div class="glass-card p-5 space-y-3">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div class="flex items-center gap-2.5">
-            <span class="text-xl">🎯</span>
-            <div>
-              <div class="flex items-center gap-2">
-                <h2 class="text-sm font-bold text-white">Meta Diária de Horas Líquidas</h2>
-                <span id="goalStatusBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">Em andamento</span>
-              </div>
-              <p class="text-[11px] text-slate-400 mt-0.5" id="goalRemainingText">Marca o hábito vinculado automaticamente ao atingir 100%.</p>
-            </div>
-          </div>
-
-          <div class="flex flex-wrap items-center gap-2 text-xs">
-            <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg">
-              <span class="text-slate-400">Meta:</span>
-              <select id="dailyGoalSelect" onchange="updateDailyGoal(this.value)" class="bg-transparent secondary-text font-mono font-bold focus:outline-none cursor-pointer">
-                <option value="1" class="bg-slate-900">1h/dia</option>
-                <option value="1.5" class="bg-slate-900">1h 30m/dia</option>
-                <option value="2" class="bg-slate-900">2h/dia</option>
-                <option value="3" class="bg-slate-900">3h/dia</option>
-                <option value="4" class="bg-slate-900">4h/dia</option>
-                <option value="5" class="bg-slate-900">5h/dia</option>
-                <option value="6" class="bg-slate-900">6h/dia</option>
-              </select>
-            </div>
-            <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg">
-              <span class="text-slate-400">Auto-check:</span>
-              <select id="linkedHabitSelect" onchange="updateLinkedHabit(this.value)" class="bg-transparent accent-text font-semibold focus:outline-none cursor-pointer max-w-[140px] truncate"></select>
-            </div>
-          </div>
-        </div>
-
-        <div class="space-y-1.5">
-          <div class="flex justify-between text-xs font-mono">
-            <span id="goalProgressFraction" class="text-slate-300 metric-val">0h 00m de 4h 00m</span>
-            <span id="goalProgressPercent" class="secondary-text font-bold metric-val">0%</span>
-          </div>
-          <div class="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
-            <div id="goalProgressBar" class="h-full rounded-full transition-all duration-500 secondary-bg" style="width: 0%"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Grid Principal da Aba 1: Pomodoro Customizável (60-90m) + Checklist de Hábitos + Curva Rápida -->
+      <!-- Grid Principal da Aba 1: Pomodoro Fundido com Meta Diária (30m a 4h) + Checklist de Hábitos + Curva Rápida -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- Cronômetro Pomodoro Customizável (4 Colunas) -->
-        <div class="lg:col-span-4 glass-card p-6 flex flex-col justify-between space-y-5">
-          <div>
-            <div class="flex items-center justify-between mb-3">
+        <!-- Cronômetro Pomodoro + Meta Diária Integrada (4 Colunas) -->
+        <div class="lg:col-span-4 glass-card p-5 flex flex-col justify-between space-y-4">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <h2 class="text-base font-bold text-white">Pomodoro Deep Work</h2>
+                <h2 class="text-base font-bold text-white">Pomodoro & Meta Diária</h2>
                 <button onclick="switchTab('studio'); switchStudioSubTab('sub-appearance');" class="text-xs text-slate-400 hover:text-white" title="Alterar minutos dos blocos e descansos">⚙️</button>
               </div>
-              <span id="timerStatusBadge" class="text-[11px] font-mono font-semibold px-2.5 py-0.5 bg-slate-800 secondary-text rounded-full">Foco 60m</span>
+              <span id="timerStatusBadge" class="text-[11px] font-mono font-semibold px-2.5 py-0.5 bg-slate-800 secondary-text rounded-full">Foco 90m</span>
             </div>
 
-            <div class="grid grid-cols-3 gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800 mb-5">
-              <button onclick="setTimerMode('focus1')" id="btn-focus1" class="py-1.5 text-xs font-mono font-semibold rounded-lg secondary-bg text-white transition">Foco 60m</button>
-              <button onclick="setTimerMode('focus2')" id="btn-focus2" class="py-1.5 text-xs font-mono font-semibold rounded-lg text-slate-400 hover:text-white transition">Foco 90m</button>
-              <button onclick="setTimerMode('break')" id="btn-break" class="py-1.5 text-xs font-mono font-semibold rounded-lg text-slate-400 hover:text-white transition">Pausa 15m</button>
+            <!-- Barra de Meta Diária Integrada no Card (Valores menores até máx 4h + Personalizável) -->
+            <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+              <div class="flex flex-wrap items-center justify-between gap-1 text-xs">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[11px] text-slate-400">🎯 Meta:</span>
+                  <select id="dailyGoalSelect" onchange="updateDailyGoal(this.value)" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-0.5 secondary-text font-mono font-bold text-xs focus:outline-none cursor-pointer">
+                    <option value="0.5">30m/dia</option>
+                    <option value="0.75">45m/dia</option>
+                    <option value="1">1h/dia</option>
+                    <option value="1.5">1h 30m/dia</option>
+                    <option value="2">2h/dia</option>
+                    <option value="2.5">2h 30m/dia</option>
+                    <option value="3">3h/dia</option>
+                    <option value="3.5">3h 30m/dia</option>
+                    <option value="4">4h/dia (Máx)</option>
+                  </select>
+                  <button type="button" onclick="promptCustomDailyGoalHours()" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[10px] text-slate-300" title="Digitar meta personalizada (até 4h)">✏️</button>
+                </div>
+                <span id="goalStatusBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">Em andamento</span>
+              </div>
+
+              <div class="space-y-1">
+                <div class="flex justify-between text-[11px] font-mono">
+                  <span id="goalProgressFraction" class="text-slate-300 metric-val">0h 00m / 1h 30m</span>
+                  <span id="goalProgressPercent" class="secondary-text font-bold metric-val">0%</span>
+                </div>
+                <div class="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                  <div id="goalProgressBar" class="h-full rounded-full transition-all duration-500 secondary-bg" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
+                <span id="goalRemainingText" class="truncate">Auto-marca ao atingir 100%</span>
+                <div class="flex items-center gap-1 shrink-0">
+                  <span>Hábito:</span>
+                  <select id="linkedHabitSelect" onchange="updateLinkedHabit(this.value)" class="bg-transparent accent-text font-semibold focus:outline-none cursor-pointer max-w-[100px] truncate"></select>
+                </div>
+              </div>
             </div>
 
-            <div class="text-center py-7 bg-slate-900/70 rounded-2xl border border-slate-800/80 mb-5">
-              <div id="timerDisplay" class="text-6xl font-extrabold tracking-tight text-white font-mono timer-glow">60:00</div>
-              <p class="text-[11px] text-slate-400 mt-2" id="timerSubtext">Blocos longos para resolução profunda e revisão de erros</p>
+            <div class="grid grid-cols-3 gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
+              <button onclick="setTimerMode('focus1')" id="btn-focus1" class="py-1.5 text-xs font-mono font-semibold rounded-lg secondary-bg text-white transition">Foco 90m</button>
+              <button onclick="setTimerMode('focus2')" id="btn-focus2" class="py-1.5 text-xs font-mono font-semibold rounded-lg text-slate-400 hover:text-white transition">Foco 60m</button>
+              <button onclick="setTimerMode('break')" id="btn-break" class="py-1.5 text-xs font-mono font-semibold rounded-lg text-slate-400 hover:text-white transition">Pausa 20m</button>
+            </div>
+
+            <div class="text-center py-5 bg-slate-900/70 rounded-2xl border border-slate-800/80">
+              <div id="timerDisplay" class="text-5xl sm:text-6xl font-extrabold tracking-tight text-white font-mono timer-glow">90:00</div>
+              <p class="text-[11px] text-slate-400 mt-1.5" id="timerSubtext">Blocos profundos de resolução e revisão</p>
             </div>
 
             <div class="flex gap-2">
@@ -515,9 +535,9 @@
             </div>
           </div>
 
-          <div class="pt-4 border-t border-slate-800">
+          <div class="pt-3 border-t border-slate-800">
             <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
-              <span>Ajuste rápido no dia:</span>
+              <span>Ajuste manual no dia:</span>
               <span id="PomodoroCyclesToday" class="font-mono font-semibold secondary-text">0 blocos</span>
             </div>
             <div class="grid grid-cols-2 gap-2 font-mono">
@@ -532,7 +552,7 @@
         </div>
 
         <!-- Checklist Diário com Ciclos ON/OFF & Regra Anti-Plantão (4 Colunas) -->
-        <div class="lg:col-span-4 glass-card p-6 flex flex-col justify-between space-y-4">
+        <div class="lg:col-span-4 glass-card p-5 flex flex-col justify-between space-y-4">
           <div>
             <div class="flex items-center justify-between mb-1">
               <h2 class="text-base font-bold text-white">Hábitos & Rotina do Dia</h2>
@@ -542,9 +562,9 @@
                 <span class="text-xs font-mono accent-text font-bold" id="dailyProgressText">0/0 ativos</span>
               </div>
             </div>
-            <p class="text-[11px] text-slate-400 mb-3">Clique em <b>📅 Dias</b> para alternar entre dias fixos ou ciclo (ex: <b>2 ON / 1 OFF</b>).</p>
+            <p class="text-[11px] text-slate-400 mb-3">Toque em <b>📅</b> para alternar entre dias fixos ou ciclo (ex: <b>2 ON / 1 OFF</b>).</p>
 
-            <div id="habitList" class="space-y-2.5 max-h-72 overflow-y-auto pr-1"></div>
+            <div id="habitList" class="space-y-2.5 max-h-80 overflow-y-auto pr-1"></div>
           </div>
 
           <form onsubmit="addHabit(event)" class="pt-3 border-t border-slate-800 space-y-2.5">
@@ -552,7 +572,7 @@
               <input 
                 type="text" 
                 id="newHabitInput" 
-                placeholder="Novo hábito (ex: Treino, Trilha ENAMED)..." 
+                placeholder="Novo hábito (ex: Treino, Questões)..." 
                 required
                 class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
               >
@@ -593,7 +613,7 @@
         </div>
 
         <!-- Curva Semanal Multidimensional (4 Colunas) -->
-        <div class="lg:col-span-4 glass-card p-6 flex flex-col justify-between">
+        <div class="lg:col-span-4 glass-card p-5 flex flex-col justify-between">
           <div>
             <h2 class="text-base font-bold text-white">Curva da Semana (Dom a Sáb)</h2>
             <p class="text-[11px] text-slate-400 mb-4">Linha: Hábitos (%) | Tracejada: Acerto (%) | Barras: Estudo (h)</p>
@@ -606,7 +626,7 @@
       </div>
     </section>
 
-    <!-- ==================== ABA 2: 📝 QUESTÕES, AUTÓPSIA MULTI-TAG & FLASH-REVIEW ==================== -->
+    <!-- ==================== ABA 2: 📝 QUESTÕES, AUTÓPSIA ENXUTA & FLASH-REVIEW ==================== -->
     <section id="view-questions" class="hidden space-y-6">
 
       <!-- ATALHOS RÁPIDOS DE 1-TOQUE -->
@@ -618,83 +638,48 @@
         <div class="flex flex-wrap gap-2" id="quickQButtonsContainer"></div>
       </div>
 
-      <!-- Grid Lado a Lado: Registro + Autópsia Multi-Tag (7 Colunas) + Diagnóstico de Erros & Pontos Recuperáveis (5 Colunas) -->
+      <!-- Grid Lado a Lado: Registro Limpo (Sem Gavetas) + Diagnóstico de Erros & Eficiência por Área -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        <!-- Card de Registro de Questões e Multi-Tags de Erro (7 Colunas) -->
+        <!-- Card de Registro de Questões e Autópsia Minimalista (7 Colunas) -->
         <div class="lg:col-span-7 glass-card p-5 flex flex-col justify-between space-y-4">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div class="flex items-center gap-2.5">
               <span class="text-xl">📝</span>
               <div>
                 <div class="flex items-center gap-2">
-                  <h2 class="text-base font-bold text-white">Lançamento de Questões & Micro-Esquema</h2>
+                  <h2 class="text-base font-bold text-white">Lançamento de Questões & Autópsia Rápida</h2>
                   <span id="qAccuracyBadge" class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">Acerto: 0%</span>
                 </div>
-                <p class="text-xs text-slate-400 mt-0.5">Marque 1, 2 ou mais causas de erro para alimentar a Autópsia e o Flash-Review espaçado.</p>
+                <p class="text-xs text-slate-400 mt-0.5">Classifique a falha com 1 toque (Teoria vs. Desatenção) sem gavetas poluindo a tela.</p>
               </div>
             </div>
 
             <div class="flex flex-wrap items-center gap-1.5 text-xs">
-              <button type="button" onclick="toggleAreaManager()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-semibold border border-slate-700 transition">
-                ⚙️ Áreas
-              </button>
-              <button type="button" onclick="toggleTagManager()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 font-semibold border border-slate-700 transition">
-                🏷️ Tags
-              </button>
-              <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2 py-1 rounded-lg">
-                <span class="text-slate-400">Meta:</span>
+              <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg">
+                <span class="text-slate-400">Meta Diária:</span>
                 <select id="dailyQGoalSelect" onchange="updateDailyQuestionGoal(this.value)" class="bg-transparent text-cyan-300 font-mono font-bold focus:outline-none cursor-pointer">
+                  <option value="5" class="bg-slate-900">5/d</option>
                   <option value="10" class="bg-slate-900">10/d</option>
                   <option value="15" class="bg-slate-900">15/d</option>
                   <option value="20" class="bg-slate-900">20/d</option>
+                  <option value="25" class="bg-slate-900">25/d</option>
                   <option value="30" class="bg-slate-900">30/d</option>
                   <option value="40" class="bg-slate-900">40/d</option>
                   <option value="50" class="bg-slate-900">50/d</option>
                   <option value="80" class="bg-slate-900">80/d</option>
-                  <option value="100" class="bg-slate-900">100/d</option>
                 </select>
+                <button type="button" onclick="promptCustomDailyQuestionGoal()" class="px-1 text-[10px] text-slate-400 hover:text-white" title="Digitar meta personalizada de questões">✏️</button>
               </div>
-            </div>
-          </div>
-
-          <!-- Gaveta Gerenciadora de Áreas Customizáveis -->
-          <div id="areaManagerPanel" class="hidden p-3.5 rounded-xl bg-slate-950/90 border border-cyan-500/30 space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold text-cyan-300">⚙️ Criar, Renomear ou Excluir Áreas (Residência & Concursos)</span>
-              <button type="button" onclick="toggleAreaManager()" class="text-xs text-slate-400 hover:text-white">Fechar ✕</button>
-            </div>
-            <div id="customAreasList" class="flex flex-wrap gap-1.5"></div>
-            <div class="flex gap-2 pt-1">
-              <input type="text" id="newAreaInput" placeholder="Nova área (ex: Português, SUS, Neurocirurgia)..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none">
-              <button type="button" onclick="addCustomArea()" class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg text-xs transition">
-                + Adicionar
-              </button>
-            </div>
-          </div>
-
-          <!-- Gaveta Gerenciadora de Tags de Erro -->
-          <div id="tagManagerPanel" class="hidden p-3.5 rounded-xl bg-slate-950/90 border border-amber-500/30 space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold text-amber-300">🏷️ Gerenciar Tags de Causa de Erro (Toque em ✏️ para renomear ou trocar tipo)</span>
-              <button type="button" onclick="toggleTagManager()" class="text-xs text-slate-400 hover:text-white">Fechar ✕</button>
-            </div>
-            <div id="customTagsManagerList" class="flex flex-wrap gap-1.5"></div>
-            <div class="flex flex-wrap gap-2 pt-1">
-              <input type="text" id="newTagInput" placeholder="Nova causa (ex: Erro de Dose, Leitura de Imagem)..." class="flex-1 min-w-[160px] bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none">
-              <select id="newTagCategorySelect" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-amber-300 font-semibold">
-                <option value="operational">⚡ Operacional / Prova (Recuperável)</option>
-                <option value="knowledge">📚 Conhecimento / Teoria</option>
-              </select>
-              <button type="button" onclick="addCustomErrorTag()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold rounded-lg text-xs transition">
-                + Criar Tag
+              <button type="button" onclick="switchTab('studio'); switchStudioSubTab('sub-shortcuts');" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] border border-slate-700" title="Gerenciar Áreas e Tags no Estúdio">
+                ⚙️ Áreas/Tags
               </button>
             </div>
           </div>
 
           <div class="space-y-1.5">
             <div class="flex justify-between text-xs font-mono">
-              <span id="qProgressFraction" class="text-slate-300 metric-val">0 de 30 questões</span>
+              <span id="qProgressFraction" class="text-slate-300 metric-val">0 de 10 questões</span>
               <span id="qProgressPercent" class="text-cyan-400 font-bold metric-val">0%</span>
             </div>
             <div class="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
@@ -705,7 +690,7 @@
           <!-- Pílulas de Desempenho por Área na Semana -->
           <div id="areaStatsPills" class="flex flex-wrap items-center gap-1.5 pt-0.5 private-text"></div>
 
-          <!-- Formulário de Registro com Multi-Tags -->
+          <!-- Formulário de Registro com Autópsia Enxuta (4 pílulas essenciais) -->
           <form onsubmit="addQuestionBatch(event)" class="space-y-3 pt-2 border-t border-slate-800/80">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               <div class="flex flex-col">
@@ -714,21 +699,21 @@
               </div>
               <div class="flex flex-col">
                 <label class="text-[10px] text-slate-400 mb-1">Questões Feitas</label>
-                <input type="number" id="qSolvedInput" min="1" max="500" placeholder="Ex: 20" required oninput="autoPreviewAccuracy()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono font-bold focus:outline-none">
+                <input type="number" id="qSolvedInput" min="1" max="500" placeholder="Ex: 15" required oninput="autoPreviewAccuracy()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono font-bold focus:outline-none">
               </div>
               <div class="flex flex-col">
                 <label class="text-[10px] text-slate-400 mb-1 flex justify-between">
                   <span>Acertos</span>
                   <span id="liveBatchAccPreview" class="font-mono text-emerald-400"></span>
                 </label>
-                <input type="number" id="qCorrectInput" min="0" max="500" placeholder="Ex: 16" required oninput="autoPreviewAccuracy()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs accent-text font-mono font-bold focus:outline-none">
+                <input type="number" id="qCorrectInput" min="0" max="500" placeholder="Ex: 12" required oninput="autoPreviewAccuracy()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs accent-text font-mono font-bold focus:outline-none">
               </div>
             </div>
 
-            <!-- SELETOR MULTI-TAG DE CAUSAS DE ERRO -->
+            <!-- AUTÓPSIA MINIMALISTA DE 1-TOQUE (Separa imediatamente Conhecimento vs. Operacional) -->
             <div class="space-y-1.5">
               <div class="flex items-center justify-between text-[11px]">
-                <span class="text-slate-400 font-medium">🏷️ Causas dos Erros neste Bloco (Marque 1, 2 ou mais):</span>
+                <span class="text-slate-400 font-medium">🔍 Autópsia Rápida do Erro (Toque se houve erro no bloco):</span>
                 <span id="selectedTagsCountLabel" class="font-mono text-[10px] text-amber-400">0 selecionadas</span>
               </div>
               <div id="errorTagsMultiPicker" class="flex flex-wrap gap-1.5"></div>
@@ -738,7 +723,7 @@
               <input 
                 type="text" 
                 id="qErrorTopicInput" 
-                placeholder="📓 Micro-esquema breve do erro (Entra no ciclo espaçado: +14d → +30d → +60d)..." 
+                placeholder="📓 Micro-esquema breve do erro (Ciclo espaçado: +14d → +30d → +60d)..." 
                 class="flex-1 min-w-[220px] bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
               >
               <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-4 py-2 rounded-xl text-xs transition">
@@ -754,39 +739,59 @@
           </form>
         </div>
 
-        <!-- Diagnóstico de Autópsia & Pontos Recuperáveis (5 Colunas) -->
+        <!-- Diagnóstico de Autópsia, Balanço Teoria vs. Desatenção & Gráfico (5 Colunas) -->
         <div class="lg:col-span-5 glass-card p-5 flex flex-col justify-between space-y-4">
           <div class="flex items-center justify-between">
             <div>
-              <h3 class="text-base font-bold text-white">🔍 Autópsia de Erros & Nota Potencial</h3>
-              <p class="text-xs text-slate-400 mt-0.5">Separa falhas de Conhecimento vs. Operacionais (Desatenção/Pegadinha).</p>
+              <h3 class="text-base font-bold text-white">🔍 Diagnóstico da Autópsia & Ritmo</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Balanço exato entre Lacuna Teórica e Erro Operacional (Desatenção).</p>
             </div>
             <select id="rightChartModeSelect" onchange="renderRightQuestionChart()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-cyan-300 font-semibold">
-              <option value="autopsy">🔍 Causas de Erro</option>
+              <option value="autopsy">🔍 Teoria vs. Operacional</option>
               <option value="areas">🍩 Volume por Área</option>
+              <option value="accuracy_area">📊 Precisão por Área (%)</option>
             </select>
           </div>
 
-          <!-- Box de Pontos Recuperáveis -->
-          <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <span class="text-[10px] text-slate-400 uppercase">Nota Real (Semana)</span>
-              <div class="text-lg font-bold font-mono text-cyan-400 metric-val" id="boxRealAcc">0%</div>
+          <!-- Box de Pontos Recuperáveis + Barra Dupla Teoria vs Operacional -->
+          <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2.5 text-xs">
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <span class="text-[10px] text-slate-400 uppercase">Nota Real</span>
+                <div class="text-base font-bold font-mono text-cyan-400 metric-val" id="boxRealAcc">0%</div>
+              </div>
+              <div>
+                <span class="text-[10px] text-emerald-400 uppercase font-semibold">Nota Potencial</span>
+                <div class="text-base font-bold font-mono accent-text metric-val" id="boxPotentialAcc">0%</div>
+              </div>
+              <div>
+                <span class="text-[10px] text-amber-300 uppercase font-semibold">Erros Recuperáveis</span>
+                <div class="text-base font-bold font-mono text-amber-400 metric-val" id="boxRecoverableCount">0q</div>
+              </div>
             </div>
-            <div>
-              <span class="text-[10px] text-emerald-400 uppercase font-semibold">Nota s/ Erros Operacionais</span>
-              <div class="text-lg font-bold font-mono accent-text metric-val" id="boxPotentialAcc">0%</div>
+
+            <!-- Barra Visual de Proporção Teoria (Rose) vs Operacional (Amber) -->
+            <div class="space-y-1 pt-1 border-t border-slate-800/80">
+              <div class="flex justify-between text-[10px] font-mono">
+                <span id="autopsyTheoryPctLabel" class="text-rose-300">📚 Teoria: 0%</span>
+                <span id="autopsyOpPctLabel" class="text-amber-300">⚠️ Operacional/Desatenção: 0%</span>
+              </div>
+              <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden flex border border-slate-800">
+                <div id="autopsyTheoryBar" class="h-full bg-rose-500 transition-all duration-300" style="width: 50%"></div>
+                <div id="autopsyOpBar" class="h-full bg-amber-400 transition-all duration-300" style="width: 50%"></div>
+              </div>
             </div>
-            <div class="col-span-2 text-[11px] text-slate-400 border-t border-slate-800/80 pt-1.5" id="autopsyInsightText">
-              Marque as tags ao registrar seus erros para calcular quantos pontos você recupera eliminando desatenções.
+
+            <div class="text-[11px] text-slate-400 pt-0.5" id="autopsyInsightText">
+              Marque a causa ao registrar seus blocos para diagnosticar quantos pontos escapam por desatenção.
             </div>
           </div>
 
-          <div class="relative h-52 w-full flex items-center justify-center">
+          <div class="relative h-48 w-full flex items-center justify-center">
             <canvas id="areaDoughnutChart"></canvas>
           </div>
 
-          <div class="text-[11px] text-slate-400 text-center border-t border-slate-800 pt-2" id="doughnutFooterText">
+          <div class="text-[11px] text-slate-400 text-center border-t border-slate-800 pt-2 font-mono" id="doughnutFooterText">
             Total na semana: 0 questões
           </div>
         </div>
@@ -878,7 +883,7 @@
             <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800">
               <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
                 <input type="checkbox" id="simFeedDailyCheck" checked class="rounded bg-slate-900 border-slate-700">
-                <span>Somar questões do simulado na meta de hoje e na Caixinha de 5.000q</span>
+                <span>Somar questões do simulado na meta de hoje e no acumulado de 5.000q</span>
               </label>
               <button type="submit" class="px-5 py-2.5 rounded-xl accent-bg text-slate-950 font-bold text-xs transition shadow-lg">
                 🏆 Registrar Boletim do Simulado
@@ -1030,26 +1035,10 @@
 
     </section>
 
-    <!-- ==================== ABA 5: 🎯 METAS (CAIXINHAS DE LONGO PRAZO) ==================== -->
-    <section id="view-goals" class="hidden space-y-6">
-      <div class="glass-card p-6 space-y-5">
-        <div class="flex flex-wrap justify-between items-center gap-3">
-          <div>
-            <h2 class="text-lg font-bold text-white">🎯 Bolsões & Metas Acumulativas de Longo Prazo</h2>
-            <p class="text-xs text-slate-400 mt-1">Diferente do quadro semanal, estas caixinhas <b>não zeram no domingo</b>. Elas acumulam sua jornada ao longo das 42 semanas.</p>
-          </div>
-          <button onclick="openNewStudyBankPrompt()" class="text-xs px-3.5 py-2 rounded-xl accent-bg text-slate-950 font-bold transition">
-            ➕ Nova Meta de Longo Prazo
-          </button>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="studyBanksGrid"></div>
-      </div>
-    </section>
-
-    <!-- ==================== ABA 6: 📅 SEMANA (MATRIZ & HISTÓRICO) ==================== -->
+    <!-- ==================== ABA 5: 📅 SEMANA, MATRIZ & METAS ACUMULATIVAS ==================== -->
     <section id="view-week" class="hidden space-y-6">
 
+      <!-- Matriz Semanal de Hábitos e Indicadores -->
       <div class="glass-card p-6 overflow-x-auto">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
           <div>
@@ -1068,30 +1057,43 @@
         </table>
       </div>
 
+      <!-- Bolsões & Metas de Longo Prazo Integrados na Aba Semana -->
+      <div class="glass-card p-6 space-y-4">
+        <div class="flex flex-wrap justify-between items-center gap-3">
+          <div>
+            <h2 class="text-base font-bold text-white">🎯 Metas Acumulativas de Longo Prazo (Não zeram no domingo)</h2>
+            <p class="text-xs text-slate-400">Alimentadas automaticamente por questões, horas de foco, simulados e sessões do Protocolo 33.</p>
+          </div>
+          <button onclick="openNewStudyBankPrompt()" class="text-xs px-3 py-1.5 rounded-xl accent-bg text-slate-950 font-bold transition">
+            ➕ Nova Meta
+          </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5" id="studyBanksGrid"></div>
+      </div>
+
+      <!-- Histórico de Semanas Arquivadas -->
       <div class="glass-card p-6 overflow-x-auto">
-        <h2 class="text-base font-bold text-white mb-1">📦 Histórico de Semanas Arquivadas</h2>
-        <p class="text-xs text-slate-400 mb-4">Evolução comparativa de consistência, horas líquidas e precisão ao longo das semanas.</p>
+        <h2 class="text-base font-bold text-white mb-1">📦 Histórico de Semanas Arquivadas & Ritmo Médio</h2>
+        <p class="text-xs text-slate-400 mb-4">Evolução comparativa de consistência, horas líquidas, questões e ritmo por questão.</p>
         <div id="archiveContainer"></div>
       </div>
 
     </section>
 
-    <!-- ==================== ABA 7: ⚙️ ESTÚDIO DE PERSONALIZAÇÃO ==================== -->
+    <!-- ==================== ABA 6: ⚙️ ESTÚDIO DE PERSONALIZAÇÃO (MINIMALISTA) ==================== -->
     <section id="view-studio" class="hidden space-y-6">
 
       <div class="flex flex-wrap gap-2 border-b border-slate-800 pb-3 text-xs">
-        <button onclick="switchStudioSubTab('sub-appearance')" id="btn-sub-appearance" class="px-3.5 py-2 rounded-xl accent-bg text-slate-950 font-bold">🎨 1. Pomodoro, Trilha, Protocolo 33 & Temas</button>
-        <button onclick="switchStudioSubTab('sub-shortcuts')" id="btn-sub-shortcuts" class="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300">⚡ 2. Atalhos Rápidos & Tags</button>
+        <button onclick="switchStudioSubTab('sub-appearance')" id="btn-sub-appearance" class="px-3.5 py-2 rounded-xl accent-bg text-slate-950 font-bold">⏱️ 1. Pomodoro, Trilha, Protocolo 33 & Tema</button>
+        <button onclick="switchStudioSubTab('sub-shortcuts')" id="btn-sub-shortcuts" class="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300">⚡ 2. Atalhos, Áreas & Tags de Autópsia</button>
         <button onclick="switchStudioSubTab('sub-cloud')" id="btn-sub-cloud" class="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300">☁️ 3. Planilha Google & Backups</button>
       </div>
 
-      <!-- SUB-PAINEL 1: POMODORO CUSTOMIZÁVEL (60-90M), TRILHA 42 SEMANAS, PROTOCOLO 33 & CORES -->
+      <!-- SUB-PAINEL 1: POMODORO, TRILHA, PROTOCOLO 33 & TEMA ENXUTO (SEM RODA DE CORES) -->
       <div id="sub-appearance" class="glass-card p-6 space-y-6">
-        
-        <!-- Configuração do Pomodoro 60-90m e Trilha ENAMED -->
         <div>
-          <h3 class="text-base font-bold text-white">⏱️ Configuração do Pomodoro Deep Work, Trilha ENAMED & Protocolo 33</h3>
-          <p class="text-xs text-slate-400 mt-0.5">Ajuste livremente os minutos dos seus blocos de foco (ex: 60m e 90m), tempo de descanso, semana atual e links diretos.</p>
+          <h3 class="text-base font-bold text-white">⏱️ Blocos do Pomodoro, Trilha ENAMED & Protocolo 33</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Ajuste livremente os minutos dos seus blocos de foco, descanso, semana atual e links diretos.</p>
           <div class="grid grid-cols-2 sm:grid-cols-6 gap-3 mt-3 text-xs">
             <div>
               <label class="text-slate-400">Bloco Foco 1 (min)</label>
@@ -1102,7 +1104,7 @@
               <input type="number" min="5" max="240" id="cfgPomoFocus2" onchange="savePomodoroCustomConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-white" />
             </div>
             <div>
-              <label class="text-slate-400">Descanso Maior (min)</label>
+              <label class="text-slate-400">Descanso (min)</label>
               <input type="number" min="1" max="120" id="cfgPomoBreak" onchange="savePomodoroCustomConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-amber-300" />
             </div>
             <div>
@@ -1133,86 +1135,81 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-800 text-xs">
           <div>
-            <label class="text-slate-400 font-medium">Modo de Superfície (Fundo)</label>
+            <label class="text-slate-400 font-medium">Modo de Superfície (Contraste)</label>
             <select id="cfgSurfaceSelect" onchange="changeSurfaceMode(this.value)" class="w-full mt-1.5 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
               <option value="dark">🌑 Dark Studio (Padrão)</option>
               <option value="oled">🖤 OLED Puro (#000000 - Economia Bateria)</option>
-              <option value="midnight">🌌 Midnight Slate</option>
               <option value="light">☀️ Modo Claro Executivo (Alto Contraste Diurno)</option>
             </select>
           </div>
 
-          <div class="md:col-span-2">
-            <label class="text-slate-400 font-medium">Título Personalizado do Painel</label>
+          <div>
+            <label class="text-slate-400 font-medium">Esquema de Destaque</label>
+            <div class="grid grid-cols-3 gap-1.5 mt-1.5">
+              <button onclick="applyThemePreset('ocean')" class="py-2 px-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-emerald-500 text-[11px] font-semibold text-white">Esmeralda</button>
+              <button onclick="applyThemePreset('graphite')" class="py-2 px-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-sky-400 text-[11px] font-semibold text-white">Azul Aço</button>
+              <button onclick="applyThemePreset('midnight')" class="py-2 px-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-amber-400 text-[11px] font-semibold text-white">Âmbar</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-slate-400 font-medium">Título do Painel</label>
             <input type="text" id="cfgBrandTitle" oninput="updateBrandTitle(this.value)" placeholder="Performance Studio" class="w-full mt-1.5 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white" />
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-slate-800">
-          <div class="space-y-2">
-            <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">3 Esquemas Pré-Montados:</span>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <button onclick="applyThemePreset('ocean')" class="p-3 rounded-xl bg-slate-900 border border-slate-700 hover:border-emerald-500 transition text-left flex flex-col gap-1.5">
-                <div class="flex items-center gap-1.5">
-                  <span class="w-3.5 h-3.5 rounded-full bg-[#10b981]"></span>
-                  <span class="w-3.5 h-3.5 rounded-full bg-[#6366f1]"></span>
-                </div>
-                <span class="text-xs font-semibold text-white">1. Esmeralda & Índigo</span>
-              </button>
-
-              <button onclick="applyThemePreset('graphite')" class="p-3 rounded-xl bg-slate-900 border border-slate-700 hover:border-sky-400 transition text-left flex flex-col gap-1.5">
-                <div class="flex items-center gap-1.5">
-                  <span class="w-3.5 h-3.5 rounded-full bg-[#0284c7]"></span>
-                  <span class="w-3.5 h-3.5 rounded-full bg-[#64748b]"></span>
-                </div>
-                <span class="text-xs font-semibold text-white">2. Azul & Aço</span>
-              </button>
-
-              <button onclick="applyThemePreset('midnight')" class="p-3 rounded-xl bg-slate-900 border border-slate-700 hover:border-amber-400 transition text-left flex flex-col gap-1.5">
-                <div class="flex items-center gap-1.5">
-                  <span class="w-3.5 h-3.5 rounded-full bg-[#d97706]"></span>
-                  <span class="w-3.5 h-3.5 rounded-full bg-[#9333ea]"></span>
-                </div>
-                <span class="text-xs font-semibold text-white">3. Âmbar & Violeta</span>
-              </button>
-            </div>
-          </div>
-
-          <div class="space-y-2">
-            <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Roda de Cores (Toque para Escolher):</span>
-            <div class="grid grid-cols-2 gap-3 bg-slate-900/70 p-3.5 rounded-xl border border-slate-800">
-              <label class="flex items-center gap-2.5 cursor-pointer">
-                <input type="color" id="pickerPrimary" value="#10b981" onchange="applyCustomWheelColors()">
-                <div>
-                  <div class="text-xs font-semibold text-white">Destaque Primário</div>
-                  <div class="text-[10px] text-slate-400">Checks, botões e linha</div>
-                </div>
-              </label>
-
-              <label class="flex items-center gap-2.5 cursor-pointer">
-                <input type="color" id="pickerSecondary" value="#6366f1" onchange="applyCustomWheelColors()">
-                <div>
-                  <div class="text-xs font-semibold text-white">Destaque Estudo</div>
-                  <div class="text-[10px] text-slate-400">Pomodoro e barras</div>
-                </div>
-              </label>
-            </div>
           </div>
         </div>
       </div>
 
-      <!-- SUB-PAINEL 2: GERENCIADOR DE ATALHOS RÁPIDOS DE QUESTÕES -->
-      <div id="sub-shortcuts" class="hidden glass-card p-6 space-y-4">
-        <div class="flex flex-wrap justify-between items-center gap-2">
-          <div>
-            <h3 class="text-base font-bold text-white">⚡ Gerenciador de Atalhos Rápidos de Questões</h3>
-            <p class="text-xs text-slate-400">Crie ou exclua botões de 1-toque que ficam no topo da aba de Questões.</p>
+      <!-- SUB-PAINEL 2: ATALHOS RÁPIDOS, ÁREAS E TAGS CENTRALIZADOS NO ESTÚDIO -->
+      <div id="sub-shortcuts" class="hidden glass-card p-6 space-y-6">
+        <div class="space-y-3">
+          <div class="flex flex-wrap justify-between items-center gap-2">
+            <div>
+              <h3 class="text-base font-bold text-white">⚡ 1. Botões de 1-Toque (Baterias Rápidas)</h3>
+              <p class="text-xs text-slate-400">Atalhos exibidos no topo da aba de Questões.</p>
+            </div>
+            <button onclick="promptNewQuickQButton()" class="text-xs px-3.5 py-2 rounded-xl accent-bg text-slate-950 font-bold">
+              ➕ Novo Atalho
+            </button>
           </div>
-          <button onclick="promptNewQuickQButton()" class="text-xs px-3.5 py-2 rounded-xl accent-bg text-slate-950 font-bold">
-            ➕ Novo Atalho
-          </button>
+          <div id="studioQuickQList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5"></div>
         </div>
-        <div id="studioQuickQList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+
+        <div class="pt-4 border-t border-slate-800 space-y-3">
+          <div>
+            <h3 class="text-base font-bold text-white">📚 2. Áreas & Disciplinas Cadastradas</h3>
+            <p class="text-xs text-slate-400">Gerencie suas áreas sem poluir a tela principal de resolução.</p>
+          </div>
+          <div id="customAreasList" class="flex flex-wrap gap-1.5"></div>
+          <div class="flex gap-2 max-w-md">
+            <input type="text" id="newAreaInput" placeholder="Nova área (ex: Infectologia, SUS)..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none">
+            <button type="button" onclick="addCustomArea()" class="px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl text-xs transition">
+              + Adicionar Área
+            </button>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-800 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-base font-bold text-white">🏷️ 3. Pílulas da Autópsia de Erros</h3>
+              <p class="text-xs text-slate-400">Mantenha enxuto (recomendado: 2 a 4 pílulas divididas entre Teoria e Operacional).</p>
+            </div>
+            <button type="button" onclick="resetMinimalAutopsyTags()" class="text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700">
+              ↺ Restaurar 4 Pílulas Minimalistas
+            </button>
+          </div>
+          <div id="customTagsManagerList" class="flex flex-wrap gap-1.5"></div>
+          <div class="flex flex-wrap gap-2 max-w-xl">
+            <input type="text" id="newTagInput" placeholder="Nova pílula (ex: 📐 Fórmula)..." class="flex-1 min-w-[150px] bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none">
+            <select id="newTagCategorySelect" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-amber-300 font-semibold">
+              <option value="operational">⚡ Operacional / Recuperável</option>
+              <option value="knowledge">📚 Conhecimento / Teoria</option>
+            </select>
+            <button type="button" onclick="addCustomErrorTag()" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold rounded-xl text-xs transition">
+              + Criar Tag
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- SUB-PAINEL 3: CONEXÃO GOOGLE DRIVE & BACKUPS -->
@@ -1276,15 +1273,12 @@
       4: { label: '🔴 Fase 4 Final (Sem 33)', week: 33, pullups: 11, pushups: 40, abs: 70, runMeters: 2700, pace: '4:26/km' }
     };
 
+    // Autópsia Minimalista: 4 Pílulas Diretas (2 Conhecimento/Teoria vs. 2 Operacional/Recuperável)
     const DEFAULT_ERROR_TAGS = [
-      { id: 't_lacuna', name: '🎯 Lacuna Teórica', category: 'knowledge' },
-      { id: 't_branco', name: '🧠 Branco / Decoreba', category: 'knowledge' },
-      { id: 't_conduta', name: '🩺 Conduta / Exame', category: 'knowledge' },
-      { id: 't_calculo', name: '📐 Cálculo / Fórmula', category: 'knowledge' },
+      { id: 't_lacuna', name: '📚 Lacuna Teórica', category: 'knowledge' },
+      { id: 't_conduta', name: '🩺 Conduta / Decoreba', category: 'knowledge' },
       { id: 't_desatencao', name: '⚠️ Desatenção / Leitura', category: 'operational' },
-      { id: 't_pegadinha', name: '🪤 Pegadinha de Banca', category: 'operational' },
-      { id: 't_duvida2', name: '🤔 Dúvida entre 2 (50/50)', category: 'operational' },
-      { id: 't_pressa', name: '⏳ Pressa / Cansaço', category: 'operational' }
+      { id: 't_duvida2', name: '🪤 Pegadinha / 50-50', category: 'operational' }
     ];
 
     const SRS_INTERVAL_DAYS = [14, 30, 60];
@@ -1372,7 +1366,7 @@
     const THEME_PRESETS = {
       ocean: { surface: 'dark', primary: '#10b981', secondary: '#6366f1' },
       graphite: { surface: 'oled', primary: '#0284c7', secondary: '#64748b' },
-      midnight: { surface: 'midnight', primary: '#d97706', secondary: '#9333ea' }
+      midnight: { surface: 'dark', primary: '#d97706', secondary: '#9333ea' }
     };
 
     const DEFAULT_QUICK_Q_BUTTONS = [
@@ -1387,10 +1381,10 @@
     ];
 
     const DEFAULT_STUDY_BANKS = [
-      { id: 'sb1', name: '🎯 Rumo às 5.000 Questões (Residência & Concursos)', current: 158, target: 5000, unit: 'questões', autoType: 'questions', note: 'Soma automaticamente a cada bloco ou simulado resolvido' },
-      { id: 'sb2', name: '⏱️ Maratona 300 Horas Líquidas de Foco', current: 1.87, target: 300, unit: 'horas', autoType: 'hours', note: 'Alimentado pelas suas horas líquidas de estudo' },
-      { id: 'sb3', name: '📄 Provas Antigas / Simulados na Íntegra', current: 0, target: 40, unit: 'provas', autoType: 'simulados', note: 'Meta de provas completas resolvidas até os exames' },
-      { id: 'sb4', name: '🏋️ Protocolo 33 // Forja Operacional (132 Treinos)', current: 0, target: 132, unit: 'treinos', autoType: 'workouts', note: 'Soma automaticamente ao concluir cada sessão A, B, C ou D' }
+      { id: 'sb1', name: '🎯 Rumo às 5.000 Questões', current: 158, target: 5000, unit: 'questões', autoType: 'questions', note: 'Soma automática por bloco/simulado' },
+      { id: 'sb2', name: '⏱️ Maratona 300h Líquidas', current: 1.87, target: 300, unit: 'horas', autoType: 'hours', note: 'Alimentado pelo cronômetro de foco' },
+      { id: 'sb3', name: '📄 Simulados na Íntegra', current: 0, target: 40, unit: 'provas', autoType: 'simulados', note: 'Provas completas resolvidas' },
+      { id: 'sb4', name: '🏋️ Protocolo 33 (132 Treinos)', current: 0, target: 132, unit: 'treinos', autoType: 'workouts', note: 'Soma automática nas sessões A/B/C/D' }
     ];
 
     const defaultHabits = [
@@ -1501,6 +1495,10 @@
 
     let customErrorTags = safeParseJSON('habitCustomErrorTags', DEFAULT_ERROR_TAGS);
     if (!Array.isArray(customErrorTags) || customErrorTags.length === 0) customErrorTags = [...DEFAULT_ERROR_TAGS];
+    // Se ainda estiver com as 8 tags antigas de fábrica, enxuga automaticamente para as 4 minimalistas
+    if (customErrorTags.length === 8 && customErrorTags[0].id === 't_lacuna' && customErrorTags[7].id === 't_pressa') {
+      customErrorTags = [...DEFAULT_ERROR_TAGS];
+    }
 
     let selectedErrorTagsForForm = [];
     let activeFlashSessionIds = [];
@@ -1535,7 +1533,8 @@
 
     let studySeconds = safeParseJSON('habitStudySeconds', [0, 0, 0, 0, 0, 0, 0]);
     let pomodoroCycles = safeParseJSON('habitPomodoroCycles', [0, 0, 0, 0, 0, 0, 0]);
-    let dailyGoalHours = Number(safeGetStorage('habitDailyGoalHours', '1.5')) || 1.5;
+    // Meta diária de horas líquidas limitada ao teto de 4h/dia (mínimo 0.25h = 15m)
+    let dailyGoalHours = Math.min(4, Math.max(0.25, Number(safeGetStorage('habitDailyGoalHours', '1.5')) || 1.5));
     let linkedHabitId = Number(safeGetStorage('habitLinkedId', '')) || (habits[0] ? habits[0].id : 0);
 
     let questionsSolved = safeParseJSON('habitQuestionsSolved', [0, 0, 0, 0, 0, 0, 0]);
@@ -1550,7 +1549,7 @@
       if (!item.trilhaWeek) item.trilhaWeek = enamedWeek;
     });
 
-    let dailyQuestionsGoal = Number(safeGetStorage('habitDailyQuestionsGoal', '10')) || 10;
+    let dailyQuestionsGoal = Math.max(1, Number(safeGetStorage('habitDailyQuestionsGoal', '10')) || 10);
     let linkedQuestionHabitId = Number(safeGetStorage('habitLinkedQuestionId', '')) || (habits[2] ? habits[2].id : 0);
     let busyDays = safeParseJSON('habitBusyDays', [false, false, false, false, false, false, false]);
     let archivedWeeks = safeParseJSON('habitArchivedWeeks', []);
@@ -1593,8 +1592,9 @@
 
     // ==================== 3. NAVEGAÇÃO POR ABAS, TRILHA ENAMED & PROTOCOLO 33 ====================
     function switchTab(tabId) {
+      if (tabId === 'goals') tabId = 'week'; // Redireciona chamadas legadas para a aba unificada Semana & Metas
       activeTab = tabId;
-      ['today', 'questions', 'simulados', 'forja', 'goals', 'week', 'studio'].forEach(id => {
+      ['today', 'questions', 'simulados', 'forja', 'week', 'studio'].forEach(id => {
         const v = document.getElementById(`view-${id}`);
         const t = document.getElementById(`tab-${id}`);
         if (v) v.classList.add('hidden');
@@ -1925,11 +1925,6 @@
       const surfSelect = document.getElementById('cfgSurfaceSelect');
       if (surfSelect) surfSelect.value = themeConfig.surface || 'dark';
 
-      const pPrimary = document.getElementById('pickerPrimary');
-      const pSecondary = document.getElementById('pickerSecondary');
-      if (pPrimary) pPrimary.value = themeConfig.primary || '#10b981';
-      if (pSecondary) pSecondary.value = themeConfig.secondary || '#6366f1';
-
       renderChart();
       if (activeTab === 'questions') renderRightQuestionChart();
       if (activeTab === 'simulados') renderSimuladosChart();
@@ -1943,17 +1938,10 @@
 
     function applyThemePreset(presetKey) {
       if (!THEME_PRESETS[presetKey]) return;
-      themeConfig = { ...THEME_PRESETS[presetKey] };
+      themeConfig = { ...THEME_PRESETS[presetKey], surface: themeConfig.surface || 'dark' };
       applyThemeVariables();
       saveState();
       showToast('Esquema visual aplicado!', '🎨');
-    }
-
-    function applyCustomWheelColors() {
-      themeConfig.primary = document.getElementById('pickerPrimary').value;
-      themeConfig.secondary = document.getElementById('pickerSecondary').value;
-      applyThemeVariables();
-      saveState();
     }
 
     function showToast(message, icon = '✅') {
@@ -1967,7 +1955,109 @@
       }, 3600);
     }
 
-    // ==================== 5. PERSISTÊNCIA E SINCRONIZAÇÃO GOOGLE SHEETS ====================
+    // ==================== 5. ANÁLISES DE EFICIÊNCIA (TEMPO × QUESTÕES) ====================
+    function computeStudyAndQuestionEfficiency() {
+      const totalSecsWeek = studySeconds.reduce((a, b) => a + (Number(b) || 0), 0);
+      const totalHoursWeek = totalSecsWeek / 3600;
+      const totalQWeek = questionsSolved.reduce((a, b) => a + (Number(b) || 0), 0);
+      const totalCWeek = questionsCorrect.reduce((a, b) => a + (Number(b) || 0), 0);
+
+      // Minutos por questão (Semana)
+      const minPerQuestion = (totalQWeek > 0 && totalSecsWeek > 0)
+        ? +((totalSecsWeek / 60) / totalQWeek).toFixed(1)
+        : 0;
+
+      // Questões por hora líquida
+      const questionsPerHour = (totalHoursWeek > 0 && totalQWeek > 0)
+        ? +(totalQWeek / totalHoursWeek).toFixed(1)
+        : 0;
+
+      // Acertos líquidos por hora de foco
+      const correctPerHour = (totalHoursWeek > 0 && totalCWeek > 0)
+        ? +(totalCWeek / totalHoursWeek).toFixed(1)
+        : 0;
+
+      // Projeção para 5.000 questões com base na média diária ativa ou semanal
+      const qBank = studyBanks.find(b => b.autoType === 'questions' || b.id === 'sb1');
+      const current5k = qBank ? Number(qBank.current) || 0 : totalQWeek;
+      const target5k = qBank ? Number(qBank.target) || 5000 : 5000;
+      const remaining5k = Math.max(0, target5k - current5k);
+
+      const daysElapsedInWeek = Math.max(1, selectedDayIndex + 1);
+      const avgDailyQ = totalQWeek / daysElapsedInWeek;
+      const weeksTo5k = avgDailyQ > 0 ? Math.ceil(remaining5k / (avgDailyQ * 7)) : null;
+
+      return {
+        totalSecsWeek,
+        totalHoursWeek,
+        totalQWeek,
+        totalCWeek,
+        minPerQuestion,
+        questionsPerHour,
+        correctPerHour,
+        remaining5k,
+        avgDailyQ: +avgDailyQ.toFixed(1),
+        weeksTo5k
+      };
+    }
+
+    function renderEfficiencyMetrics() {
+      const eff = computeStudyAndQuestionEfficiency();
+
+      const minQEl = document.getElementById('metricMinPerQ');
+      const minQSub = document.getElementById('metricMinPerQSub');
+      const qHourEl = document.getElementById('metricQPerHour');
+      const qHourSub = document.getElementById('metricQPerHourSub');
+      const cHourEl = document.getElementById('metricCorrectPerHour');
+      const cHourSub = document.getElementById('metricCorrectPerHourSub');
+      const etaEl = document.getElementById('metricEta5000');
+      const etaSub = document.getElementById('metricEta5000Sub');
+      const badgeEl = document.getElementById('efficiencyStatusBadge');
+
+      if (!minQEl) return;
+
+      if (eff.minPerQuestion > 0) {
+        minQEl.textContent = `${eff.minPerQuestion} min/q`;
+        minQSub.textContent = eff.minPerQuestion <= 3.0
+          ? '🟢 Velocidade de prova (≤3m/q)'
+          : (eff.minPerQuestion <= 4.5 ? '🟡 Estudo c/ revisão teórica' : '🔴 Lento (>4,5m/q — foque em objetividade)');
+      } else {
+        minQEl.textContent = '— min/q';
+        minQSub.textContent = 'Registre horas + questões';
+      }
+
+      qHourEl.textContent = `${eff.questionsPerHour} q/h`;
+      qHourSub.textContent = eff.totalHoursWeek > 0 ? `Em ${formatHoursMinutes(eff.totalSecsWeek)} na semana` : 'Sem horas na semana';
+
+      cHourEl.textContent = `${eff.correctPerHour} certas/h`;
+      cHourSub.textContent = eff.totalQWeek > 0 ? `${eff.totalCWeek} acertos totais na semana` : 'Retorno líquido por hora';
+
+      if (eff.remaining5k <= 0) {
+        etaEl.textContent = 'Concluído! 🏆';
+        etaSub.textContent = 'Meta de 5.000q batida';
+      } else if (eff.weeksTo5k !== null) {
+        etaEl.textContent = `~${eff.weeksTo5k} sem`;
+        etaSub.textContent = `Média: ${eff.avgDailyQ}q/dia (faltam ${eff.remaining5k}q)`;
+      } else {
+        etaEl.textContent = `${eff.remaining5k}q rest.`;
+        etaSub.textContent = 'Resolva blocos p/ projetar ritmo';
+      }
+
+      if (badgeEl) {
+        if (eff.questionsPerHour >= 18) {
+          badgeEl.textContent = '⚡ Alta Densidade Operacional';
+          badgeEl.className = 'text-[10px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+        } else if (eff.questionsPerHour > 0) {
+          badgeEl.textContent = `📊 Ritmo Ativo: ${eff.questionsPerHour} questões/hora`;
+          badgeEl.className = 'text-[10px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30';
+        } else {
+          badgeEl.textContent = 'Aguardando foco + questões';
+          badgeEl.className = 'text-[10px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400';
+        }
+      }
+    }
+
+    // ==================== 6. PERSISTÊNCIA E SINCRONIZAÇÃO GOOGLE SHEETS ====================
     function buildFullPayload() {
       const enrichedHabits = habits.map(h => ({
         ...h,
@@ -1975,7 +2065,7 @@
       }));
 
       return {
-        version: 9,
+        version: 10,
         brandTitle,
         enamedWeek,
         enamedTotalWeeks,
@@ -2031,9 +2121,9 @@
       if (Array.isArray(data.tafHistory)) tafHistory = data.tafHistory;
       if (data.pomoConfig) {
         pomoConfig = {
-          focus1: Math.max(5, Number(data.pomoConfig.focus1) || 60),
-          focus2: Math.max(5, Number(data.pomoConfig.focus2) || 90),
-          breakMins: Math.max(1, Number(data.pomoConfig.breakMins) || 15)
+          focus1: Math.max(5, Number(data.pomoConfig.focus1) || 90),
+          focus2: Math.max(5, Number(data.pomoConfig.focus2) || 60),
+          breakMins: Math.max(1, Number(data.pomoConfig.breakMins) || 20)
         };
         if (!isRunning) setTimerMode(timerMode);
       }
@@ -2042,7 +2132,11 @@
       if (Array.isArray(data.questionsSolved) && data.questionsSolved.length === 7) questionsSolved = data.questionsSolved.map(v => Math.max(0, Number(v) || 0));
       if (Array.isArray(data.questionsCorrect) && data.questionsCorrect.length === 7) questionsCorrect = data.questionsCorrect.map(v => Math.max(0, Number(v) || 0));
       if (Array.isArray(data.customAreas) && data.customAreas.length > 0) customAreas = data.customAreas;
-      if (Array.isArray(data.customErrorTags) && data.customErrorTags.length > 0) customErrorTags = data.customErrorTags;
+      if (Array.isArray(data.customErrorTags) && data.customErrorTags.length > 0) {
+        customErrorTags = (data.customErrorTags.length === 8 && data.customErrorTags[0].id === 't_lacuna' && data.customErrorTags[7].id === 't_pressa')
+          ? [...DEFAULT_ERROR_TAGS]
+          : data.customErrorTags;
+      }
       if (Array.isArray(data.quickQButtons)) quickQButtons = data.quickQButtons;
       if (Array.isArray(data.studyBanks)) {
         studyBanks = data.studyBanks.map(b => ({
@@ -2063,9 +2157,9 @@
       }
       if (Array.isArray(data.busyDays) && data.busyDays.length === 7) busyDays = data.busyDays.map(Boolean);
       if (Array.isArray(data.archivedWeeks)) archivedWeeks = data.archivedWeeks;
-      if (data.dailyGoalHours) dailyGoalHours = Number(data.dailyGoalHours);
+      if (data.dailyGoalHours) dailyGoalHours = Math.min(4, Math.max(0.25, Number(data.dailyGoalHours)));
       if (data.linkedHabitId !== undefined) linkedHabitId = Number(data.linkedHabitId);
-      if (data.dailyQuestionsGoal) dailyQuestionsGoal = Number(data.dailyQuestionsGoal);
+      if (data.dailyQuestionsGoal) dailyQuestionsGoal = Math.max(1, Number(data.dailyQuestionsGoal));
       if (data.linkedQuestionHabitId !== undefined) linkedQuestionHabitId = Number(data.linkedQuestionHabitId);
       if (data.weekStartIso) storedWeekStartIso = data.weekStartIso;
       if (data.updatedAt) localUpdatedAt = data.updatedAt;
@@ -2233,18 +2327,19 @@
       }
     }
 
-    // ==================== 6. MULTI-TAGS DE ERRO & CÁLCULO DE NOTA POTENCIAL ====================
-    function toggleTagManager() {
-      const panel = document.getElementById('tagManagerPanel');
-      panel.classList.toggle('hidden');
-      renderErrorTagsMultiPicker();
-    }
-
+    // ==================== 7. AUTÓPSIA MINIMALISTA & CÁLCULO DE NOTA POTENCIAL ====================
     function toggleFormErrorTag(tagName) {
       const idx = selectedErrorTagsForForm.indexOf(tagName);
       if (idx === -1) selectedErrorTagsForForm.push(tagName);
       else selectedErrorTagsForForm.splice(idx, 1);
       renderErrorTagsMultiPicker();
+    }
+
+    function resetMinimalAutopsyTags() {
+      customErrorTags = [...DEFAULT_ERROR_TAGS];
+      selectedErrorTagsForForm = [];
+      saveState();
+      showToast('4 pílulas minimalistas de autópsia restauradas!', '🏷️');
     }
 
     function addCustomErrorTag() {
@@ -2321,7 +2416,7 @@
       const countLabel = document.getElementById('selectedTagsCountLabel');
 
       if (countLabel) {
-        countLabel.textContent = `${selectedErrorTagsForForm.length} ${selectedErrorTagsForForm.length === 1 ? 'selecionada' : 'selecionadas'}`;
+        countLabel.textContent = `${selectedErrorTagsForForm.length} ${selectedErrorTagsForForm.length === 1 ? 'marcada' : 'marcadas'}`;
       }
 
       if (pickerEl) {
@@ -2332,8 +2427,9 @@
             ? (isOp ? 'bg-amber-500 text-slate-950 font-bold border-amber-400 shadow' : 'bg-rose-500 text-white font-bold border-rose-400 shadow')
             : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800';
           return `
-            <button type="button" onclick="toggleFormErrorTag('${escapeHtml(tag.name)}')" class="px-2.5 py-1 rounded-xl text-[11px] border transition flex items-center gap-1 ${activeClass}">
+            <button type="button" onclick="toggleFormErrorTag('${escapeHtml(tag.name)}')" class="px-3 py-1.5 rounded-xl text-xs border transition flex items-center gap-1.5 ${activeClass}">
               <span>${escapeHtml(tag.name)}</span>
+              <span class="text-[9px] opacity-75">(${isOp ? 'Operacional' : 'Teoria'})</span>
               ${isSelected ? '<span>✓</span>' : ''}
             </button>
           `;
@@ -2361,32 +2457,54 @@
       customErrorTags.forEach(t => { tagCounts[t.name] = 0; });
 
       let recoverableWrongQuestions = 0;
+      let knowledgeTagHits = 0;
+      let operationalTagHits = 0;
 
       questionLogs.forEach(log => {
         const wrongInBatch = Math.max(0, (Number(log.solved) || 0) - (Number(log.correct) || 0));
         const tags = Array.isArray(log.tags) ? log.tags : [];
         tags.forEach(tName => {
           tagCounts[tName] = (tagCounts[tName] || 0) + 1;
+          const tagObj = customErrorTags.find(ct => ct.name === tName);
+          const isOp = !tagObj ? (tName.toLowerCase().includes('desaten') || tName.toLowerCase().includes('pegadinha') || tName.toLowerCase().includes('50')) : (tagObj.category === 'operational');
+          if (isOp) operationalTagHits++;
+          else knowledgeTagHits++;
         });
 
         if (wrongInBatch > 0 && tags.length > 0) {
           let opCount = 0;
           tags.forEach(tName => {
             const tagObj = customErrorTags.find(ct => ct.name === tName);
-            if (!tagObj || tagObj.category === 'operational') opCount++;
+            const isOp = !tagObj ? (tName.toLowerCase().includes('desaten') || tName.toLowerCase().includes('pegadinha') || tName.toLowerCase().includes('50')) : (tagObj.category === 'operational');
+            if (isOp) opCount++;
           });
           const opRatio = opCount / tags.length;
           recoverableWrongQuestions += Math.round(wrongInBatch * opRatio);
         }
       });
 
+      const totalHits = knowledgeTagHits + operationalTagHits;
+      const theoryPct = totalHits > 0 ? Math.round((knowledgeTagHits / totalHits) * 100) : 50;
+      const opPct = totalHits > 0 ? (100 - theoryPct) : 50;
+
       const potentialCorrect = Math.min(totalQ, totalC + recoverableWrongQuestions);
       const potentialAcc = totalQ > 0 ? Math.round((potentialCorrect / totalQ) * 100) : 0;
 
-      return { totalQ, totalC, realAcc, potentialAcc, recoverableWrongQuestions, tagCounts };
+      return {
+        totalQ,
+        totalC,
+        realAcc,
+        potentialAcc,
+        recoverableWrongQuestions,
+        tagCounts,
+        knowledgeTagHits,
+        operationalTagHits,
+        theoryPct,
+        opPct
+      };
     }
 
-    // ==================== 7. FLASH-REVIEW ESPAÇADO LONGO (14d -> 30d -> 60d) ====================
+    // ==================== 8. FLASH-REVIEW ESPAÇADO LONGO (14d -> 30d -> 60d) ====================
     function getDueErrorItems() {
       return errorNotebook.filter(item => !item.reviewed && (item.nextReviewIso || TODAY_ISO) <= TODAY_ISO);
     }
@@ -2611,7 +2729,7 @@
       }).join('');
     }
 
-    // ==================== 8. ABA 🏟️ SIMULADOS (CRONÔMETRO DE PROVA & BOLETIM) ====================
+    // ==================== 9. ABA 🏟️ SIMULADOS (CRONÔMETRO DE PROVA & BOLETIM) ====================
     function formatStopwatch(secs) {
       const h = String(Math.floor(secs / 3600)).padStart(2, '0');
       const m = String(Math.floor((secs % 3600) / 60)).padStart(2, '0');
@@ -2835,7 +2953,7 @@
       }
     }
 
-    // ==================== 9. ATALHOS RÁPIDOS, CAIXINHAS E QUESTÕES ====================
+    // ==================== 10. ATALHOS RÁPIDOS, BOLSÕES COMPACTOS E QUESTÕES ====================
     function renderQuickQButtons() {
       const cont = document.getElementById('quickQButtonsContainer');
       const studioList = document.getElementById('studioQuickQList');
@@ -2930,36 +3048,52 @@
     }
 
     function renderStudyBanks() {
+      // 1. Pílulas compactas na barra superior
+      const compactBar = document.getElementById('compactBanksBar');
+      if (compactBar) {
+        compactBar.innerHTML = studyBanks.slice(0, 4).map(b => {
+          const pct = b.target > 0 ? Math.min(100, Math.round((b.current / b.target) * 100)) : 0;
+          const icon = b.autoType === 'questions' ? '🎯' : (b.autoType === 'hours' ? '⏱️' : (b.autoType === 'workouts' ? '🏋️' : '📄'));
+          return `
+            <button type="button" onclick="promptEditStudyBank('${b.id}')" class="px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 flex items-center gap-1 transition" title="${escapeHtml(b.name)} (Toque para ajustar)">
+              <span>${icon}</span>
+              <span class="metric-val font-bold text-white">${b.current}</span>
+              <span class="text-slate-500">/${b.target}</span>
+              <span class="text-[9px] text-emerald-400">(${pct}%)</span>
+            </button>
+          `;
+        }).join('');
+      }
+
+      // 2. Cards completos dentro da aba Semana & Metas
       const grid = document.getElementById('studyBanksGrid');
       if (!grid) return;
       grid.innerHTML = studyBanks.map(b => {
         const pct = b.target > 0 ? Math.min(100, (b.current / b.target) * 100) : 0;
-        const rem = Math.max(0, Number((b.target - b.current).toFixed(1)));
         const stepSmall = b.unit === 'questões' ? 20 : 1;
-        const stepLarge = b.unit === 'questões' ? 100 : 5;
 
         return `
-          <div class="p-5 rounded-2xl bg-slate-900/75 border border-slate-800 space-y-3">
-            <div class="flex justify-between items-start gap-2">
-              <div>
-                <h4 class="font-bold text-sm text-white">${escapeHtml(b.name)}</h4>
-                <p class="text-[11px] text-slate-400">${escapeHtml(b.note || '')}</p>
+          <div class="p-4 rounded-2xl bg-slate-900/75 border border-slate-800 flex flex-col justify-between space-y-2.5">
+            <div>
+              <div class="flex justify-between items-start gap-1">
+                <h4 class="font-bold text-xs text-white leading-snug">${escapeHtml(b.name)}</h4>
+                <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 metric-val">${pct.toFixed(1)}%</span>
               </div>
-              <span class="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 metric-val">${pct.toFixed(1)}%</span>
+              <p class="text-[10px] text-slate-400 mt-0.5">${escapeHtml(b.note || '')}</p>
             </div>
-            <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
-              <div class="accent-bg h-full transition-all duration-300" style="width: ${pct}%"></div>
+            <div class="space-y-1">
+              <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                <div class="accent-bg h-full transition-all duration-300" style="width: ${pct}%"></div>
+              </div>
+              <div class="flex justify-between text-[11px] font-mono text-slate-300">
+                <span class="metric-val"><strong class="accent-text">${b.current}</strong> / ${b.target} ${escapeHtml(b.unit)}</span>
+              </div>
             </div>
-            <div class="flex justify-between text-xs pt-1 font-mono">
-              <span>Acumulado: <strong class="accent-text metric-val">${b.current} ${escapeHtml(b.unit)}</strong></span>
-              <span>Faltam: <strong class="text-amber-400 metric-val">${rem} ${escapeHtml(b.unit)}</strong></span>
-            </div>
-            <div class="flex flex-wrap gap-2 pt-2 border-t border-slate-800/80 font-mono">
-              <button onclick="adjustStudyBank('${b.id}', ${stepSmall})" class="text-xs px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300">+${stepSmall}</button>
-              <button onclick="adjustStudyBank('${b.id}', ${stepLarge})" class="text-xs px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300">+${stepLarge}</button>
-              <button onclick="adjustStudyBank('${b.id}', -${stepSmall})" class="text-xs px-2 py-1 rounded-lg bg-slate-800 text-slate-400">-${stepSmall}</button>
-              <button onclick="promptEditStudyBank('${b.id}')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 ml-auto font-sans">✏️ Editar</button>
-              <button onclick="deleteStudyBank('${b.id}')" class="text-xs px-2 py-1 rounded-lg bg-rose-500/20 text-rose-300">🗑️</button>
+            <div class="flex items-center gap-1.5 pt-1.5 border-t border-slate-800/80 font-mono">
+              <button onclick="adjustStudyBank('${b.id}', ${stepSmall})" class="text-[11px] px-2 py-0.5 rounded bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300">+${stepSmall}</button>
+              <button onclick="adjustStudyBank('${b.id}', -${stepSmall})" class="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-400">-${stepSmall}</button>
+              <button onclick="promptEditStudyBank('${b.id}')" class="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 ml-auto font-sans">✏️</button>
+              <button onclick="deleteStudyBank('${b.id}')" class="text-[11px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300">✕</button>
             </div>
           </div>
         `;
@@ -2975,11 +3109,11 @@
 
     function openNewStudyBankPrompt() {
       openAppModal({
-        title: '🎯 Nova Meta de Longo Prazo (Caixinha)',
+        title: '🎯 Nova Meta Acumulativa',
         bodyHtml: `
           <div>
             <label class="text-slate-400">Nome da Meta</label>
-            <input type="text" id="modalBankName" placeholder="Ex: 🏃 500 km de Corrida no Ano" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
+            <input type="text" id="modalBankName" placeholder="Ex: 🏃 300 km de Corrida" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div>
@@ -3021,7 +3155,7 @@
       const b = studyBanks.find(x => x.id === id);
       if (!b) return;
       openAppModal({
-        title: '✏️ Editar Meta de Longo Prazo',
+        title: '✏️ Ajustar Meta Acumulativa',
         bodyHtml: `
           <div>
             <label class="text-slate-400">Nome da Meta</label>
@@ -3053,12 +3187,7 @@
       saveState();
     }
 
-    // ==================== 10. ÁREAS, RECOMENDADOR E REGISTRO DE QUESTÕES ====================
-    function toggleAreaManager() {
-      document.getElementById('areaManagerPanel').classList.toggle('hidden');
-      renderCustomAreasManager();
-    }
-
+    // ==================== 11. ÁREAS, RECOMENDADOR E REGISTRO DE QUESTÕES ====================
     function addCustomArea() {
       const input = document.getElementById('newAreaInput');
       const name = (input.value || '').trim();
@@ -3067,6 +3196,7 @@
       customAreas.push(name);
       input.value = '';
       saveState();
+      showToast(`Área "${name}" adicionada!`, '📚');
     }
 
     function renameCustomArea(index) {
@@ -3166,7 +3296,7 @@
         currentRecommendedArea = customAreas[0] || 'Clínica🩺';
         badgeEl.textContent = `🧭 Trilha Semana ${enamedWeek}/42`;
         badgeEl.className = 'text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400';
-        descEl.innerHTML = `Registre seus blocos de questões da Semana ${enamedWeek} da Trilha ENAMED para ativar a Autópsia e o cálculo de Nota Potencial.`;
+        descEl.innerHTML = `Registre seus blocos de questões da Semana ${enamedWeek} da Trilha ENAMED para ativar a Autópsia e a análise de eficiência.`;
         btnEl.classList.add('hidden');
       }
     }
@@ -3194,7 +3324,7 @@
       checkAutoCompleteStudyHabit(selectedDayIndex);
       checkAutoCompleteQuestionHabit(selectedDayIndex);
       saveState();
-      showToast(busyDays[selectedDayIndex] ? `Modo Dia Corrido ON (${DAYS[selectedDayIndex]}).` : 'Modo Dia Corrido OFF.', '⚡');
+      showToast(busyDays[selectedDayIndex] ? `Meta reduzida (-50%) em ${DAYS[selectedDayIndex]}.` : 'Meta normal restaurada.', '⚡');
     }
 
     function checkAutoCompleteQuestionHabit(dayIdx) {
@@ -3306,15 +3436,29 @@
     }
 
     function updateDailyQuestionGoal(val) {
-      dailyQuestionsGoal = Number(val);
+      dailyQuestionsGoal = Math.max(1, Number(val) || 10);
       checkAutoCompleteQuestionHabit(selectedDayIndex);
       saveState();
     }
 
-    function updateLinkedQuestionHabit(val) {
-      linkedQuestionHabitId = Number(val);
-      checkAutoCompleteQuestionHabit(selectedDayIndex);
-      saveState();
+    function promptCustomDailyQuestionGoal() {
+      openAppModal({
+        title: '📝 Meta Diária Personalizada de Questões',
+        bodyHtml: `
+          <div>
+            <label class="text-slate-400">Meta de questões por dia</label>
+            <input type="number" id="modalCustomQGoal" value="${dailyQuestionsGoal}" min="1" max="300" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
+          </div>
+        `,
+        onConfirm: () => {
+          const val = Math.max(1, parseInt(document.getElementById('modalCustomQGoal').value || '10', 10));
+          dailyQuestionsGoal = val;
+          checkAutoCompleteQuestionHabit(selectedDayIndex);
+          closeAppModal();
+          saveState();
+          showToast(`Meta diária ajustada para ${val} questões/dia!`, '📝');
+        }
+      });
     }
 
     function getDailyQuestionAccuracies() {
@@ -3337,11 +3481,11 @@
       return map;
     }
 
-    // ==================== 11. POMODORO DE ELITE CUSTOMIZÁVEL (60-90 MIN) ====================
+    // ==================== 12. POMODORO CUSTOMIZÁVEL & META DIÁRIA (ATÉ 4H) ====================
     function savePomodoroCustomConfig() {
-      pomoConfig.focus1 = Math.max(5, Number(document.getElementById('cfgPomoFocus1').value) || 60);
-      pomoConfig.focus2 = Math.max(5, Number(document.getElementById('cfgPomoFocus2').value) || 90);
-      pomoConfig.breakMins = Math.max(1, Number(document.getElementById('cfgPomoBreak').value) || 15);
+      pomoConfig.focus1 = Math.max(5, Number(document.getElementById('cfgPomoFocus1').value) || 90);
+      pomoConfig.focus2 = Math.max(5, Number(document.getElementById('cfgPomoFocus2').value) || 60);
+      pomoConfig.breakMins = Math.max(1, Number(document.getElementById('cfgPomoBreak').value) || 20);
       if (!isRunning) setTimerMode(timerMode);
       saveState();
       showToast(`Pomodoro ajustado: ${pomoConfig.focus1}m / ${pomoConfig.focus2}m / Pausa ${pomoConfig.breakMins}m!`, '⏱️');
@@ -3396,9 +3540,30 @@
     }
 
     function updateDailyGoal(hoursValue) {
-      dailyGoalHours = Number(hoursValue);
+      dailyGoalHours = Math.min(4, Math.max(0.25, Number(hoursValue) || 1.5));
       checkAutoCompleteStudyHabit(selectedDayIndex);
       saveState();
+    }
+
+    function promptCustomDailyGoalHours() {
+      openAppModal({
+        title: '🎯 Meta Diária de Horas Líquidas (Máx: 4h)',
+        bodyHtml: `
+          <div>
+            <label class="text-slate-400">Horas por dia (ex: 0.5 = 30m, 1.25 = 1h15m, máx 4h)</label>
+            <input type="number" id="modalCustomGoalHours" value="${dailyGoalHours}" min="0.25" max="4" step="0.25" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
+          </div>
+        `,
+        onConfirm: () => {
+          const raw = parseFloat(document.getElementById('modalCustomGoalHours').value || '1.5');
+          const clamped = Math.min(4, Math.max(0.25, isNaN(raw) ? 1.5 : raw));
+          dailyGoalHours = clamped;
+          checkAutoCompleteStudyHabit(selectedDayIndex);
+          closeAppModal();
+          saveState();
+          showToast(`Meta diária definida em ${formatHoursMinutes(clamped * 3600)}!`, '🎯');
+        }
+      });
     }
 
     function updateLinkedHabit(habitIdValue) {
@@ -3466,6 +3631,7 @@
         } else {
           renderKPIs();
           renderGoalBar();
+          renderEfficiencyMetrics();
         }
       }
 
@@ -3538,7 +3704,7 @@
       return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
     }
 
-    // ==================== 12. HÁBITOS, ARQUIVAMENTO E BACKUPS ====================
+    // ==================== 13. HÁBITOS, ARQUIVAMENTO E BACKUPS ====================
     function selectDay(index) {
       selectedDayIndex = index;
       renderAll();
@@ -3760,7 +3926,7 @@
             <label class="text-slate-400">Identificação do Período no Histórico</label>
             <input type="text" id="modalArchiveWeekLabel" value="${escapeHtml(defaultLabel)}" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
           </div>
-          <p class="text-[11px] text-slate-400">Seus Micro-Esquemas ativos, Simulados, Certificações TAF e Caixinhas serão preservados.</p>
+          <p class="text-[11px] text-slate-400">Seus Micro-Esquemas ativos, Simulados, Certificações TAF e Acumulados serão preservados.</p>
         `,
         confirmText: '📦 Arquivar Agora',
         onConfirm: () => {
@@ -3801,7 +3967,7 @@
     function resetWeekOnly() {
       openAppModal({
         title: '🧹 Zerar Semana Atual',
-        bodyHtml: `<p>Deseja zerar os dados da semana atual sem arquivar? (Suas Caixinhas, Simulados, Certificações TAF e Micro-Esquemas não serão afetados).</p>`,
+        bodyHtml: `<p>Deseja zerar os dados da semana atual sem arquivar? (Seus Acumulados, Simulados, Certificações TAF e Micro-Esquemas não serão afetados).</p>`,
         confirmText: 'Zerar Semana',
         onConfirm: () => {
           habits.forEach(h => h.days = [false, false, false, false, false, false, false]);
@@ -3844,7 +4010,7 @@
       }
     }
 
-    // ==================== 13. EXPORTAÇÃO E IMPORTAÇÃO ====================
+    // ==================== 14. EXPORTAÇÃO E IMPORTAÇÃO ====================
     function triggerDownload(content, filename, mimeType) {
       const blob = new Blob([content], { type: mimeType });
       const url = URL.createObjectURL(blob);
@@ -3907,7 +4073,7 @@
       reader.readAsText(file);
     }
 
-    // ==================== 14. RENDERIZAÇÃO DE COMPONENTES E GRÁFICOS ====================
+    // ==================== 15. RENDERIZAÇÃO DE COMPONENTES E GRÁFICOS ====================
     function renderDaySelector() {
       const container = document.getElementById('daySelector');
       const isBusyToday = busyDays[selectedDayIndex];
@@ -3918,10 +4084,10 @@
       const busyBtnText = document.getElementById('busyDayBtnText');
       if (isBusyToday) {
         busyBtn.className = 'text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition flex items-center gap-1 bg-amber-500/20 text-amber-300 border-amber-500/50';
-        busyBtnText.textContent = 'Dia Corrido: ON (-50%)';
+        busyBtnText.textContent = '-50% Meta: ON';
       } else {
         busyBtn.className = 'text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition flex items-center gap-1 bg-slate-800/90 text-slate-300 border-slate-700 hover:border-amber-500/50';
-        busyBtnText.textContent = 'Dia Corrido: OFF';
+        busyBtnText.textContent = '-50% Meta';
       }
 
       container.innerHTML = WEEK_DATES.map((info, idx) => {
@@ -3930,7 +4096,7 @@
         return `
           <button 
             onclick="selectDay(${idx})"
-            class="px-2.5 py-1.5 rounded-xl text-xs font-semibold transition border flex flex-col items-center justify-center ${
+            class="px-2 py-1 rounded-xl text-xs font-semibold transition border flex flex-col items-center justify-center ${
               isSelected 
                 ? 'accent-bg text-slate-950 font-bold border-transparent shadow-lg' 
                 : 'bg-slate-800/70 text-slate-400 border-slate-700/60 hover:bg-slate-800'
@@ -3948,7 +4114,16 @@
 
     function renderGoalBar() {
       const goalSelect = document.getElementById('dailyGoalSelect');
-      if (goalSelect) goalSelect.value = String(dailyGoalHours);
+      if (goalSelect) {
+        const strVal = String(dailyGoalHours);
+        if (![...goalSelect.options].some(o => o.value === strVal)) {
+          const customOpt = document.createElement('option');
+          customOpt.value = strVal;
+          customOpt.textContent = `${formatHoursMinutes(dailyGoalHours * 3600)}/dia`;
+          goalSelect.appendChild(customOpt);
+        }
+        goalSelect.value = strVal;
+      }
 
       const linkedSelect = document.getElementById('linkedHabitSelect');
       if (linkedSelect) {
@@ -3970,17 +4145,27 @@
       if (todaySecs >= goalSecs) {
         statusBadge.textContent = '✅ Meta Batida';
         statusBadge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300';
-        remainingText.textContent = 'Meta de horas líquidas do dia concluída!';
+        remainingText.textContent = 'Meta concluída hoje!';
       } else {
-        statusBadge.textContent = busyDays[selectedDayIndex] ? '⚡ Meta Reduzida (-50%)' : 'Em andamento';
+        statusBadge.textContent = busyDays[selectedDayIndex] ? '⚡ Meta -50%' : 'Em andamento';
         statusBadge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400';
-        remainingText.textContent = `Faltam ${formatHoursMinutes(goalSecs - todaySecs)} para completar a meta.`;
+        remainingText.textContent = `Faltam ${formatHoursMinutes(goalSecs - todaySecs)}`;
       }
     }
 
     function renderQuestionBar() {
       const qGoalSelect = document.getElementById('dailyQGoalSelect');
-      if (qGoalSelect) qGoalSelect.value = String(dailyQuestionsGoal);
+      if (qGoalSelect) {
+        const strVal = String(dailyQuestionsGoal);
+        if (![...qGoalSelect.options].some(o => o.value === strVal)) {
+          const customOpt = document.createElement('option');
+          customOpt.value = strVal;
+          customOpt.className = 'bg-slate-900';
+          customOpt.textContent = `${dailyQuestionsGoal}/d`;
+          qGoalSelect.appendChild(customOpt);
+        }
+        qGoalSelect.value = strVal;
+      }
 
       const areaSelect = document.getElementById('qAreaSelect');
       if (areaSelect) {
@@ -4036,16 +4221,29 @@
       const autopsy = computeAutopsyAndPotentialAccuracy();
       document.getElementById('boxRealAcc').textContent = `${autopsy.realAcc}%`;
       document.getElementById('boxPotentialAcc').textContent = `${autopsy.potentialAcc}%`;
+      document.getElementById('boxRecoverableCount').textContent = `${autopsy.recoverableWrongQuestions}q`;
+
+      const thBar = document.getElementById('autopsyTheoryBar');
+      const opBar = document.getElementById('autopsyOpBar');
+      const thLbl = document.getElementById('autopsyTheoryPctLabel');
+      const opLbl = document.getElementById('autopsyOpPctLabel');
+
+      if (thBar && opBar) {
+        thBar.style.width = `${autopsy.theoryPct}%`;
+        opBar.style.width = `${autopsy.opPct}%`;
+        thLbl.textContent = `📚 Teoria: ${autopsy.theoryPct}% (${autopsy.knowledgeTagHits})`;
+        opLbl.textContent = `⚠️ Operacional: ${autopsy.opPct}% (${autopsy.operationalTagHits})`;
+      }
 
       const gain = Math.max(0, autopsy.potentialAcc - autopsy.realAcc);
       document.getElementById('autopsyInsightText').innerHTML = gain > 0
-        ? `💡 Eliminando erros operacionais (Desatenção/Pegadinha/Pressa), você recupera <b>+${gain}% na nota geral</b> (${autopsy.recoverableWrongQuestions} questões).`
-        : `Marque as tags ao registrar seus blocos para diagnosticar quantos pontos estão escapando por desatenção.`;
+        ? `💡 Eliminando falhas operacionais (Desatenção/Pegadinha), você recupera <b>+${gain}% na nota geral</b> (${autopsy.recoverableWrongQuestions} questões).`
+        : `Marque a causa ao registrar seus blocos para diagnosticar quantos pontos estão escapando por desatenção.`;
 
       if (mode === 'autopsy') {
         const activeTags = Object.keys(autopsy.tagCounts).filter(t => autopsy.tagCounts[t] > 0);
         const totalTags = activeTags.reduce((acc, t) => acc + autopsy.tagCounts[t], 0);
-        document.getElementById('doughnutFooterText').textContent = `Ocorrências de tags diagnosticadas na semana: ${totalTags}`;
+        document.getElementById('doughnutFooterText').textContent = `Causas de erro diagnosticadas na semana: ${totalTags}`;
 
         const labels = activeTags.length > 0 ? activeTags : ['Sem tags marcadas'];
         const vals = activeTags.length > 0 ? activeTags.map(t => autopsy.tagCounts[t]) : [1];
@@ -4058,6 +4256,29 @@
             responsive: true,
             maintainAspectRatio: false,
             plugins: { legend: { position: 'right', labels: { color: legendColor, font: { size: 10, family: 'Inter' } } } }
+          }
+        });
+      } else if (mode === 'accuracy_area') {
+        const areaStats = getAreaStatsForWeek();
+        const activeAreas = Object.keys(areaStats).filter(a => areaStats[a].solved > 0);
+        document.getElementById('doughnutFooterText').textContent = `Comparativo de precisão (%) entre áreas praticadas na semana`;
+
+        const labels = activeAreas.length > 0 ? activeAreas : ['Sem registros'];
+        const vals = activeAreas.length > 0 ? activeAreas.map(a => Math.round((areaStats[a].correct / areaStats[a].solved) * 100)) : [0];
+        const colors = vals.map(v => v >= 80 ? '#10b981' : (v >= 70 ? '#f59e0b' : '#f43f5e'));
+
+        areaDoughnutInstance = new Chart(ctx, {
+          type: 'bar',
+          data: { labels, datasets: [{ label: 'Acerto (%)', data: vals, backgroundColor: colors, borderRadius: 6 }] },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: { beginAtZero: true, max: 100, ticks: { color: legendColor, callback: v => v + '%' } },
+              y: { ticks: { color: legendColor, font: { size: 10 } } }
+            },
+            plugins: { legend: { display: false } }
           }
         });
       } else {
@@ -4161,7 +4382,7 @@
                 <button onclick="moveHabit(${idx}, -1)" class="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400 hover:text-white">↑</button>
                 <button onclick="moveHabit(${idx}, 1)" class="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400 hover:text-white">↓</button>
                 <button onclick="renameHabit(${habit.id})" class="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300">✏️</button>
-                <button onclick="toggleScheduleEditor(${habit.id})" class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300">📅 Dias</button>
+                <button onclick="toggleScheduleEditor(${habit.id})" class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300" title="Editar dias ou ciclo">📅</button>
                 <button onclick="deleteHabit(${habit.id})" class="text-slate-600 hover:text-rose-400 px-1 text-xs">✕</button>
               </div>
             </div>
@@ -4220,6 +4441,14 @@
         return `<td class="py-3 text-center text-xs font-mono font-semibold text-cyan-400 metric-val">${c}/${s} (${Math.round((c / s) * 100)}%)</td>`;
       }).join('');
 
+      const eff = computeStudyAndQuestionEfficiency();
+      const paceCells = DAYS.map((_, idx) => {
+        const sec = studySeconds[idx] || 0;
+        const q = questionsSolved[idx] || 0;
+        if (sec === 0 || q === 0) return `<td class="py-3 text-center text-xs font-mono text-slate-600">—</td>`;
+        return `<td class="py-3 text-center text-xs font-mono text-amber-300 metric-val">${((sec / 60) / q).toFixed(1)}m/q</td>`;
+      }).join('');
+
       tbody.innerHTML = habitRows + `
         <tr class="bg-indigo-950/20">
           <td class="py-3 pr-4 font-semibold secondary-text">⏱️ Horas Líquidas</td>
@@ -4230,6 +4459,11 @@
           <td class="py-3 pr-4 font-semibold text-cyan-300">📝 Questões (Acertos/Total)</td>
           ${questionCells}
           <td class="py-3 text-right font-mono font-bold text-cyan-400 metric-val">${totalC}/${totalQ} (${weekQAcc}%)</td>
+        </tr>
+        <tr class="bg-amber-950/20">
+          <td class="py-3 pr-4 font-semibold text-amber-300">⚡ Ritmo Médio (Min/Questão)</td>
+          ${paceCells}
+          <td class="py-3 text-right font-mono font-bold text-amber-400 metric-val">${eff.minPerQuestion > 0 ? eff.minPerQuestion + 'm/q (' + eff.questionsPerHour + 'q/h)' : '—'}</td>
         </tr>
       `;
     }
@@ -4269,25 +4503,32 @@
         return;
       }
 
-      const rows = archivedWeeks.map(w => `
-        <tr class="border-b border-slate-800/60 text-xs font-mono">
-          <td class="py-3 pr-4 font-sans font-semibold text-white">${escapeHtml(w.label)}</td>
-          <td class="py-3 text-center accent-text font-bold">${w.weeklyRate}% (${w.totalDone}/${w.totalScheduled})</td>
-          <td class="py-3 text-center secondary-text font-semibold">${formatHoursMinutes(w.totalStudySeconds)}</td>
-          <td class="py-3 text-center text-cyan-400 font-semibold">${w.totalCorrect}/${w.totalQuestions} (${w.questionAccuracy}%)</td>
-          <td class="py-3 text-center text-amber-400 font-semibold">🔥 ${w.streak}d</td>
-          <td class="py-3 text-right"><button onclick="deleteArchivedWeek(${w.id})" class="text-slate-500 hover:text-rose-400 px-2">✕</button></td>
-        </tr>
-      `).join('');
+      const rows = archivedWeeks.map(w => {
+        const minQ = (w.totalQuestions > 0 && w.totalStudySeconds > 0)
+          ? `${((w.totalStudySeconds / 60) / w.totalQuestions).toFixed(1)}m/q`
+          : '—';
+        return `
+          <tr class="border-b border-slate-800/60 text-xs font-mono">
+            <td class="py-3 pr-4 font-sans font-semibold text-white">${escapeHtml(w.label)}</td>
+            <td class="py-3 text-center accent-text font-bold">${w.weeklyRate}% (${w.totalDone}/${w.totalScheduled})</td>
+            <td class="py-3 text-center secondary-text font-semibold">${formatHoursMinutes(w.totalStudySeconds)}</td>
+            <td class="py-3 text-center text-cyan-400 font-semibold">${w.totalCorrect}/${w.totalQuestions} (${w.questionAccuracy}%)</td>
+            <td class="py-3 text-center text-indigo-300">${minQ}</td>
+            <td class="py-3 text-center text-amber-400 font-semibold">🔥 ${w.streak}d</td>
+            <td class="py-3 text-right"><button onclick="deleteArchivedWeek(${w.id})" class="text-slate-500 hover:text-rose-400 px-2">✕</button></td>
+          </tr>
+        `;
+      }).join('');
 
       container.innerHTML = `
-        <table class="w-full text-left border-collapse min-w-[550px]">
+        <table class="w-full text-left border-collapse min-w-[600px]">
           <thead>
             <tr class="border-b border-slate-800 text-[11px] uppercase text-slate-400">
               <th class="py-2 pr-4">Período</th>
               <th class="py-2 text-center">Hábitos</th>
               <th class="py-2 text-center">Horas</th>
               <th class="py-2 text-center">Questões</th>
+              <th class="py-2 text-center">Ritmo</th>
               <th class="py-2 text-center">Sequência</th>
               <th class="py-2 text-right"></th>
             </tr>
@@ -4374,7 +4615,7 @@
           maintainAspectRatio: false,
           scales: {
             y: { type: 'linear', position: 'left', beginAtZero: true, max: 100, grid: { color: gridColor }, ticks: { color: tickColor, callback: v => v + '%' } },
-            y1: { type: 'linear', position: 'right', beginAtZero: true, suggestedMax: 6, grid: { drawOnChartArea: false }, ticks: { color: tickColor, callback: v => v + 'h' } },
+            y1: { type: 'linear', position: 'right', beginAtZero: true, suggestedMax: 4, grid: { drawOnChartArea: false }, ticks: { color: tickColor, callback: v => v + 'h' } },
             x: { grid: { display: false }, ticks: { color: tickColor } }
           },
           plugins: { legend: { display: false } }
@@ -4396,6 +4637,7 @@
       renderProtocoloSection();
       renderRecommendationBanner();
       renderGoalBar();
+      renderEfficiencyMetrics();
       renderQuestionBar();
       renderHabitList();
       renderNewHabitDaysPicker();
