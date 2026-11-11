@@ -1,0 +1,19 @@
+{
+  "name": "Performance Studio • ENAMED & Protocolo 33",
+  "short_name": "PerfStudio",
+  "description": "Painel minimalista de estudo de alta performance, revisão espaçada, simulados e Protocolo 33.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b0f19",
+  "theme_color": "#0b0f19",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%230b0f19'/%3E%3Crect x='24' y='24' width='464' height='464' rx='92' fill='none' stroke='%2310b981' stroke-width='16' stroke-opacity='0.35'/%3E%3Cpath d='M288 80L144 288h112l-32 144 144-208H256l32-144z' fill='%2310b981'/%3E%3C/svg%3E",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
