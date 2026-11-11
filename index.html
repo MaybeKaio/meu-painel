@@ -9,6 +9,11 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#0b0f19" id="metaThemeColor" />
 
+  <!-- Ícone SVG Nativo de Alta Definição para Homescreen (iOS / Android / Desktop) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%230b0f19'/%3E%3Crect x='24' y='24' width='464' height='464' rx='92' fill='none' stroke='%2310b981' stroke-width='16' stroke-opacity='0.35'/%3E%3Cpath d='M288 80L144 288h112l-32 144 144-208H256l32-144z' fill='%2310b981'/%3E%3C/svg%3E" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%230b0f19'/%3E%3Cpath d='M288 80L144 288h112l-32 144 144-208H256l32-144z' fill='%2310b981'/%3E%3C/svg%3E" />
+  <link rel="manifest" href="manifest.json" id="pwaManifestLink" />
+
   <title>Performance Studio • Questões, Revisão, Simulados & Protocolo 33</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -206,6 +211,52 @@
     </div>
   </div>
 
+  <!-- MODAL DE CONTA / LOGIN MULTIUSUÁRIO & CONVITE DE COMPRA (SaaS) -->
+  <div id="accountAuthModal" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass-card max-w-md w-full p-6 space-y-4 border border-emerald-500/40 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center accent-text font-bold font-mono text-base">⚡</div>
+          <div>
+            <h3 class="text-sm font-bold text-white">Conta & Sincronização Pessoal</h3>
+            <p class="text-[11px] text-slate-400">Isolamento individual de dados na nuvem</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeAccountModal()" class="text-xs text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="text-slate-300 font-semibold">Seu E-mail ou Chave de Aluno</label>
+          <input type="text" id="authUserKeyInput" placeholder="Ex: nome@email.com ou codigo-aluno" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-mono focus:outline-none" />
+          <p class="text-[10px] text-slate-400 mt-1">Cada e-mail/chave cria uma pasta isolada no banco da nuvem para você acessar do celular ou computador sem misturar com outros usuários.</p>
+        </div>
+
+        <div>
+          <label class="text-slate-300 font-semibold">PIN / Senha de Acesso (Opcional)</label>
+          <input type="password" id="authUserPinInput" placeholder="PIN de 4 a 8 dígitos (protege sua conta)" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-white font-mono focus:outline-none" />
+        </div>
+
+        <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1 text-[11px] text-slate-300">
+          <div class="font-semibold text-emerald-400">📲 Como funciona no celular (Offline-First):</div>
+          <p>Seus dados ficam salvos no aparelho mesmo sem internet (modo avião/hospital). Assim que o Wi-Fi ou 4G voltar, o aplicativo envia tudo automaticamente para a sua conta na nuvem.</p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-800">
+        <button type="button" onclick="logoutAccount()" class="px-3 py-2 rounded-xl bg-rose-950/50 hover:bg-rose-900/60 text-rose-300 text-xs font-medium border border-rose-500/30">
+          Sair / Trocar Conta
+        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closeAccountModal()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium">Fechar</button>
+          <button type="button" onclick="saveAccountLogin()" class="px-4 py-2 rounded-xl accent-bg text-slate-950 text-xs font-bold shadow-lg">
+            🔑 Entrar & Sincronizar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- TOP STICKY HEADER -->
   <header class="sticky top-0 z-30 backdrop-blur-md bg-slate-900/90 border-b border-slate-800 px-4 py-2.5">
     <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2.5">
@@ -214,12 +265,18 @@
           ⚡
         </div>
         <div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
             <h1 class="font-bold text-sm sm:text-base leading-tight text-white" id="brandTitle">Performance Studio</h1>
-            <span id="cloudStatusPill" onclick="switchTab('studio'); switchStudioSubTab('sub-cloud');" class="cursor-pointer text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700 hover:border-slate-500 transition flex items-center gap-1" title="Status da Planilha Google">
+            <!-- Pílula de Status Offline/Nuvem -->
+            <span id="cloudStatusPill" onclick="switchTab('studio'); switchStudioSubTab('sub-cloud');" class="cursor-pointer text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700 hover:border-slate-500 transition flex items-center gap-1" title="Status de Sincronização (Offline-First + Nuvem)">
               <span id="cloudStatusDot" class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
               <span id="cloudStatusText">Local</span>
             </span>
+            <!-- Botão de Conta Multiusuário -->
+            <button onclick="openAccountModal()" class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/25 transition flex items-center gap-1" title="Conta ativa (Multiusuário)">
+              <span>👤</span>
+              <span id="headerAccountLabel">Admin</span>
+            </button>
           </div>
           <!-- Barra Compacta Dupla: Trilha ENAMED + Protocolo 33 -->
           <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5 text-[11px] text-slate-400">
@@ -242,6 +299,11 @@
 
       <!-- Controles Rápidos Globais Minimalistas -->
       <div class="flex items-center gap-1.5 flex-wrap">
+        <!-- Botão Instalar App (PWA) -->
+        <button id="installPwaBtn" onclick="triggerPwaInstall()" class="hidden text-xs font-bold px-2.5 py-1.5 rounded-lg accent-bg text-slate-950 transition flex items-center gap-1 shadow-lg" title="Instalar aplicativo na tela inicial">
+          <span>📲</span> <span>Instalar App</span>
+        </button>
+
         <button id="shiftCycleBtn" onclick="shiftAllCyclesForPlantao(1)" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition flex items-center gap-1 bg-slate-800/90 text-rose-300 border-slate-700 hover:border-rose-500/50" title="Regra Anti-Plantão: Desloca todos os ciclos ON/OFF em +1 dia sem quebrar sua sequência">
           <span>🏥</span> <span class="hidden sm:inline">Plantão (+1d)</span>
         </button>
@@ -304,7 +366,7 @@
           <span class="text-xs font-medium text-slate-400">Dia:</span>
           <span id="selectedDayLabel" class="text-xs font-bold font-mono px-2.5 py-1 bg-slate-800 accent-text rounded-lg">Hoje</span>
         </div>
-        <!-- Pílulas Acumulativas de Longo Prazo (Substitui a antiga aba inteira de Metas) -->
+        <!-- Pílulas Acumulativas de Longo Prazo -->
         <div id="compactBanksBar" class="flex flex-wrap items-center gap-1.5 text-[11px] font-mono"></div>
       </div>
       <div class="grid grid-cols-7 gap-1.5 w-full lg:w-auto" id="daySelector"></div>
@@ -361,7 +423,7 @@
         </div>
       </div>
 
-      <!-- NOVO: PAINEL DE INTELIGÊNCIA & EFICIÊNCIA OPERACIONAL (TEMPO × QUESTÕES) -->
+      <!-- PAINEL DE INTELIGÊNCIA & EFICIÊNCIA OPERACIONAL (TEMPO × QUESTÕES) -->
       <div class="glass-card p-4 border border-indigo-500/25 space-y-3">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-2">
@@ -638,7 +700,7 @@
         <div class="flex flex-wrap gap-2" id="quickQButtonsContainer"></div>
       </div>
 
-      <!-- Grid Lado a Lado: Registro Limpo (Sem Gavetas) + Diagnóstico de Erros & Eficiência por Área -->
+      <!-- Grid Lado a Lado: Registro Limpo + Diagnóstico de Erros & Eficiência por Área -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
         <!-- Card de Registro de Questões e Autópsia Minimalista (7 Colunas) -->
@@ -690,7 +752,7 @@
           <!-- Pílulas de Desempenho por Área na Semana -->
           <div id="areaStatsPills" class="flex flex-wrap items-center gap-1.5 pt-0.5 private-text"></div>
 
-          <!-- Formulário de Registro com Autópsia Enxuta (4 pílulas essenciais) -->
+          <!-- Formulário de Registro com Autópsia Enxuta -->
           <form onsubmit="addQuestionBatch(event)" class="space-y-3 pt-2 border-t border-slate-800/80">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               <div class="flex flex-col">
@@ -710,7 +772,7 @@
               </div>
             </div>
 
-            <!-- AUTÓPSIA MINIMALISTA DE 1-TOQUE (Separa imediatamente Conhecimento vs. Operacional) -->
+            <!-- AUTÓPSIA MINIMALISTA DE 1-TOQUE -->
             <div class="space-y-1.5">
               <div class="flex items-center justify-between text-[11px]">
                 <span class="text-slate-400 font-medium">🔍 Autópsia Rápida do Erro (Toque se houve erro no bloco):</span>
@@ -1086,10 +1148,10 @@
       <div class="flex flex-wrap gap-2 border-b border-slate-800 pb-3 text-xs">
         <button onclick="switchStudioSubTab('sub-appearance')" id="btn-sub-appearance" class="px-3.5 py-2 rounded-xl accent-bg text-slate-950 font-bold">⏱️ 1. Pomodoro, Trilha, Protocolo 33 & Tema</button>
         <button onclick="switchStudioSubTab('sub-shortcuts')" id="btn-sub-shortcuts" class="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300">⚡ 2. Atalhos, Áreas & Tags de Autópsia</button>
-        <button onclick="switchStudioSubTab('sub-cloud')" id="btn-sub-cloud" class="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300">☁️ 3. Planilha Google & Backups</button>
+        <button onclick="switchStudioSubTab('sub-cloud')" id="btn-sub-cloud" class="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300">☁️ 3. Contas Multiusuário, Nuvem & App</button>
       </div>
 
-      <!-- SUB-PAINEL 1: POMODORO, TRILHA, PROTOCOLO 33 & TEMA ENXUTO (SEM RODA DE CORES) -->
+      <!-- SUB-PAINEL 1: POMODORO, TRILHA, PROTOCOLO 33 & TEMA ENXUTO -->
       <div id="sub-appearance" class="glass-card p-6 space-y-6">
         <div>
           <h3 class="text-base font-bold text-white">⏱️ Blocos do Pomodoro, Trilha ENAMED & Protocolo 33</h3>
@@ -1212,28 +1274,63 @@
         </div>
       </div>
 
-      <!-- SUB-PAINEL 3: CONEXÃO GOOGLE DRIVE & BACKUPS -->
-      <div id="sub-cloud" class="hidden glass-card p-6 space-y-4">
-        <h3 class="text-base font-bold text-white">☁️ Sincronização Google Planilhas & Backups Locais</h3>
-        <div class="flex flex-col sm:flex-row gap-2">
-          <input 
-            type="url" 
-            id="gasUrlInput" 
-            placeholder="https://script.google.com/macros/s/.../exec" 
-            class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none"
-          >
-          <button onclick="saveGasUrl()" class="accent-bg text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition">
-            Salvar Conexão
-          </button>
+      <!-- SUB-PAINEL 3: CONTAS MULTIUSUÁRIO, FILA OFFLINE & GERADOR DE LINKS PARA VENDA -->
+      <div id="sub-cloud" class="hidden glass-card p-6 space-y-6">
+
+        <!-- Bloco 1: Conta Ativa & Link de Convite para Alunos/Compradores -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-white text-sm">👤 1. Sua Conta Ativa (Multiusuário)</span>
+              <span id="studioAccountBadge" class="font-mono px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">admin</span>
+            </div>
+            <p class="text-slate-400">Cada usuário possui uma linha e um cofre isolado na aba <code class="text-cyan-300">Usuarios_SaaS</code> da planilha, protegido por PIN.</p>
+            <div class="flex gap-2">
+              <button onclick="openAccountModal()" class="px-3.5 py-2 rounded-xl accent-bg text-slate-950 font-bold text-xs">
+                🔑 Trocar / Configurar Conta & PIN
+              </button>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-slate-900/90 border border-indigo-500/30 space-y-3 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-indigo-300 text-sm">💼 2. Gerador de Link p/ Venda (Onboarding 1-Clique)</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300">Pronto p/ Kiwify/Hotmart</span>
+            </div>
+            <p class="text-slate-400">Gere um link mágico para enviar ao seu comprador. Quando ele abrir, o app já entra direto na conta exclusiva dele:</p>
+            <div class="flex gap-2">
+              <input type="text" id="buyerEmailGenInput" placeholder="E-mail ou código do comprador (ex: joao@gmail.com)" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-xs" />
+              <button onclick="generateBuyerMagicLink()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shrink-0">
+                🔗 Copiar Link
+              </button>
+            </div>
+          </div>
         </div>
 
+        <!-- Bloco 2: URL do Servidor Apps Script -->
+        <div class="pt-4 border-t border-slate-800 space-y-3">
+          <h3 class="text-sm font-bold text-white">☁️ 3. Servidor Google Apps Script & Fila Offline-First</h3>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <input 
+              type="url" 
+              id="gasUrlInput" 
+              placeholder="https://script.google.com/macros/s/.../exec" 
+              class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none"
+            >
+            <button onclick="saveGasUrl()" class="accent-bg text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition">
+              Salvar Conexão
+            </button>
+          </div>
+        </div>
+
+        <!-- Bloco 3: Controles de Sincronização e Backups -->
         <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-800 text-xs">
           <div class="flex flex-wrap items-center gap-2">
             <button onclick="pullFromCloud(true)" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-sky-300 rounded-xl font-medium border border-slate-700 transition">
-              ☁️↓ Baixar da Planilha
+              ☁️↓ Baixar da Nuvem
             </button>
             <button onclick="pushToCloud(true)" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-emerald-300 rounded-xl font-medium border border-slate-700 transition">
-              ☁️↑ Enviar p/ Planilha
+              ☁️↑ Forçar Envio
             </button>
             <button onclick="exportJSON()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-medium border border-slate-700 transition">
               ⬇️ Exportar .JSON
@@ -1258,7 +1355,7 @@
   </main>
 
   <script>
-    // ==================== 1. CONFIGURAÇÃO BASE & DATAS ====================
+    // ==================== 1. CONFIGURAÇÃO BASE, PWA & MULTIUSUÁRIO ====================
     const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     const DEFAULT_AREAS = ['Clínica🩺', 'Cirurgia 🔪', 'GO 🤰', 'Pediatria 🧸', 'Preventiva 🦎', 'Português 📓', 'Prova antiga', 'Geral'];
     const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbyp8TM__GQLo0cz9jkf5ACHU6MZhRUfI8JkFOtSSY4_H7RFz4uUAL0-8ZroFyzn6pTJYA/exec';
@@ -1273,7 +1370,6 @@
       4: { label: '🔴 Fase 4 Final (Sem 33)', week: 33, pullups: 11, pushups: 40, abs: 70, runMeters: 2700, pace: '4:26/km' }
     };
 
-    // Autópsia Minimalista: 4 Pílulas Diretas (2 Conhecimento/Teoria vs. 2 Operacional/Recuperável)
     const DEFAULT_ERROR_TAGS = [
       { id: 't_lacuna', name: '📚 Lacuna Teórica', category: 'knowledge' },
       { id: 't_conduta', name: '🩺 Conduta / Decoreba', category: 'knowledge' },
@@ -1285,8 +1381,10 @@
 
     let selectedDayIndex = new Date().getDay();
     let activeTab = 'today';
+    let deferredPwaPrompt = null;
 
-    function safeGetStorage(key, fallback = '') {
+    // Helpers Seguros de Storage (Com suporte a Namespace por Conta para Multiusuário)
+    function rawGetStorage(key, fallback = '') {
       try {
         const val = localStorage.getItem(key);
         return val !== null ? val : fallback;
@@ -1295,10 +1393,43 @@
       }
     }
 
-    function safeSetStorage(key, val) {
+    function rawSetStorage(key, val) {
       try {
         localStorage.setItem(key, val);
       } catch (e) {}
+    }
+
+    // Identificação da Conta Ativa (Suporta parâmetro ?user= na URL para Onboarding de Compradores)
+    function initAccountIdentity() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const urlUser = (params.get('user') || params.get('u') || '').trim().toLowerCase();
+        const urlGas = (params.get('gas') || '').trim();
+        if (urlGas && urlGas.startsWith('https://script.google.com/')) {
+          rawSetStorage('habitGasWebAppUrl', urlGas);
+        }
+        if (urlUser) {
+          rawSetStorage('habitCurrentAccountKey', urlUser);
+        }
+      } catch (e) {}
+    }
+    initAccountIdentity();
+
+    let currentAccountKey = (rawGetStorage('habitCurrentAccountKey', 'admin') || 'admin').trim().toLowerCase();
+    let currentAccountPin = rawGetStorage(`habitPin_${currentAccountKey}`, '');
+
+    // Prefixa chaves locais quando não for a conta 'admin' original (preserva 100% os dados antigos do dono)
+    function getScopedKey(baseKey) {
+      if (!currentAccountKey || currentAccountKey === 'admin') return baseKey;
+      return `${baseKey}__${currentAccountKey}`;
+    }
+
+    function safeGetStorage(key, fallback = '') {
+      return rawGetStorage(getScopedKey(key), fallback);
+    }
+
+    function safeSetStorage(key, val) {
+      rawSetStorage(getScopedKey(key), val);
     }
 
     function safeParseJSON(key, fallback) {
@@ -1307,6 +1438,110 @@
         return raw ? JSON.parse(raw) : fallback;
       } catch (e) {
         return fallback;
+      }
+    }
+
+    // ==================== REGISTRO DO SERVICE WORKER & INSTALAÇÃO PWA ====================
+    function setupPwaAndServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').catch(() => {});
+        });
+      }
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPwaPrompt = e;
+        const btn = document.getElementById('installPwaBtn');
+        if (btn) btn.classList.remove('hidden');
+      });
+
+      window.addEventListener('appinstalled', () => {
+        deferredPwaPrompt = null;
+        const btn = document.getElementById('installPwaBtn');
+        if (btn) btn.classList.add('hidden');
+        showToast('Aplicativo instalado na tela inicial!', '📲');
+      });
+    }
+
+    async function triggerPwaInstall() {
+      if (deferredPwaPrompt) {
+        deferredPwaPrompt.prompt();
+        await deferredPwaPrompt.userChoice;
+        deferredPwaPrompt = null;
+        document.getElementById('installPwaBtn').classList.add('hidden');
+      } else {
+        openAppModal({
+          title: '📲 Como Instalar na Tela Inicial',
+          bodyHtml: `
+            <div class="space-y-2 text-xs">
+              <p><b>🍎 No iPhone / iPad (Safari):</b> Toque no ícone de <b>Compartilhar (quadrado com seta p/ cima)</b> na barra inferior e escolha <b>"Adicionar à Tela de Início"</b>.</p>
+              <p><b>🤖 No Android (Chrome):</b> Toque nos <b>3 pontinhos (⋮)</b> no canto superior direito e selecione <b>"Instalar aplicativo"</b> ou <b>"Adicionar à tela inicial"</b>.</p>
+              <p><b>💻 No Computador (Chrome/Edge):</b> Clique no ícone de instalação na lateral direita da barra de endereços.</p>
+            </div>
+          `,
+          confirmText: 'Entendi',
+          onConfirm: () => closeAppModal()
+        });
+      }
+    }
+
+    // ==================== GESTÃO DE CONTAS MULTIUSUÁRIO (SaaS) ====================
+    function openAccountModal() {
+      document.getElementById('authUserKeyInput').value = currentAccountKey === 'admin' ? '' : currentAccountKey;
+      document.getElementById('authUserPinInput').value = currentAccountPin || '';
+      document.getElementById('accountAuthModal').classList.remove('hidden');
+    }
+
+    function closeAccountModal() {
+      document.getElementById('accountAuthModal').classList.add('hidden');
+    }
+
+    function saveAccountLogin() {
+      const rawKey = (document.getElementById('authUserKeyInput').value || '').trim().toLowerCase();
+      const pinVal = (document.getElementById('authUserPinInput').value || '').trim();
+      const cleanKey = rawKey ? rawKey.replace(/[^a-z0-9@._-]/g, '') : 'admin';
+
+      currentAccountKey = cleanKey || 'admin';
+      currentAccountPin = pinVal;
+      rawSetStorage('habitCurrentAccountKey', currentAccountKey);
+      rawSetStorage(`habitPin_${currentAccountKey}`, currentAccountPin);
+
+      closeAccountModal();
+      loadAllStateForCurrentAccount();
+      renderAll();
+      showToast(`Conta ativa: ${currentAccountKey}. Sincronizando...`, '👤');
+      pullFromCloud(true);
+    }
+
+    function logoutAccount() {
+      currentAccountKey = 'admin';
+      currentAccountPin = rawGetStorage('habitPin_admin', '');
+      rawSetStorage('habitCurrentAccountKey', 'admin');
+      closeAccountModal();
+      loadAllStateForCurrentAccount();
+      renderAll();
+      showToast('Retornado para a conta principal (Admin).', '👤');
+      pullFromCloud(false);
+    }
+
+    function generateBuyerMagicLink() {
+      const buyerKey = (document.getElementById('buyerEmailGenInput').value || '').trim().toLowerCase();
+      if (!buyerKey) return showToast('Digite o e-mail ou código do aluno/comprador.', '⚠️');
+      const baseUrl = window.location.origin + window.location.pathname;
+      const magicUrl = `${baseUrl}?user=${encodeURIComponent(buyerKey)}`;
+
+      try {
+        navigator.clipboard.writeText(magicUrl);
+        showToast('Link exclusivo do aluno copiado!', '🔗');
+      } catch (e) {
+        const temp = document.createElement('input');
+        temp.value = magicUrl;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand('copy');
+        document.body.removeChild(temp);
+        showToast('Link exclusivo do aluno copiado!', '🔗');
       }
     }
 
@@ -1381,8 +1616,8 @@
     ];
 
     const DEFAULT_STUDY_BANKS = [
-      { id: 'sb1', name: '🎯 Rumo às 5.000 Questões', current: 158, target: 5000, unit: 'questões', autoType: 'questions', note: 'Soma automática por bloco/simulado' },
-      { id: 'sb2', name: '⏱️ Maratona 300h Líquidas', current: 1.87, target: 300, unit: 'horas', autoType: 'hours', note: 'Alimentado pelo cronômetro de foco' },
+      { id: 'sb1', name: '🎯 Rumo às 5.000 Questões', current: 0, target: 5000, unit: 'questões', autoType: 'questions', note: 'Soma automática por bloco/simulado' },
+      { id: 'sb2', name: '⏱️ Maratona 300h Líquidas', current: 0, target: 300, unit: 'horas', autoType: 'hours', note: 'Alimentado pelo cronômetro de foco' },
       { id: 'sb3', name: '📄 Simulados na Íntegra', current: 0, target: 40, unit: 'provas', autoType: 'simulados', note: 'Provas completas resolvidas' },
       { id: 'sb4', name: '🏋️ Protocolo 33 (132 Treinos)', current: 0, target: 132, unit: 'treinos', autoType: 'workouts', note: 'Soma automática nas sessões A/B/C/D' }
     ];
@@ -1395,7 +1630,7 @@
         scheduleMode: 'cycle',
         cycleOn: 3,
         cycleOff: 1,
-        cycleAnchor: '2026-10-26',
+        cycleAnchor: TODAY_ISO,
         scheduledDays: [false, true, true, true, true, true, true]
       },
       {
@@ -1405,7 +1640,7 @@
         scheduleMode: 'cycle',
         cycleOn: 2,
         cycleOff: 1,
-        cycleAnchor: '2026-10-26',
+        cycleAnchor: TODAY_ISO,
         scheduledDays: [true, false, true, false, true, true, false]
       },
       {
@@ -1415,7 +1650,7 @@
         scheduleMode: 'fixed',
         cycleOn: 2,
         cycleOff: 1,
-        cycleAnchor: '2026-10-26',
+        cycleAnchor: TODAY_ISO,
         scheduledDays: [false, true, true, true, true, true, false]
       },
       {
@@ -1425,7 +1660,7 @@
         scheduleMode: 'cycle',
         cycleOn: 1,
         cycleOff: 3,
-        cycleAnchor: '2026-10-28',
+        cycleAnchor: TODAY_ISO,
         scheduledDays: [true, false, false, false, true, false, false]
       }
     ];
@@ -1462,110 +1697,45 @@
       return clean;
     }
 
-    // ==================== 2. CARREGAMENTO DO ESTADO E RETROCOMPATIBILIDADE ====================
-    let brandTitle = safeGetStorage('habitBrandTitle', 'Performance Studio');
-    let enamedWeek = Number(safeGetStorage('habitEnamedWeek', '2')) || 2;
-    let enamedTotalWeeks = Number(safeGetStorage('habitEnamedTotalWeeks', '42')) || 42;
-
-    let protocoloConfig = safeParseJSON('habitProtocoloConfig', {
-      week: 1,
-      totalWeeks: 33,
-      nextSession: 'A',
-      completedWorkouts: 0,
-      docUrl: DEFAULT_PROTOCOLO_DOC_URL,
-      mobileDocUrl: DEFAULT_PROTOCOLO_MOBILE_URL,
-      linkedWorkoutHabitId: 1792689976919
-    });
-    protocoloConfig.week = Math.max(1, Math.min(33, Number(protocoloConfig.week) || 1));
-    protocoloConfig.totalWeeks = 33;
-    if (!['A', 'B', 'C', 'D'].includes(protocoloConfig.nextSession)) protocoloConfig.nextSession = 'A';
-    if (!protocoloConfig.docUrl) protocoloConfig.docUrl = DEFAULT_PROTOCOLO_DOC_URL;
-    if (!protocoloConfig.mobileDocUrl) protocoloConfig.mobileDocUrl = DEFAULT_PROTOCOLO_MOBILE_URL;
-
-    let tafHistory = safeParseJSON('habitTafHistory', []);
-    if (!Array.isArray(tafHistory)) tafHistory = [];
-
-    let pomoConfig = safeParseJSON('habitPomoConfig', { focus1: 90, focus2: 60, breakMins: 20 });
-    pomoConfig.focus1 = Math.max(5, Number(pomoConfig.focus1) || 90);
-    pomoConfig.focus2 = Math.max(5, Number(pomoConfig.focus2) || 60);
-    pomoConfig.breakMins = Math.max(1, Number(pomoConfig.breakMins) || 20);
-
-    let customAreas = safeParseJSON('habitCustomAreas', DEFAULT_AREAS);
-    if (!Array.isArray(customAreas) || customAreas.length === 0) customAreas = [...DEFAULT_AREAS];
-
-    let customErrorTags = safeParseJSON('habitCustomErrorTags', DEFAULT_ERROR_TAGS);
-    if (!Array.isArray(customErrorTags) || customErrorTags.length === 0) customErrorTags = [...DEFAULT_ERROR_TAGS];
-    // Se ainda estiver com as 8 tags antigas de fábrica, enxuga automaticamente para as 4 minimalistas
-    if (customErrorTags.length === 8 && customErrorTags[0].id === 't_lacuna' && customErrorTags[7].id === 't_pressa') {
-      customErrorTags = [...DEFAULT_ERROR_TAGS];
-    }
-
+    // ==================== 2. CARREGAMENTO DO ESTADO (POR CONTA) & FILA OFFLINE ====================
+    let brandTitle = 'Performance Studio';
+    let enamedWeek = 1;
+    let enamedTotalWeeks = 42;
+    let protocoloConfig = {};
+    let tafHistory = [];
+    let pomoConfig = {};
+    let customAreas = [];
+    let customErrorTags = [];
     let selectedErrorTagsForForm = [];
     let activeFlashSessionIds = [];
+    let quickQButtons = [];
+    let studyBanks = [];
+    let simuladosHistory = [];
+    let habits = [];
+    let studySeconds = [0, 0, 0, 0, 0, 0, 0];
+    let pomodoroCycles = [0, 0, 0, 0, 0, 0, 0];
+    let dailyGoalHours = 1.5;
+    let linkedHabitId = 0;
+    let questionsSolved = [0, 0, 0, 0, 0, 0, 0];
+    let questionsCorrect = [0, 0, 0, 0, 0, 0, 0];
+    let questionLogs = [];
+    let errorNotebook = [];
+    let dailyQuestionsGoal = 10;
+    let linkedQuestionHabitId = 0;
+    let busyDays = [false, false, false, false, false, false, false];
+    let archivedWeeks = [];
+    let storedWeekStartIso = CURRENT_WEEK_SUNDAY_ISO;
+    let localUpdatedAt = '';
+    let hasPendingOfflineSync = false;
+    let themeConfig = THEME_PRESETS.ocean;
 
-    let quickQButtons = safeParseJSON('habitQuickQButtons', DEFAULT_QUICK_Q_BUTTONS);
-    let studyBanks = safeParseJSON('habitStudyBanks', DEFAULT_STUDY_BANKS);
-    studyBanks.forEach(b => {
-      if (b.id === 'sb4' || (b.unit === 'treinos' && b.autoType === 'manual')) {
-        b.autoType = 'workouts';
-      }
-      if (b.id === 'sb3' && b.autoType === 'manual') {
-        b.autoType = 'simulados';
-      }
-    });
-
-    let simuladosHistory = safeParseJSON('habitSimuladosHistory', []);
-
-    let habits = safeParseJSON('habitDashboardData', defaultHabits);
-    habits.forEach(h => {
-      if (!Array.isArray(h.days) || h.days.length !== 7) h.days = [false, false, false, false, false, false, false];
-      if (!Array.isArray(h.scheduledDays) || h.scheduledDays.length !== 7) h.scheduledDays = [true, true, true, true, true, true, true];
-      if (!h.scheduleMode) h.scheduleMode = h.name.toLowerCase().includes('treino') ? 'cycle' : 'fixed';
-      if (!h.cycleOn) h.cycleOn = 2;
-      if (!h.cycleOff) h.cycleOff = 1;
-      if (!h.cycleAnchor) h.cycleAnchor = TODAY_ISO;
-    });
-
-    if (!protocoloConfig.linkedWorkoutHabitId) {
-      const foundTreino = habits.find(h => h.name.toLowerCase().includes('treino'));
-      protocoloConfig.linkedWorkoutHabitId = foundTreino ? foundTreino.id : (habits[0] ? habits[0].id : 0);
-    }
-
-    let studySeconds = safeParseJSON('habitStudySeconds', [0, 0, 0, 0, 0, 0, 0]);
-    let pomodoroCycles = safeParseJSON('habitPomodoroCycles', [0, 0, 0, 0, 0, 0, 0]);
-    // Meta diária de horas líquidas limitada ao teto de 4h/dia (mínimo 0.25h = 15m)
-    let dailyGoalHours = Math.min(4, Math.max(0.25, Number(safeGetStorage('habitDailyGoalHours', '1.5')) || 1.5));
-    let linkedHabitId = Number(safeGetStorage('habitLinkedId', '')) || (habits[0] ? habits[0].id : 0);
-
-    let questionsSolved = safeParseJSON('habitQuestionsSolved', [0, 0, 0, 0, 0, 0, 0]);
-    let questionsCorrect = safeParseJSON('habitQuestionsCorrect', [0, 0, 0, 0, 0, 0, 0]);
-    let questionLogs = safeParseJSON('habitQuestionLogs', []);
-    let errorNotebook = safeParseJSON('habitErrorNotebook', []);
-
-    errorNotebook.forEach(item => {
-      if (!Array.isArray(item.tags)) item.tags = [];
-      if (typeof item.srsStage !== 'number') item.srsStage = 0;
-      if (!item.nextReviewIso) item.nextReviewIso = TODAY_ISO;
-      if (!item.trilhaWeek) item.trilhaWeek = enamedWeek;
-    });
-
-    let dailyQuestionsGoal = Math.max(1, Number(safeGetStorage('habitDailyQuestionsGoal', '10')) || 10);
-    let linkedQuestionHabitId = Number(safeGetStorage('habitLinkedQuestionId', '')) || (habits[2] ? habits[2].id : 0);
-    let busyDays = safeParseJSON('habitBusyDays', [false, false, false, false, false, false, false]);
-    let archivedWeeks = safeParseJSON('habitArchivedWeeks', []);
-    let storedWeekStartIso = safeGetStorage('habitWeekStartIso', CURRENT_WEEK_SUNDAY_ISO);
-    let localUpdatedAt = safeGetStorage('habitUpdatedAt', '');
-
-    let themeConfig = safeParseJSON('habitThemeConfig', THEME_PRESETS.ocean);
-    if (!themeConfig.surface) themeConfig.surface = 'dark';
-
-    let storedGasUrl = safeGetStorage('habitGasWebAppUrl', '');
+    let storedGasUrl = rawGetStorage('habitGasWebAppUrl', '');
     if (!storedGasUrl || storedGasUrl.includes('AKfycbz9fYDyV8f4LH31YsaXV5Y31uaCPuCY-OIE3dBt13a6DNVRGq7s040TCn2yGlprak73oQ')) {
       storedGasUrl = DEFAULT_GAS_URL;
-      safeSetStorage('habitGasWebAppUrl', DEFAULT_GAS_URL);
+      rawSetStorage('habitGasWebAppUrl', DEFAULT_GAS_URL);
     }
     let gasWebAppUrl = storedGasUrl;
-    let lastCloudSync = safeGetStorage('habitLastCloudSync', '');
+    let lastCloudSync = '';
     let cloudSyncTimeout = null;
     let isPullingFromCloud = false;
     let hasCompletedInitialPull = false;
@@ -1579,7 +1749,7 @@
     let simuladosChartInstance = null;
 
     let timerMode = 'focus1';
-    let timeLeft = pomoConfig.focus1 * 60;
+    let timeLeft = 90 * 60;
     let timerInterval = null;
     let isRunning = false;
     let lastTickTimestamp = null;
@@ -1590,9 +1760,101 @@
     let simTimerInterval = null;
     let simLastTick = null;
 
+    function loadAllStateForCurrentAccount() {
+      brandTitle = safeGetStorage('habitBrandTitle', 'Performance Studio');
+      enamedWeek = Number(safeGetStorage('habitEnamedWeek', '1')) || 1;
+      enamedTotalWeeks = Number(safeGetStorage('habitEnamedTotalWeeks', '42')) || 42;
+
+      protocoloConfig = safeParseJSON('habitProtocoloConfig', {
+        week: 1,
+        totalWeeks: 33,
+        nextSession: 'A',
+        completedWorkouts: 0,
+        docUrl: DEFAULT_PROTOCOLO_DOC_URL,
+        mobileDocUrl: DEFAULT_PROTOCOLO_MOBILE_URL,
+        linkedWorkoutHabitId: 1792689976919
+      });
+      protocoloConfig.week = Math.max(1, Math.min(33, Number(protocoloConfig.week) || 1));
+      protocoloConfig.totalWeeks = 33;
+      if (!['A', 'B', 'C', 'D'].includes(protocoloConfig.nextSession)) protocoloConfig.nextSession = 'A';
+      if (!protocoloConfig.docUrl) protocoloConfig.docUrl = DEFAULT_PROTOCOLO_DOC_URL;
+      if (!protocoloConfig.mobileDocUrl) protocoloConfig.mobileDocUrl = DEFAULT_PROTOCOLO_MOBILE_URL;
+
+      tafHistory = safeParseJSON('habitTafHistory', []);
+      if (!Array.isArray(tafHistory)) tafHistory = [];
+
+      pomoConfig = safeParseJSON('habitPomoConfig', { focus1: 90, focus2: 60, breakMins: 20 });
+      pomoConfig.focus1 = Math.max(5, Number(pomoConfig.focus1) || 90);
+      pomoConfig.focus2 = Math.max(5, Number(pomoConfig.focus2) || 60);
+      pomoConfig.breakMins = Math.max(1, Number(pomoConfig.breakMins) || 20);
+
+      customAreas = safeParseJSON('habitCustomAreas', DEFAULT_AREAS);
+      if (!Array.isArray(customAreas) || customAreas.length === 0) customAreas = [...DEFAULT_AREAS];
+
+      customErrorTags = safeParseJSON('habitCustomErrorTags', DEFAULT_ERROR_TAGS);
+      if (!Array.isArray(customErrorTags) || customErrorTags.length === 0) customErrorTags = [...DEFAULT_ERROR_TAGS];
+      if (customErrorTags.length === 8 && customErrorTags[0].id === 't_lacuna' && customErrorTags[7].id === 't_pressa') {
+        customErrorTags = [...DEFAULT_ERROR_TAGS];
+      }
+
+      quickQButtons = safeParseJSON('habitQuickQButtons', DEFAULT_QUICK_Q_BUTTONS);
+      studyBanks = safeParseJSON('habitStudyBanks', JSON.parse(JSON.stringify(DEFAULT_STUDY_BANKS)));
+      studyBanks.forEach(b => {
+        if (b.id === 'sb4' || (b.unit === 'treinos' && b.autoType === 'manual')) b.autoType = 'workouts';
+        if (b.id === 'sb3' && b.autoType === 'manual') b.autoType = 'simulados';
+      });
+
+      simuladosHistory = safeParseJSON('habitSimuladosHistory', []);
+      habits = safeParseJSON('habitDashboardData', JSON.parse(JSON.stringify(defaultHabits)));
+      habits.forEach(h => {
+        if (!Array.isArray(h.days) || h.days.length !== 7) h.days = [false, false, false, false, false, false, false];
+        if (!Array.isArray(h.scheduledDays) || h.scheduledDays.length !== 7) h.scheduledDays = [true, true, true, true, true, true, true];
+        if (!h.scheduleMode) h.scheduleMode = h.name.toLowerCase().includes('treino') ? 'cycle' : 'fixed';
+        if (!h.cycleOn) h.cycleOn = 2;
+        if (!h.cycleOff) h.cycleOff = 1;
+        if (!h.cycleAnchor) h.cycleAnchor = TODAY_ISO;
+      });
+
+      if (!protocoloConfig.linkedWorkoutHabitId) {
+        const foundTreino = habits.find(h => h.name.toLowerCase().includes('treino'));
+        protocoloConfig.linkedWorkoutHabitId = foundTreino ? foundTreino.id : (habits[0] ? habits[0].id : 0);
+      }
+
+      studySeconds = safeParseJSON('habitStudySeconds', [0, 0, 0, 0, 0, 0, 0]);
+      pomodoroCycles = safeParseJSON('habitPomodoroCycles', [0, 0, 0, 0, 0, 0, 0]);
+      dailyGoalHours = Math.min(4, Math.max(0.25, Number(safeGetStorage('habitDailyGoalHours', '1.5')) || 1.5));
+      linkedHabitId = Number(safeGetStorage('habitLinkedId', '')) || (habits[0] ? habits[0].id : 0);
+
+      questionsSolved = safeParseJSON('habitQuestionsSolved', [0, 0, 0, 0, 0, 0, 0]);
+      questionsCorrect = safeParseJSON('habitQuestionsCorrect', [0, 0, 0, 0, 0, 0, 0]);
+      questionLogs = safeParseJSON('habitQuestionLogs', []);
+      errorNotebook = safeParseJSON('habitErrorNotebook', []);
+
+      errorNotebook.forEach(item => {
+        if (!Array.isArray(item.tags)) item.tags = [];
+        if (typeof item.srsStage !== 'number') item.srsStage = 0;
+        if (!item.nextReviewIso) item.nextReviewIso = TODAY_ISO;
+        if (!item.trilhaWeek) item.trilhaWeek = enamedWeek;
+      });
+
+      dailyQuestionsGoal = Math.max(1, Number(safeGetStorage('habitDailyQuestionsGoal', '10')) || 10);
+      linkedQuestionHabitId = Number(safeGetStorage('habitLinkedQuestionId', '')) || (habits[2] ? habits[2].id : 0);
+      busyDays = safeParseJSON('habitBusyDays', [false, false, false, false, false, false, false]);
+      archivedWeeks = safeParseJSON('habitArchivedWeeks', []);
+      storedWeekStartIso = safeGetStorage('habitWeekStartIso', CURRENT_WEEK_SUNDAY_ISO);
+      localUpdatedAt = safeGetStorage('habitUpdatedAt', '');
+      hasPendingOfflineSync = safeGetStorage('habitPendingSync', 'false') === 'true';
+      lastCloudSync = safeGetStorage('habitLastCloudSync', '');
+
+      themeConfig = safeParseJSON('habitThemeConfig', THEME_PRESETS.ocean);
+      if (!themeConfig.surface) themeConfig.surface = 'dark';
+    }
+
+    loadAllStateForCurrentAccount();
+
     // ==================== 3. NAVEGAÇÃO POR ABAS, TRILHA ENAMED & PROTOCOLO 33 ====================
     function switchTab(tabId) {
-      if (tabId === 'goals') tabId = 'week'; // Redireciona chamadas legadas para a aba unificada Semana & Metas
+      if (tabId === 'goals') tabId = 'week';
       activeTab = tabId;
       ['today', 'questions', 'simulados', 'forja', 'week', 'studio'].forEach(id => {
         const v = document.getElementById(`view-${id}`);
@@ -1962,22 +2224,18 @@
       const totalQWeek = questionsSolved.reduce((a, b) => a + (Number(b) || 0), 0);
       const totalCWeek = questionsCorrect.reduce((a, b) => a + (Number(b) || 0), 0);
 
-      // Minutos por questão (Semana)
       const minPerQuestion = (totalQWeek > 0 && totalSecsWeek > 0)
         ? +((totalSecsWeek / 60) / totalQWeek).toFixed(1)
         : 0;
 
-      // Questões por hora líquida
       const questionsPerHour = (totalHoursWeek > 0 && totalQWeek > 0)
         ? +(totalQWeek / totalHoursWeek).toFixed(1)
         : 0;
 
-      // Acertos líquidos por hora de foco
       const correctPerHour = (totalHoursWeek > 0 && totalCWeek > 0)
         ? +(totalCWeek / totalHoursWeek).toFixed(1)
         : 0;
 
-      // Projeção para 5.000 questões com base na média diária ativa ou semanal
       const qBank = studyBanks.find(b => b.autoType === 'questions' || b.id === 'sb1');
       const current5k = qBank ? Number(qBank.current) || 0 : totalQWeek;
       const target5k = qBank ? Number(qBank.target) || 5000 : 5000;
@@ -2057,7 +2315,7 @@
       }
     }
 
-    // ==================== 6. PERSISTÊNCIA E SINCRONIZAÇÃO GOOGLE SHEETS ====================
+    // ==================== 6. PERSISTÊNCIA, FILA OFFLINE AUTOMÁTICA & MULTIUSUÁRIO ====================
     function buildFullPayload() {
       const enrichedHabits = habits.map(h => ({
         ...h,
@@ -2065,7 +2323,9 @@
       }));
 
       return {
-        version: 10,
+        version: 11,
+        userKey: currentAccountKey || 'admin',
+        userPin: currentAccountPin || '',
         brandTitle,
         enamedWeek,
         enamedTotalWeeks,
@@ -2170,6 +2430,11 @@
       return true;
     }
 
+    function markPendingSync(isPending) {
+      hasPendingOfflineSync = Boolean(isPending);
+      safeSetStorage('habitPendingSync', hasPendingOfflineSync ? 'true' : 'false');
+    }
+
     function saveLocalOnly(touchTimestamp = true) {
       if (touchTimestamp) {
         localUpdatedAt = new Date().toISOString();
@@ -2205,6 +2470,9 @@
 
     function saveState(skipCloud = false) {
       saveLocalOnly(true);
+      if (!skipCloud) {
+        markPendingSync(true);
+      }
       renderAll();
       if (!skipCloud && gasWebAppUrl && !isPullingFromCloud) {
         scheduleCloudPush();
@@ -2216,10 +2484,15 @@
       const text = document.getElementById('cloudStatusText');
       const lastSyncEl = document.getElementById('lastSyncTimestamp');
 
-      if (lastSyncEl && lastCloudSync) lastSyncEl.textContent = `Último sync: ${lastCloudSync}`;
+      if (lastSyncEl && lastCloudSync) lastSyncEl.textContent = `Último sync (${currentAccountKey}): ${lastCloudSync}`;
       if (!gasWebAppUrl) {
         dot.className = 'w-1.5 h-1.5 rounded-full bg-slate-500';
         text.textContent = 'Local';
+        return;
+      }
+      if (!navigator.onLine) {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400';
+        text.textContent = hasPendingOfflineSync ? 'Offline (Na Fila)' : 'Offline';
         return;
       }
       if (state === 'syncing') {
@@ -2227,10 +2500,13 @@
         text.textContent = customText || 'Sync...';
       } else if (state === 'ok') {
         dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400';
-        text.textContent = customText || 'Planilha OK';
+        text.textContent = customText || 'Salvo Nuvem';
+      } else if (state === 'pending') {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400';
+        text.textContent = customText || 'Pendente Sync';
       } else if (state === 'error') {
         dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-500';
-        text.textContent = customText || 'Offline';
+        text.textContent = customText || 'Na Fila Local';
       }
     }
 
@@ -2242,20 +2518,30 @@
         return;
       }
       gasWebAppUrl = url;
-      safeSetStorage('habitGasWebAppUrl', gasWebAppUrl);
+      rawSetStorage('habitGasWebAppUrl', gasWebAppUrl);
       showToast('URL salva! Sincronizando com a Planilha...', '☁️');
       pullFromCloud(true);
     }
 
     function scheduleCloudPush() {
-      if (!gasWebAppUrl || isPullingFromCloud || !hasCompletedInitialPull) return;
+      if (!gasWebAppUrl || isPullingFromCloud) return;
+      if (!navigator.onLine) {
+        updateCloudStatusUI('pending', 'Offline (Na Fila)');
+        return;
+      }
       updateCloudStatusUI('syncing', 'Salvando...');
       clearTimeout(cloudSyncTimeout);
-      cloudSyncTimeout = setTimeout(() => { pushToCloud(false); }, 1200);
+      cloudSyncTimeout = setTimeout(() => { pushToCloud(false); }, 1100);
     }
 
     async function pushToCloud(showNotification = false) {
       if (!gasWebAppUrl || isPullingFromCloud) return;
+      if (!navigator.onLine) {
+        markPendingSync(true);
+        updateCloudStatusUI('pending', 'Offline (Na Fila)');
+        if (showNotification) showToast('Sem internet: salvo no aparelho! Enviará assim que reconectar.', '📲');
+        return;
+      }
       updateCloudStatusUI('syncing', 'Enviando...');
       try {
         const response = await fetch(gasWebAppUrl, {
@@ -2265,17 +2551,22 @@
         });
         const resData = await response.json();
         if (resData.status === 'saved') {
+          markPendingSync(false);
           const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
           lastCloudSync = `${new Date().toLocaleDateString('pt-BR')} às ${timeStr}`;
           safeSetStorage('habitLastCloudSync', lastCloudSync);
           updateCloudStatusUI('ok', `Salvo (${timeStr})`);
-          if (showNotification) showToast('Dados salvos na Planilha Google!', '☁️');
+          if (showNotification) showToast(`Sincronizado na conta "${currentAccountKey}"!`, '☁️');
+        } else if (resData.status === 'invalid_pin') {
+          updateCloudStatusUI('error', 'PIN incorreto');
+          showToast('PIN incorreto para esta conta! Verifique no ícone 👤.', '🔒');
         } else {
-          throw new Error('Falha no retorno');
+          throw new Error(resData.message || 'Falha no retorno');
         }
       } catch (err) {
-        updateCloudStatusUI('error', 'Salvo Local');
-        if (showNotification) showToast('Erro ao enviar para a Planilha.', '❌');
+        markPendingSync(true);
+        updateCloudStatusUI('error', 'Na Fila Local');
+        if (showNotification) showToast('Salvo no dispositivo. Será enviado automaticamente ao reconectar.', '📲');
       }
     }
 
@@ -2284,12 +2575,37 @@
         hasCompletedInitialPull = true;
         return;
       }
+      if (!navigator.onLine) {
+        hasCompletedInitialPull = true;
+        updateCloudStatusUI('pending', hasPendingOfflineSync ? 'Offline (Na Fila)' : 'Offline');
+        if (showNotification) showToast('Você está offline. Usando dados salvos no aparelho.', '📲');
+        return;
+      }
+
+      // Se houver alterações feitas offline pendentes na fila, envia primeiro antes de puxar!
+      if (hasPendingOfflineSync && !showNotification) {
+        hasCompletedInitialPull = true;
+        await pushToCloud(false);
+        return;
+      }
+
       isPullingFromCloud = true;
       clearTimeout(cloudSyncTimeout);
       updateCloudStatusUI('syncing', 'Lendo...');
       try {
-        const response = await fetch(`${gasWebAppUrl}?t=${Date.now()}`);
+        const qParams = `userKey=${encodeURIComponent(currentAccountKey || 'admin')}&pin=${encodeURIComponent(currentAccountPin || '')}&t=${Date.now()}`;
+        const response = await fetch(`${gasWebAppUrl}?${qParams}`);
         const resData = await response.json();
+
+        if (resData.status === 'invalid_pin') {
+          isPullingFromCloud = false;
+          hasCompletedInitialPull = true;
+          updateCloudStatusUI('error', 'PIN Inválido');
+          showToast('Esta conta é protegida por PIN. Informe o PIN correto no menu 👤.', '🔒');
+          openAccountModal();
+          return;
+        }
+
         if (resData.status === 'ok' && resData.hasData && resData.data) {
           const cloudTime = resData.data.updatedAt ? Date.parse(resData.data.updatedAt) : 0;
           const localTime = localUpdatedAt ? Date.parse(localUpdatedAt) : 0;
@@ -2302,6 +2618,7 @@
           }
 
           applyPayloadToState(resData.data);
+          markPendingSync(false);
           saveLocalOnly(false);
           checkNewWeekRollover();
           renderAll();
@@ -2309,7 +2626,7 @@
           lastCloudSync = `${new Date().toLocaleDateString('pt-BR')} às ${timeStr}`;
           safeSetStorage('habitLastCloudSync', lastCloudSync);
           updateCloudStatusUI('ok', `OK (${timeStr})`);
-          if (showNotification) showToast('Sincronizado com a Planilha Google!', '☁️');
+          if (showNotification) showToast(`Dados da conta "${currentAccountKey}" carregados!`, '☁️');
           isPullingFromCloud = false;
           hasCompletedInitialPull = true;
         } else if (resData.status === 'ok' && !resData.hasData) {
@@ -2322,10 +2639,32 @@
       } catch (err) {
         isPullingFromCloud = false;
         hasCompletedInitialPull = true;
-        updateCloudStatusUI('error', 'Offline');
-        if (showNotification) showToast('Usando dados locais (sem resposta da nuvem).', '⚠️');
+        updateCloudStatusUI('error', hasPendingOfflineSync ? 'Na Fila Local' : 'Offline');
+        if (showNotification) showToast('Usando dados salvos no aparelho (sem resposta da nuvem).', '⚠️');
       }
     }
+
+    // Gatilhos Automáticos de Reconexão (Offline -> Online) e Retorno ao App
+    window.addEventListener('online', () => {
+      showToast('Conexão restaurada! Sincronizando dados pendentes...', '🌐');
+      if (hasPendingOfflineSync) {
+        pushToCloud(true);
+      } else {
+        pullFromCloud(false);
+      }
+    });
+
+    window.addEventListener('offline', () => {
+      updateCloudStatusUI('pending', 'Offline (Salvo Local)');
+      showToast('Modo Offline: tudo continuará salvo no aparelho.', '📲');
+    });
+
+    // Verifica a fila pendente a cada 45 segundos se estiver online
+    setInterval(() => {
+      if (navigator.onLine && hasPendingOfflineSync && !isPullingFromCloud && gasWebAppUrl) {
+        pushToCloud(false);
+      }
+    }, 45000);
 
     // ==================== 7. AUTÓPSIA MINIMALISTA & CÁLCULO DE NOTA POTENCIAL ====================
     function toggleFormErrorTag(tagName) {
@@ -3048,7 +3387,6 @@
     }
 
     function renderStudyBanks() {
-      // 1. Pílulas compactas na barra superior
       const compactBar = document.getElementById('compactBanksBar');
       if (compactBar) {
         compactBar.innerHTML = studyBanks.slice(0, 4).map(b => {
@@ -3065,7 +3403,6 @@
         }).join('');
       }
 
-      // 2. Cards completos dentro da aba Semana & Metas
       const grid = document.getElementById('studyBanksGrid');
       if (!grid) return;
       grid.innerHTML = studyBanks.map(b => {
@@ -3627,6 +3964,7 @@
           saveState();
         } else if (studySeconds[selectedDayIndex] % 10 < effectiveDelta) {
           saveLocalOnly(true);
+          markPendingSync(true);
           renderAll();
         } else {
           renderKPIs();
@@ -3685,6 +4023,8 @@
       if (isRunning) {
         processTimerDelta();
         if (document.visibilityState === 'hidden') saveState();
+      } else if (document.visibilityState === 'visible' && navigator.onLine && hasPendingOfflineSync) {
+        pushToCloud(false);
       }
     });
 
@@ -4024,7 +4364,7 @@
     }
 
     function exportJSON() {
-      triggerDownload(JSON.stringify(buildFullPayload(), null, 2), `performance_studio_${TODAY_ISO}.json`, 'application/json;charset=utf-8;');
+      triggerDownload(JSON.stringify(buildFullPayload(), null, 2), `performance_studio_${currentAccountKey}_${TODAY_ISO}.json`, 'application/json;charset=utf-8;');
       showToast('Backup JSON exportado!', '⬇️');
     }
 
@@ -4049,7 +4389,7 @@
       rows.push(['QUESTOES_ACERTOS', '0', '"Questoes Certas"', ...questionsCorrect, totalC, '']);
 
       const csvContent = '\uFEFF' + rows.map(r => r.join(',')).join('\r\n');
-      triggerDownload(csvContent, `relatorio_performance_${TODAY_ISO}.csv`, 'text/csv;charset=utf-8;');
+      triggerDownload(csvContent, `relatorio_performance_${currentAccountKey}_${TODAY_ISO}.csv`, 'text/csv;charset=utf-8;');
     }
 
     function handleFileImport(event) {
@@ -4630,9 +4970,14 @@
       const gasInput = document.getElementById('gasUrlInput');
       if (gasInput && document.activeElement !== gasInput) gasInput.value = gasWebAppUrl;
 
+      const accLbl = document.getElementById('headerAccountLabel');
+      if (accLbl) accLbl.textContent = currentAccountKey.length > 14 ? currentAccountKey.slice(0, 12) + '…' : currentAccountKey;
+      const studioAccBadge = document.getElementById('studioAccountBadge');
+      if (studioAccBadge) studioAccBadge.textContent = currentAccountKey;
+
       renderPomodoroLabels();
       updateNotificationButtonUI();
-      updateCloudStatusUI(gasWebAppUrl ? 'ok' : 'off');
+      updateCloudStatusUI(hasPendingOfflineSync ? 'pending' : (gasWebAppUrl ? 'ok' : 'off'));
       renderDaySelector();
       renderProtocoloSection();
       renderRecommendationBanner();
@@ -4651,6 +4996,7 @@
       if (activeTab === 'simulados') renderSimuladosChart();
     }
 
+    setupPwaAndServiceWorker();
     applyThemeVariables();
     setTimerMode('focus1');
     checkNewWeekRollover();
