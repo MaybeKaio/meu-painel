@@ -12,7 +12,7 @@
   <!-- Ícone SVG Nativo de Alta Definição para Homescreen (iOS / Android / Desktop) -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%230b0f19'/%3E%3Crect x='24' y='24' width='464' height='464' rx='92' fill='none' stroke='%2310b981' stroke-width='16' stroke-opacity='0.35'/%3E%3Cpath d='M288 80L144 288h112l-32 144 144-208H256l32-144z' fill='%2310b981'/%3E%3C/svg%3E" />
   <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%230b0f19'/%3E%3Cpath d='M288 80L144 288h112l-32 144 144-208H256l32-144z' fill='%2310b981'/%3E%3C/svg%3E" />
-  <link rel="manifest" href="manifest.json" id="pwaManifestLink" />
+  <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Performance%20Studio%22%2C%22short_name%22%3A%22PerfStudio%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230b0f19%22%2C%22theme_color%22%3A%22%230b0f19%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%2520viewBox%3D%270%25200%2520512%2520512%27%253E%253Crect%2520width%3D%27512%27%2520height%3D%27512%27%2520rx%3D%27112%27%2520fill%3D%27%25230b0f19%27%2F%253E%253Cpath%2520d%3D%27M288%252080L144%2520288h112l-32%2520144%2520144-208H256l32-144z%27%2520fill%3D%27%252310b981%27%2F%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22192x192%20512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D" id="pwaManifestLink" />
 
   <title>Performance Studio • Questões, Revisão, Simulados & Protocolo 33</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -1441,12 +1441,22 @@
       }
     }
 
-    // ==================== REGISTRO DO SERVICE WORKER & INSTALAÇÃO PWA ====================
+    // ==================== LIMPEZA DE CACHE ANTIGO & INSTALAÇÃO PWA (ARQUIVO ÚNICO) ====================
     function setupPwaAndServiceWorker() {
+      // Remove qualquer Service Worker antigo que possa ter travado o cache do navegador
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js').catch(() => {});
-        });
+        try {
+          navigator.serviceWorker.getRegistrations().then(regs => {
+            regs.forEach(reg => reg.unregister());
+          }).catch(() => {});
+        } catch (e) {}
+      }
+      if ('caches' in window) {
+        try {
+          caches.keys().then(keys => {
+            keys.forEach(k => caches.delete(k));
+          }).catch(() => {});
+        } catch (e) {}
       }
 
       window.addEventListener('beforeinstallprompt', (e) => {
@@ -1760,12 +1770,55 @@
     let simTimerInterval = null;
     let simLastTick = null;
 
+    const ADMIN_CLOUD_SNAPSHOT = {
+      enamedWeek: 2,
+      enamedTotalWeeks: 42,
+      dailyGoalHours: 1,
+      dailyQuestionsGoal: 10,
+      protocoloConfig: {
+        week: 1,
+        totalWeeks: 33,
+        nextSession: 'B',
+        completedWorkouts: 1,
+        docUrl: DEFAULT_PROTOCOLO_DOC_URL,
+        mobileDocUrl: DEFAULT_PROTOCOLO_MOBILE_URL,
+        linkedWorkoutHabitId: 1792689976919
+      },
+      studySeconds: [0, 10800, 0, 0, 0, 0, 0],
+      pomodoroCycles: [0, 3, 0, 0, 0, 0, 0],
+      studyBanks: [
+        { id: 'sb1', name: '🎯 Rumo às 5.000 Questões (Residência & Concursos)', current: 258, target: 5000, unit: 'questões', autoType: 'questions', note: 'Soma automaticamente a cada bloco de questões resolvido' },
+        { id: 'sb2', name: '⏱️ Maratona 300 Horas Líquidas de Foco', current: 6.04, target: 300, unit: 'horas', autoType: 'hours', note: 'Alimentado pelas suas horas líquidas de estudo' },
+        { id: 'sb3', name: '📄 Provas Antigas / Simulados na Íntegra', current: 1, target: 40, unit: 'provas', autoType: 'simulados', note: 'Meta de provas completas resolvidas até os exames' },
+        { id: 'sb4', name: '🏋️ Protocolo 33 (132 Treinos)', current: 1, target: 132, unit: 'treinos', autoType: 'workouts', note: 'Soma automática nas sessões A/B/C/D' }
+      ],
+      simuladosHistory: [
+        { id: 1794022462675, dateStr: '06/11', title: 'Simulado enamed', trilhaWeek: 1, totalSolved: 100, totalCorrect: 75, accuracy: 75, durationFormatted: '—', breakdown: [{ area: 'Prova antiga', solved: 100, correct: 75 }] }
+      ],
+      errorNotebook: [
+        { id: 1793213251898, logId: 1793213251897, dateStr: '28/10', area: 'Preventiva 🦎', topic: 'Atributos atenção básica', batchScore: '1/2 (50%)', reviewed: false, tags: [], srsStage: 0, nextReviewIso: '2026-10-28', trilhaWeek: 1 },
+        { id: 1793212936447, logId: 1793212936446, dateStr: '28/10', area: 'Preventiva 🦎', topic: 'Hieraquirzação', batchScore: '1/2 (50%)', reviewed: false, tags: [], srsStage: 0, nextReviewIso: '2026-10-28', trilhaWeek: 1 }
+      ],
+      habits: [
+        { id: 1792680210824, name: 'Estudo', days: [false, true, false, false, false, false, false], scheduledDays: [false, true, true, true, true, true, true], scheduleMode: 'cycle', cycleOn: 3, cycleOff: 1, cycleAnchor: '2026-10-26' },
+        { id: 1792689976919, name: 'Treino', days: [false, false, false, false, false, false, false], scheduledDays: [true, false, true, false, true, true, false], scheduleMode: 'cycle', cycleOn: 2, cycleOff: 1, cycleAnchor: '2026-10-26' },
+        { id: 1792692829100, name: 'Questões', days: [false, false, false, false, false, false, false], scheduledDays: [false, true, true, true, true, true, false], scheduleMode: 'cycle', cycleOn: 2, cycleOff: 1, cycleAnchor: '2026-11-05' }
+      ],
+      archivedWeeks: [
+        { id: 1794246550375, label: 'Semana 1/42 (08/11 a 14/11)', archivedAt: '2026-11-09T17:49:10.375Z', weeklyRate: 55, totalDone: 11, totalScheduled: 20, totalStudySeconds: 12600, totalQuestions: 100, totalCorrect: 75, questionAccuracy: 75, streak: 1 },
+        { id: 1793538410138, label: 'Semana 1/42 (01/11 a 07/11)', archivedAt: '2026-11-01T13:06:50.138Z', weeklyRate: 33, totalDone: 6, totalScheduled: 18, totalStudySeconds: 21343, totalQuestions: 158, totalCorrect: 88, questionAccuracy: 56, streak: 0 },
+        { id: 1792983465884, label: 'Semana encerrada em 25/10/2026', archivedAt: '2026-10-26T02:57:45.884Z', weeklyRate: 50, totalDone: 12, totalScheduled: 24, totalStudySeconds: 14823, totalQuestions: 24, totalCorrect: 18, questionAccuracy: 75, streak: 0 }
+      ]
+    };
+
     function loadAllStateForCurrentAccount() {
+      const isAdmin = (!currentAccountKey || currentAccountKey === 'admin');
+      const hasLocalData = Boolean(safeGetStorage('habitDashboardData', ''));
       brandTitle = safeGetStorage('habitBrandTitle', 'Performance Studio');
-      enamedWeek = Number(safeGetStorage('habitEnamedWeek', '1')) || 1;
+      enamedWeek = Number(safeGetStorage('habitEnamedWeek', isAdmin ? String(ADMIN_CLOUD_SNAPSHOT.enamedWeek) : '1')) || 1;
       enamedTotalWeeks = Number(safeGetStorage('habitEnamedTotalWeeks', '42')) || 42;
 
-      protocoloConfig = safeParseJSON('habitProtocoloConfig', {
+      protocoloConfig = safeParseJSON('habitProtocoloConfig', isAdmin ? JSON.parse(JSON.stringify(ADMIN_CLOUD_SNAPSHOT.protocoloConfig)) : {
         week: 1,
         totalWeeks: 33,
         nextSession: 'A',
@@ -1798,14 +1851,14 @@
       }
 
       quickQButtons = safeParseJSON('habitQuickQButtons', DEFAULT_QUICK_Q_BUTTONS);
-      studyBanks = safeParseJSON('habitStudyBanks', JSON.parse(JSON.stringify(DEFAULT_STUDY_BANKS)));
+      studyBanks = safeParseJSON('habitStudyBanks', JSON.parse(JSON.stringify(isAdmin ? ADMIN_CLOUD_SNAPSHOT.studyBanks : DEFAULT_STUDY_BANKS)));
       studyBanks.forEach(b => {
         if (b.id === 'sb4' || (b.unit === 'treinos' && b.autoType === 'manual')) b.autoType = 'workouts';
         if (b.id === 'sb3' && b.autoType === 'manual') b.autoType = 'simulados';
       });
 
-      simuladosHistory = safeParseJSON('habitSimuladosHistory', []);
-      habits = safeParseJSON('habitDashboardData', JSON.parse(JSON.stringify(defaultHabits)));
+      simuladosHistory = safeParseJSON('habitSimuladosHistory', isAdmin ? JSON.parse(JSON.stringify(ADMIN_CLOUD_SNAPSHOT.simuladosHistory)) : []);
+      habits = safeParseJSON('habitDashboardData', JSON.parse(JSON.stringify(isAdmin ? ADMIN_CLOUD_SNAPSHOT.habits : defaultHabits)));
       habits.forEach(h => {
         if (!Array.isArray(h.days) || h.days.length !== 7) h.days = [false, false, false, false, false, false, false];
         if (!Array.isArray(h.scheduledDays) || h.scheduledDays.length !== 7) h.scheduledDays = [true, true, true, true, true, true, true];
@@ -1820,15 +1873,15 @@
         protocoloConfig.linkedWorkoutHabitId = foundTreino ? foundTreino.id : (habits[0] ? habits[0].id : 0);
       }
 
-      studySeconds = safeParseJSON('habitStudySeconds', [0, 0, 0, 0, 0, 0, 0]);
-      pomodoroCycles = safeParseJSON('habitPomodoroCycles', [0, 0, 0, 0, 0, 0, 0]);
-      dailyGoalHours = Math.min(4, Math.max(0.25, Number(safeGetStorage('habitDailyGoalHours', '1.5')) || 1.5));
+      studySeconds = safeParseJSON('habitStudySeconds', isAdmin && !hasLocalData ? [...ADMIN_CLOUD_SNAPSHOT.studySeconds] : [0, 0, 0, 0, 0, 0, 0]);
+      pomodoroCycles = safeParseJSON('habitPomodoroCycles', isAdmin && !hasLocalData ? [...ADMIN_CLOUD_SNAPSHOT.pomodoroCycles] : [0, 0, 0, 0, 0, 0, 0]);
+      dailyGoalHours = Math.min(4, Math.max(0.25, Number(safeGetStorage('habitDailyGoalHours', isAdmin ? '1' : '1.5')) || 1));
       linkedHabitId = Number(safeGetStorage('habitLinkedId', '')) || (habits[0] ? habits[0].id : 0);
 
       questionsSolved = safeParseJSON('habitQuestionsSolved', [0, 0, 0, 0, 0, 0, 0]);
       questionsCorrect = safeParseJSON('habitQuestionsCorrect', [0, 0, 0, 0, 0, 0, 0]);
       questionLogs = safeParseJSON('habitQuestionLogs', []);
-      errorNotebook = safeParseJSON('habitErrorNotebook', []);
+      errorNotebook = safeParseJSON('habitErrorNotebook', isAdmin ? JSON.parse(JSON.stringify(ADMIN_CLOUD_SNAPSHOT.errorNotebook)) : []);
 
       errorNotebook.forEach(item => {
         if (!Array.isArray(item.tags)) item.tags = [];
@@ -1840,7 +1893,7 @@
       dailyQuestionsGoal = Math.max(1, Number(safeGetStorage('habitDailyQuestionsGoal', '10')) || 10);
       linkedQuestionHabitId = Number(safeGetStorage('habitLinkedQuestionId', '')) || (habits[2] ? habits[2].id : 0);
       busyDays = safeParseJSON('habitBusyDays', [false, false, false, false, false, false, false]);
-      archivedWeeks = safeParseJSON('habitArchivedWeeks', []);
+      archivedWeeks = safeParseJSON('habitArchivedWeeks', isAdmin ? JSON.parse(JSON.stringify(ADMIN_CLOUD_SNAPSHOT.archivedWeeks)) : []);
       storedWeekStartIso = safeGetStorage('habitWeekStartIso', CURRENT_WEEK_SUNDAY_ISO);
       localUpdatedAt = safeGetStorage('habitUpdatedAt', '');
       hasPendingOfflineSync = safeGetStorage('habitPendingSync', 'false') === 'true';
@@ -2544,8 +2597,9 @@
       }
       updateCloudStatusUI('syncing', 'Enviando...');
       try {
-        const response = await fetch(gasWebAppUrl, {
+        const response = await fetch(String(gasWebAppUrl), {
           method: 'POST',
+          redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(buildFullPayload())
         });
@@ -2557,6 +2611,12 @@
           safeSetStorage('habitLastCloudSync', lastCloudSync);
           updateCloudStatusUI('ok', `Salvo (${timeStr})`);
           if (showNotification) showToast(`Sincronizado na conta "${currentAccountKey}"!`, '☁️');
+        } else if (resData.status === 'protected_skip' && resData.data) {
+          applyPayloadToState(resData.data);
+          markPendingSync(false);
+          saveLocalOnly(false);
+          renderAll();
+          updateCloudStatusUI('ok', 'Recuperado Nuvem');
         } else if (resData.status === 'invalid_pin') {
           updateCloudStatusUI('error', 'PIN incorreto');
           showToast('PIN incorreto para esta conta! Verifique no ícone 👤.', '🔒');
@@ -2582,19 +2642,19 @@
         return;
       }
 
-      // Se houver alterações feitas offline pendentes na fila, envia primeiro antes de puxar!
-      if (hasPendingOfflineSync && !showNotification) {
-        hasCompletedInitialPull = true;
-        await pushToCloud(false);
-        return;
-      }
-
       isPullingFromCloud = true;
       clearTimeout(cloudSyncTimeout);
       updateCloudStatusUI('syncing', 'Lendo...');
       try {
-        const qParams = `userKey=${encodeURIComponent(currentAccountKey || 'admin')}&pin=${encodeURIComponent(currentAccountPin || '')}&t=${Date.now()}`;
-        const response = await fetch(`${gasWebAppUrl}?${qParams}`);
+        const reqUrl = new URL(gasWebAppUrl);
+        reqUrl.searchParams.set('userKey', currentAccountKey || 'admin');
+        reqUrl.searchParams.set('pin', currentAccountPin || '');
+        reqUrl.searchParams.set('t', String(Date.now()));
+
+        const response = await fetch(reqUrl.toString(), {
+          method: 'GET',
+          redirect: 'follow'
+        });
         const resData = await response.json();
 
         if (resData.status === 'invalid_pin') {
@@ -2610,7 +2670,8 @@
           const cloudTime = resData.data.updatedAt ? Date.parse(resData.data.updatedAt) : 0;
           const localTime = localUpdatedAt ? Date.parse(localUpdatedAt) : 0;
 
-          if (!showNotification && localTime > cloudTime + 5000) {
+          // Só envia estado local por cima da nuvem se o usuário realmente tiver editado offline mais recentemente
+          if (!showNotification && hasPendingOfflineSync && localTime > cloudTime + 5000) {
             isPullingFromCloud = false;
             hasCompletedInitialPull = true;
             await pushToCloud(false);
@@ -3214,6 +3275,7 @@
 
     function renderSimuladosChart() {
       const ctx = document.getElementById('simuladosEvolutionChart');
+      if (typeof window.Chart === 'undefined') return;
       const footer = document.getElementById('simSummaryFooter');
       const histContainer = document.getElementById('simuladosHistoryContainer');
       if (!ctx) return;
@@ -4551,6 +4613,7 @@
 
     function renderRightQuestionChart() {
       const ctx = document.getElementById('areaDoughnutChart');
+      if (typeof window.Chart === 'undefined') return;
       if (!ctx) return;
       if (areaDoughnutInstance) areaDoughnutInstance.destroy();
 
@@ -4879,7 +4942,10 @@
     }
 
     function renderChart() {
-      const ctx = document.getElementById('weeklyChart').getContext('2d');
+      if (typeof window.Chart === 'undefined') return;
+      const canvasEl = document.getElementById('weeklyChart');
+      if (!canvasEl) return;
+      const ctx = canvasEl.getContext('2d');
       const dataPcts = getDailyPercentages();
       const dataQAcc = getDailyQuestionAccuracies();
       const dataHours = getDailyStudyHours();
