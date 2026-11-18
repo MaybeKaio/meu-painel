@@ -161,13 +161,22 @@
     .secondary-bg { background-color: var(--accent-secondary); }
     .secondary-text { color: var(--accent-secondary); }
 
+    body.surface-light #bottomAppNav {
+      background-color: rgba(255, 255, 255, 0.96) !important;
+      border-top-color: #cbd5e1 !important;
+    }
     .tab-btn {
-      border-bottom: 2px solid transparent;
+      border-top: 2px solid transparent;
       transition: all 0.15s ease;
+      color: #94a3b8;
+    }
+    body.surface-light .tab-btn {
+      color: #475569;
     }
     .tab-btn.active {
-      border-bottom: 2px solid var(--accent-primary);
-      color: var(--accent-primary);
+      border-top: 2px solid var(--accent-primary);
+      color: var(--accent-primary) !important;
+      background-color: rgba(16, 185, 129, 0.08);
       font-weight: 700;
     }
     .metric-val {
@@ -186,10 +195,10 @@
     ::-webkit-scrollbar-thumb { background: #64748b; border-radius: 3px; }
   </style>
 </head>
-<body class="min-h-screen pb-16">
+<body class="min-h-screen pb-28">
 
   <!-- Notificação Toast Interna -->
-  <div id="toastNotification" class="fixed bottom-5 right-5 z-50 hidden transform transition-all duration-300">
+  <div id="toastNotification" class="fixed bottom-20 right-4 z-50 hidden transform transition-all duration-300">
     <div class="glass-card px-4 py-3 rounded-xl shadow-2xl border border-emerald-500/40 flex items-center gap-3">
       <span id="toastIcon" class="text-lg">✅</span>
       <span id="toastMessage" class="text-xs md:text-sm font-medium text-slate-100">Operação realizada!</span>
@@ -286,8 +295,8 @@
               <strong id="enamedHeaderLabel" class="font-mono accent-text">S1/42 (2%)</strong>
               <button onclick="adjustEnamedWeek(1)" class="px-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-[10px]">+</button>
             </div>
-            <span class="text-slate-700 hidden sm:inline">|</span>
-            <div class="flex items-center gap-1">
+            <span id="headerP33Divider" class="text-slate-700 hidden sm:inline">|</span>
+            <div id="headerP33Block" class="flex items-center gap-1">
               <span>🎖️ Prot. 33:</span>
               <button onclick="adjustProtocoloWeek(-1)" class="px-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-[10px]">-</button>
               <strong id="p33HeaderLabel" class="font-mono text-amber-400">S1/33 • Treino A</strong>
@@ -325,17 +334,55 @@
         </button>
       </div>
     </div>
-
-    <!-- NAVEGAÇÃO MINIMALISTA (6 ABAS DIRETAS) -->
-    <nav class="max-w-7xl mx-auto mt-2.5 flex gap-1 overflow-x-auto border-b border-slate-800/80 text-xs">
-      <button onclick="switchTab('today')" id="tab-today" class="tab-btn active px-3 py-2 whitespace-nowrap">📊 Hoje</button>
-      <button onclick="switchTab('questions')" id="tab-questions" class="tab-btn px-3 py-2 whitespace-nowrap">📝 Questões <span id="navDueBadge" class="hidden ml-1 px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-mono text-[10px]">0</span></button>
-      <button onclick="switchTab('simulados')" id="tab-simulados" class="tab-btn px-3 py-2 whitespace-nowrap">🏟️ Simulados</button>
-      <button onclick="switchTab('forja')" id="tab-forja" class="tab-btn px-3 py-2 whitespace-nowrap">🎖️ Protocolo 33</button>
-      <button onclick="switchTab('week')" id="tab-week" class="tab-btn px-3 py-2 whitespace-nowrap">📅 Semana & Metas</button>
-      <button onclick="switchTab('studio')" id="tab-studio" class="tab-btn px-3 py-2 whitespace-nowrap">⚙️ Estúdio</button>
-    </nav>
   </header>
+
+  <!-- MINI-POMODORO FLUTUANTE EM TODOS OS DISPOSITIVOS -->
+  <div id="floatingMiniPomodoro" class="fixed bottom-16 left-4 z-40 glass-card px-3 py-2 rounded-2xl shadow-2xl border border-indigo-500/40 flex items-center gap-2.5 text-xs transition-all duration-200">
+    <button type="button" onclick="switchTab('today')" class="flex items-center gap-2 text-left group" title="Ir para o cronômetro principal">
+      <span id="miniPomoDot" class="w-2 h-2 rounded-full bg-slate-500"></span>
+      <div>
+        <div class="flex items-center gap-1.5">
+          <span id="miniPomoModeLabel" class="text-[10px] font-semibold uppercase tracking-wider text-indigo-300">Foco</span>
+          <span id="miniWakeLockIcon" class="hidden text-[10px] text-amber-300" title="Tela Ativa (Wake Lock)">🔆</span>
+        </div>
+        <div id="miniPomoTime" class="font-mono font-extrabold text-sm text-white leading-none mt-0.5">90:00</div>
+      </div>
+    </button>
+    <button type="button" id="miniPomoToggleBtn" onclick="toggleTimer()" class="px-2.5 py-1.5 rounded-xl accent-bg text-slate-950 font-bold text-xs shadow">
+      ▶
+    </button>
+  </div>
+
+  <!-- BARRA DE NAVEGAÇÃO INFERIOR FIXA UNIVERSAL (TODOS OS DISPOSITIVOS) -->
+  <nav id="bottomAppNav" class="fixed bottom-0 inset-x-0 z-40 backdrop-blur-md bg-slate-900/95 border-t border-slate-800 px-2 py-1 shadow-2xl">
+    <div class="max-w-4xl mx-auto grid grid-flow-col auto-cols-fr gap-1 text-[11px] sm:text-xs">
+      <button onclick="switchTab('today')" id="tab-today" class="tab-btn active py-1.5 px-1 rounded-xl flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 whitespace-nowrap">
+        <span class="text-sm sm:text-base">📊</span>
+        <span>Hoje</span>
+      </button>
+      <button onclick="switchTab('questions')" id="tab-questions" class="tab-btn py-1.5 px-1 rounded-xl flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 whitespace-nowrap relative">
+        <span class="text-sm sm:text-base">📝</span>
+        <span>Questões</span>
+        <span id="navDueBadge" class="hidden px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-mono text-[10px]">0</span>
+      </button>
+      <button onclick="switchTab('simulados')" id="tab-simulados" class="tab-btn py-1.5 px-1 rounded-xl flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 whitespace-nowrap">
+        <span class="text-sm sm:text-base">🏟️</span>
+        <span>Simulados</span>
+      </button>
+      <button onclick="switchTab('forja')" id="tab-forja" class="tab-btn py-1.5 px-1 rounded-xl flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 whitespace-nowrap">
+        <span class="text-sm sm:text-base">🎖️</span>
+        <span>Protocolo 33</span>
+      </button>
+      <button onclick="switchTab('week')" id="tab-week" class="tab-btn py-1.5 px-1 rounded-xl flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 whitespace-nowrap">
+        <span class="text-sm sm:text-base">📅</span>
+        <span>Semana & Metas</span>
+      </button>
+      <button onclick="switchTab('studio')" id="tab-studio" class="tab-btn py-1.5 px-1 rounded-xl flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 whitespace-nowrap">
+        <span class="text-sm sm:text-base">⚙️</span>
+        <span>Estúdio</span>
+      </button>
+    </div>
+  </nav>
 
   <!-- CONTAINER PRINCIPAL -->
   <main class="max-w-7xl mx-auto px-4 pt-4 space-y-5">
@@ -460,8 +507,8 @@
         </div>
       </div>
 
-      <!-- BARRA COMPACTA DO PROTOCOLO 33 (ACESSO DIRETO AO DOC + CHECK 1-TOQUE) -->
-      <div class="glass-card p-4 border border-amber-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+      <!-- BARRA COMPACTA DO PROTOCOLO 33 (EXCLUSIVA ADMIN / OPÇÃO A) -->
+      <div id="todayP33Card" class="glass-card p-4 border border-amber-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <div class="flex items-start sm:items-center gap-3">
           <div class="text-2xl">🎖️</div>
           <div>
@@ -533,7 +580,10 @@
                 <h2 class="text-base font-bold text-white">Pomodoro & Meta Diária</h2>
                 <button onclick="switchTab('studio'); switchStudioSubTab('sub-appearance');" class="text-xs text-slate-400 hover:text-white" title="Alterar minutos dos blocos e descansos">⚙️</button>
               </div>
-              <span id="timerStatusBadge" class="text-[11px] font-mono font-semibold px-2.5 py-0.5 bg-slate-800 secondary-text rounded-full">Foco 90m</span>
+              <div class="flex items-center gap-1.5">
+                <span id="wakeLockBadge" class="hidden text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30" title="Tela mantida ativa durante o foco">🔆 Tela Ativa</span>
+                <span id="timerStatusBadge" class="text-[11px] font-mono font-semibold px-2.5 py-0.5 bg-slate-800 secondary-text rounded-full">Foco 90m</span>
+              </div>
             </div>
 
             <!-- Barra de Meta Diária Integrada no Card (Valores menores até máx 4h + Personalizável) -->
@@ -658,12 +708,12 @@
 
             <div id="newCycleContainer" class="hidden flex items-center justify-between gap-2 bg-slate-900 p-2 rounded-xl border border-slate-800 text-[11px]">
               <div class="flex items-center gap-1">
-                <input type="number" id="newCycleOn" value="2" min="1" max="30" class="w-10 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-center text-white font-mono font-bold">
+                <input type="number" inputmode="numeric" pattern="[0-9]*" id="newCycleOn" value="2" min="1" max="30" class="w-10 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-center text-white font-mono font-bold">
                 <span class="accent-text font-semibold">ON</span>
               </div>
               <span class="text-slate-500">/</span>
               <div class="flex items-center gap-1">
-                <input type="number" id="newCycleOff" value="1" min="1" max="30" class="w-10 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-center text-white font-mono font-bold">
+                <input type="number" inputmode="numeric" pattern="[0-9]*" id="newCycleOff" value="1" min="1" max="30" class="w-10 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-center text-white font-mono font-bold">
                 <span class="text-slate-400 font-semibold">OFF</span>
               </div>
               <div class="flex items-center gap-1 ml-auto">
@@ -761,14 +811,27 @@
               </div>
               <div class="flex flex-col">
                 <label class="text-[10px] text-slate-400 mb-1">Questões Feitas</label>
-                <input type="number" id="qSolvedInput" min="1" max="500" placeholder="Ex: 15" required oninput="autoPreviewAccuracy()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono font-bold focus:outline-none">
+                <input type="number" inputmode="numeric" pattern="[0-9]*" id="qSolvedInput" min="1" max="500" placeholder="Ex: 15" required oninput="autoPreviewAccuracy()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono font-bold focus:outline-none">
+                <div class="flex flex-wrap gap-1 mt-1.5 font-mono text-[10px]">
+                  <button type="button" onclick="adjustQuestionInput('qSolvedInput', 5)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">+5</button>
+                  <button type="button" onclick="adjustQuestionInput('qSolvedInput', 10)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">+10</button>
+                  <button type="button" onclick="adjustQuestionInput('qSolvedInput', 20)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">+20</button>
+                  <button type="button" onclick="adjustQuestionInput('qSolvedInput', 0)" class="px-1.5 py-0.5 rounded bg-slate-900 text-slate-500 hover:text-rose-300">C</button>
+                </div>
               </div>
               <div class="flex flex-col">
                 <label class="text-[10px] text-slate-400 mb-1 flex justify-between">
                   <span>Acertos</span>
                   <span id="liveBatchAccPreview" class="font-mono text-emerald-400"></span>
                 </label>
-                <input type="number" id="qCorrectInput" min="0" max="500" placeholder="Ex: 12" required oninput="autoPreviewAccuracy()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs accent-text font-mono font-bold focus:outline-none">
+                <input type="number" inputmode="numeric" pattern="[0-9]*" id="qCorrectInput" min="0" max="500" placeholder="Ex: 12" required oninput="autoPreviewAccuracy()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs accent-text font-mono font-bold focus:outline-none">
+                <div class="flex flex-wrap gap-1 mt-1.5 font-mono text-[10px]">
+                  <button type="button" onclick="adjustQuestionInput('qCorrectInput', 1)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-emerald-300">+1</button>
+                  <button type="button" onclick="adjustQuestionInput('qCorrectInput', 5)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-emerald-300">+5</button>
+                  <button type="button" onclick="adjustQuestionInput('qCorrectInput', 10)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-emerald-300">+10</button>
+                  <button type="button" onclick="setQuestionAccuracyPreset(0.8)" class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300">80%</button>
+                  <button type="button" onclick="setQuestionAccuracyPreset(1)" class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300">100%</button>
+                </div>
               </div>
             </div>
 
@@ -930,7 +993,7 @@
               </div>
               <div>
                 <label class="text-xs text-slate-400">Semana da Trilha</label>
-                <input type="number" id="simTrilhaWeekInput" min="1" max="60" value="1" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono font-bold text-amber-300 focus:outline-none">
+                <input type="number" inputmode="numeric" pattern="[0-9]*" id="simTrilhaWeekInput" min="1" max="60" value="1" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono font-bold text-amber-300 focus:outline-none">
               </div>
             </div>
 
@@ -1028,22 +1091,22 @@
               </div>
               <div>
                 <label class="text-slate-400">Barra Fixa Estrita (reps)</label>
-                <input type="number" id="tafPullupsInput" min="0" max="50" required placeholder="Meta F1: 5" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-white focus:outline-none">
+                <input type="number" inputmode="numeric" pattern="[0-9]*" id="tafPullupsInput" min="0" max="50" required placeholder="Meta F1: 5" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-white focus:outline-none">
               </div>
               <div>
                 <label class="text-slate-400">Flexões Militares (reps)</label>
-                <input type="number" id="tafPushupsInput" min="0" max="150" required placeholder="Meta F1: 20" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-white focus:outline-none">
+                <input type="number" inputmode="numeric" pattern="[0-9]*" id="tafPushupsInput" min="0" max="150" required placeholder="Meta F1: 20" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-white focus:outline-none">
               </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
               <div>
                 <label class="text-slate-400">Abdominal Supra (reps)</label>
-                <input type="number" id="tafAbsInput" min="0" max="150" required placeholder="Meta F1: 35" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-white focus:outline-none">
+                <input type="number" inputmode="numeric" pattern="[0-9]*" id="tafAbsInput" min="0" max="150" required placeholder="Meta F1: 35" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-white focus:outline-none">
               </div>
               <div>
                 <label class="text-slate-400">Corrida 12 min (Metros)</label>
-                <input type="number" id="tafRunMetersInput" min="500" max="4500" step="10" required placeholder="Meta F1: 1850" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-cyan-300 focus:outline-none">
+                <input type="number" inputmode="numeric" pattern="[0-9]*" id="tafRunMetersInput" min="500" max="4500" step="10" required placeholder="Meta F1: 1850" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-cyan-300 focus:outline-none">
               </div>
               <div>
                 <label class="text-slate-400">Observação / Prancha / Toalha</label>
@@ -1159,38 +1222,45 @@
           <div class="grid grid-cols-2 sm:grid-cols-6 gap-3 mt-3 text-xs">
             <div>
               <label class="text-slate-400">Bloco Foco 1 (min)</label>
-              <input type="number" min="5" max="240" id="cfgPomoFocus1" onchange="savePomodoroCustomConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-white" />
+              <input type="number" inputmode="numeric" pattern="[0-9]*" min="5" max="240" id="cfgPomoFocus1" onchange="savePomodoroCustomConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-white" />
             </div>
             <div>
               <label class="text-slate-400">Bloco Foco 2 (min)</label>
-              <input type="number" min="5" max="240" id="cfgPomoFocus2" onchange="savePomodoroCustomConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-white" />
+              <input type="number" inputmode="numeric" pattern="[0-9]*" min="5" max="240" id="cfgPomoFocus2" onchange="savePomodoroCustomConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-white" />
             </div>
             <div>
               <label class="text-slate-400">Descanso (min)</label>
-              <input type="number" min="1" max="120" id="cfgPomoBreak" onchange="savePomodoroCustomConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-amber-300" />
+              <input type="number" inputmode="numeric" pattern="[0-9]*" min="1" max="120" id="cfgPomoBreak" onchange="savePomodoroCustomConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-amber-300" />
             </div>
             <div>
               <label class="text-slate-400">Semana ENAMED</label>
-              <input type="number" min="1" max="60" id="cfgEnamedWeek" onchange="saveEnamedConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold accent-text" />
+              <input type="number" inputmode="numeric" pattern="[0-9]*" min="1" max="60" id="cfgEnamedWeek" onchange="saveEnamedConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold accent-text" />
             </div>
             <div>
               <label class="text-slate-400">Total Sem. ENAMED</label>
-              <input type="number" min="1" max="100" id="cfgEnamedTotal" onchange="saveEnamedConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-slate-300" />
+              <input type="number" inputmode="numeric" pattern="[0-9]*" min="1" max="100" id="cfgEnamedTotal" onchange="saveEnamedConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-slate-300" />
             </div>
-            <div>
+            <div id="studioP33WeekBox">
               <label class="text-slate-400">Semana Prot. 33</label>
-              <input type="number" min="1" max="33" id="cfgProtocoloWeek" onchange="saveProtocoloConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-amber-400" />
+              <input type="number" inputmode="numeric" min="1" max="33" id="cfgProtocoloWeek" onchange="saveProtocoloConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-amber-400" />
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 text-xs">
+          <div id="studioP33ConfigBlock" class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3 p-3 rounded-xl bg-slate-900/70 border border-amber-500/20 text-xs">
             <div>
               <label class="text-slate-400">Link Direto do Documento Oficial (Protocolo 33 Google Doc)</label>
-              <input type="url" id="cfgProtocoloDocUrl" onchange="saveProtocoloConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-cyan-300" />
+              <input type="url" id="cfgProtocoloDocUrl" onchange="saveProtocoloConfig()" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 font-mono text-cyan-300" />
             </div>
             <div>
-              <label class="text-slate-400">Hábito Auto-Marcado ao Concluir Treino do Protocolo 33</label>
-              <select id="cfgLinkedWorkoutHabitSelect" onchange="saveProtocoloConfig()" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-amber-300 font-semibold"></select>
+              <label class="text-slate-400">Hábito Vinculado ao Protocolo 33</label>
+              <select id="cfgLinkedWorkoutHabitSelect" onchange="saveProtocoloConfig()" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-amber-300 font-semibold"></select>
+            </div>
+            <div class="flex flex-col justify-between">
+              <label class="text-slate-400">Visibilidade do Módulo Forja/TAF (Opção A)</label>
+              <label class="flex items-center gap-2 mt-2 cursor-pointer text-amber-300 font-semibold">
+                <input type="checkbox" id="cfgShowForjaAdminCheck" checked onchange="toggleForjaAdminVisibility(this.checked)" class="rounded bg-slate-950 border-slate-700">
+                <span>Exibir Forja na minha conta Admin (Oculto p/ Alunos)</span>
+              </label>
             </div>
           </div>
         </div>
@@ -1221,8 +1291,30 @@
         </div>
       </div>
 
-      <!-- SUB-PAINEL 2: ATALHOS RÁPIDOS, ÁREAS E TAGS CENTRALIZADOS NO ESTÚDIO -->
+      <!-- SUB-PAINEL 2: PERFIS POR NICHO (WHITE-LABEL), ATALHOS RÁPIDOS, ÁREAS E TAGS -->
       <div id="sub-shortcuts" class="hidden glass-card p-6 space-y-6">
+        <div class="p-4 rounded-2xl bg-slate-900/90 border border-cyan-500/30 space-y-3 text-xs">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-sm font-bold text-cyan-300">🎯 Perfis Pré-Prontos por Nicho (White-Label 1-Clique)</h3>
+              <p class="text-slate-400 mt-0.5">Adapte instantaneamente todas as Áreas e Baterias Rápidas de 1-Toque para o perfil do estudante ou comprador:</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <button type="button" onclick="applyNichePreset('residencia')" class="p-3 rounded-xl bg-slate-950 hover:bg-slate-800 border border-emerald-500/30 text-left transition">
+              <div class="font-bold text-emerald-400">🩺 Residência Médica / ENAMED</div>
+              <div class="text-[11px] text-slate-400 mt-0.5">Clínica, Cirurgia, GO, Pediatria, Preventiva e Prova Antiga</div>
+            </button>
+            <button type="button" onclick="applyNichePreset('concursos')" class="p-3 rounded-xl bg-slate-950 hover:bg-slate-800 border border-indigo-500/30 text-left transition">
+              <div class="font-bold text-indigo-300">⚖️ Concursos Públicos & Carreiras</div>
+              <div class="text-[11px] text-slate-400 mt-0.5">Português, Constitucional, Administrativo, RLM, Informática e Específicas</div>
+            </button>
+            <button type="button" onclick="applyNichePreset('vestibular')" class="p-3 rounded-xl bg-slate-950 hover:bg-slate-800 border border-amber-500/30 text-left transition">
+              <div class="font-bold text-amber-300">🎓 ENEM, Vestibular & Graduação</div>
+              <div class="text-[11px] text-slate-400 mt-0.5">Linguagens, Humanas, Natureza, Matemática, Redação e Simulado</div>
+            </button>
+          </div>
+        </div>
         <div class="space-y-3">
           <div class="flex flex-wrap justify-between items-center gap-2">
             <div>
@@ -1294,15 +1386,57 @@
 
           <div class="p-4 rounded-2xl bg-slate-900/90 border border-indigo-500/30 space-y-3 text-xs">
             <div class="flex items-center justify-between">
-              <span class="font-bold text-indigo-300 text-sm">💼 2. Gerador de Link p/ Venda (Onboarding 1-Clique)</span>
-              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300">Pronto p/ Kiwify/Hotmart</span>
+              <span class="font-bold text-indigo-300 text-sm">💼 2. Onboarding de Alunos & Webhook (Kiwify / Hotmart)</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300">Sem Treinos/TAF p/ Alunos</span>
             </div>
-            <p class="text-slate-400">Gere um link mágico para enviar ao seu comprador. Quando ele abrir, o app já entra direto na conta exclusiva dele:</p>
-            <div class="flex gap-2">
-              <input type="text" id="buyerEmailGenInput" placeholder="E-mail ou código do comprador (ex: joao@gmail.com)" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-xs" />
-              <button onclick="generateBuyerMagicLink()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shrink-0">
+            <p class="text-slate-400">Gere o Link Mágico já com o perfil de áreas do aluno (ou use a URL do Apps Script com <code class="text-indigo-300">?webhook=1</code> no webhook da Kiwify/Hotmart):</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <input type="text" id="buyerEmailGenInput" placeholder="E-mail do aluno (ex: joao@gmail.com)" class="sm:col-span-2 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-xs" />
+              <select id="buyerPresetSelect" class="bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-2 text-indigo-300 font-semibold text-xs">
+                <option value="residencia">🩺 Perfil Residência</option>
+                <option value="concursos">⚖️ Perfil Concursos</option>
+                <option value="vestibular">🎓 Perfil Vestibular</option>
+              </select>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="generateBuyerMagicLink()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs">
                 🔗 Copiar Link
               </button>
+              <button type="button" onclick="copySalesWebhookUrl()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 font-semibold text-xs border border-slate-700">
+                ⚡ Copiar URL de Webhook (Kiwify/Hotmart)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bloco Novo (Ideia 5): Resumo Semanal Automático via E-mail & Telegram -->
+        <div class="p-4 rounded-2xl bg-slate-900/90 border border-emerald-500/30 space-y-3 text-xs">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="font-bold text-emerald-300 text-sm">📩 3. Boletim Semanal Automático (Domingo à Noite • E-mail & Telegram)</span>
+              <p class="text-slate-400 mt-0.5">Receba um diagnóstico de 5 linhas com Horas Líquidas, Nota Real vs. Potencial, Ritmo (min/q) e as 2 áreas mais críticas da semana:</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="triggerWeeklyDigestNow()" class="px-3.5 py-2 rounded-xl accent-bg text-slate-950 font-bold text-xs shadow">
+                📩 Enviar Resumo Agora
+              </button>
+              <button type="button" onclick="installSundayTriggerFromApp()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 font-semibold text-xs border border-slate-700">
+                ⏰ Ativar Gatilho de Domingo (20h)
+              </button>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+            <div>
+              <label class="text-slate-400">Seu E-mail p/ Receber o Boletim</label>
+              <input type="email" id="cfgDigestEmail" onchange="saveDigestConfig()" placeholder="Deixe vazio p/ usar o e-mail da planilha" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-xs" />
+            </div>
+            <div>
+              <label class="text-slate-400">Telegram Bot Token (Opcional)</label>
+              <input type="password" id="cfgTelegramToken" onchange="saveDigestConfig()" placeholder="Ex: 123456:ABC-DEF..." class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-xs" />
+            </div>
+            <div>
+              <label class="text-slate-400">Telegram Chat ID (Opcional)</label>
+              <input type="text" id="cfgTelegramChatId" onchange="saveDigestConfig()" placeholder="Ex: 987654321" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-xs" />
             </div>
           </div>
         </div>
@@ -1399,17 +1533,61 @@
       } catch (e) {}
     }
 
-    // Identificação da Conta Ativa (Suporta parâmetro ?user= na URL para Onboarding de Compradores)
+    const NICHE_PRESETS = {
+      residencia: {
+        label: '🩺 Residência Médica / ENAMED',
+        areas: ['Clínica🩺', 'Cirurgia 🔪', 'GO 🤰', 'Pediatria 🧸', 'Preventiva 🦎', 'Prova antiga', 'Geral'],
+        quickButtons: [
+          { id: 'qq1', label: '🩺 Clínica 20q', area: 'Clínica🩺', solved: 20 },
+          { id: 'qq2', label: '🔪 Cirurgia 20q', area: 'Cirurgia 🔪', solved: 20 },
+          { id: 'qq3', label: '🤰 GO 20q', area: 'GO 🤰', solved: 20 },
+          { id: 'qq4', label: '🧸 Pediatria 20q', area: 'Pediatria 🧸', solved: 20 },
+          { id: 'qq5', label: '🦎 Preventiva / SUS 20q', area: 'Preventiva 🦎', solved: 20 },
+          { id: 'qq6', label: '⚡ Prova antiga 100q', area: 'Prova antiga', solved: 100 }
+        ]
+      },
+      concursos: {
+        label: '⚖️ Concursos Públicos & Carreiras',
+        areas: ['Português 📓', 'Dir. Constitucional ⚖️', 'Dir. Administrativo 🏛️', 'Raciocínio Lógico 🧮', 'Informática 💻', 'Específicas 🎯', 'Prova antiga'],
+        quickButtons: [
+          { id: 'qq_c1', label: '📓 Português 20q', area: 'Português 📓', solved: 20 },
+          { id: 'qq_c2', label: '⚖️ Constitucional 15q', area: 'Dir. Constitucional ⚖️', solved: 15 },
+          { id: 'qq_c3', label: '🏛️ Administrativo 15q', area: 'Dir. Administrativo 🏛️', solved: 15 },
+          { id: 'qq_c4', label: '🧮 RLM 15q', area: 'Raciocínio Lógico 🧮', solved: 15 },
+          { id: 'qq_c5', label: '🎯 Específicas 25q', area: 'Específicas 🎯', solved: 25 },
+          { id: 'qq_c6', label: '⚡ Prova Antiga 80q', area: 'Prova antiga', solved: 80 }
+        ]
+      },
+      vestibular: {
+        label: '🎓 ENEM, Vestibular & Graduação',
+        areas: ['Linguagens 📚', 'Ciências Humanas 🌍', 'Ciências da Natureza 🧬', 'Matemática 📐', 'Redação ✍️', 'Simulado Geral'],
+        quickButtons: [
+          { id: 'qq_v1', label: '📚 Linguagens 20q', area: 'Linguagens 📚', solved: 20 },
+          { id: 'qq_v2', label: '🌍 Humanas 20q', area: 'Ciências Humanas 🌍', solved: 20 },
+          { id: 'qq_v3', label: '🧬 Natureza 20q', area: 'Ciências da Natureza 🧬', solved: 20 },
+          { id: 'qq_v4', label: '📐 Matemática 20q', area: 'Matemática 📐', solved: 20 },
+          { id: 'qq_v5', label: '⚡ Simulado 90q', area: 'Simulado Geral', solved: 90 }
+        ]
+      }
+    };
+
+    let pendingUrlPreset = '';
+
+    // Identificação da Conta Ativa (Suporta ?user= e ?preset= na URL para Onboarding de Compradores)
     function initAccountIdentity() {
       try {
         const params = new URLSearchParams(window.location.search);
         const urlUser = (params.get('user') || params.get('u') || '').trim().toLowerCase();
         const urlGas = (params.get('gas') || '').trim();
+        const urlPreset = (params.get('preset') || '').trim().toLowerCase();
         if (urlGas && urlGas.startsWith('https://script.google.com/')) {
           rawSetStorage('habitGasWebAppUrl', urlGas);
         }
         if (urlUser) {
           rawSetStorage('habitCurrentAccountKey', urlUser);
+        }
+        if (urlPreset && NICHE_PRESETS[urlPreset]) {
+          pendingUrlPreset = urlPreset;
         }
       } catch (e) {}
     }
@@ -1535,23 +1713,59 @@
       pullFromCloud(false);
     }
 
-    function generateBuyerMagicLink() {
-      const buyerKey = (document.getElementById('buyerEmailGenInput').value || '').trim().toLowerCase();
-      if (!buyerKey) return showToast('Digite o e-mail ou código do aluno/comprador.', '⚠️');
-      const baseUrl = window.location.origin + window.location.pathname;
-      const magicUrl = `${baseUrl}?user=${encodeURIComponent(buyerKey)}`;
+    function isForjaVisible() {
+      return (!currentAccountKey || currentAccountKey === 'admin') && (protocoloConfig.showForjaAdmin !== false);
+    }
 
+    function toggleForjaAdminVisibility(showIt) {
+      protocoloConfig.showForjaAdmin = Boolean(showIt);
+      if (!isForjaVisible() && activeTab === 'forja') {
+        switchTab('today');
+      }
+      saveState();
+      showToast(showIt ? 'Módulo Protocolo 33 visível na sua conta Admin.' : 'Módulo Protocolo 33 ocultado (modo estudo puro).', '🎖️');
+    }
+
+    function copyTextToClipboard(text, successMsg) {
       try {
-        navigator.clipboard.writeText(magicUrl);
-        showToast('Link exclusivo do aluno copiado!', '🔗');
+        navigator.clipboard.writeText(text);
+        showToast(successMsg, '🔗');
       } catch (e) {
         const temp = document.createElement('input');
-        temp.value = magicUrl;
+        temp.value = text;
         document.body.appendChild(temp);
         temp.select();
         document.execCommand('copy');
         document.body.removeChild(temp);
-        showToast('Link exclusivo do aluno copiado!', '🔗');
+        showToast(successMsg, '🔗');
+      }
+    }
+
+    function generateBuyerMagicLink() {
+      const buyerKey = (document.getElementById('buyerEmailGenInput').value || '').trim().toLowerCase();
+      if (!buyerKey) return showToast('Digite o e-mail ou código do aluno/comprador.', '⚠️');
+      const preset = document.getElementById('buyerPresetSelect')?.value || 'residencia';
+      const baseUrl = window.location.origin + window.location.pathname;
+      const magicUrl = `${baseUrl}?user=${encodeURIComponent(buyerKey)}&preset=${encodeURIComponent(preset)}`;
+      copyTextToClipboard(magicUrl, `Link exclusivo (${preset}) copiado! O aluno verá apenas Estudos, Pomodoro e Simulados.`);
+    }
+
+    function copySalesWebhookUrl() {
+      if (!gasWebAppUrl) return showToast('Salve primeiro a URL do Google Apps Script abaixo.', '⚠️');
+      const preset = document.getElementById('buyerPresetSelect')?.value || 'residencia';
+      const baseUrl = window.location.origin + window.location.pathname;
+      const whUrl = `${gasWebAppUrl}?webhook=1&preset=${encodeURIComponent(preset)}&appUrl=${encodeURIComponent(baseUrl)}`;
+      copyTextToClipboard(whUrl, 'URL de Webhook copiada! Cole na Kiwify ou Hotmart.');
+    }
+
+    function applyNichePreset(presetKey, silent = false) {
+      const p = NICHE_PRESETS[presetKey];
+      if (!p) return;
+      customAreas = [...p.areas];
+      quickQButtons = JSON.parse(JSON.stringify(p.quickButtons));
+      if (!silent) {
+        saveState();
+        showToast(`Perfil "${p.label}" aplicado nas Áreas e Atalhos!`, '🎯');
       }
     }
 
@@ -1712,6 +1926,8 @@
     let enamedWeek = 1;
     let enamedTotalWeeks = 42;
     let protocoloConfig = {};
+    let digestConfig = { email: '', telegramBotToken: '', telegramChatId: '' };
+    let wakeLockSentinel = null;
     let tafHistory = [];
     let pomoConfig = {};
     let customAreas = [];
@@ -1829,6 +2045,8 @@
       });
       protocoloConfig.week = Math.max(1, Math.min(33, Number(protocoloConfig.week) || 1));
       protocoloConfig.totalWeeks = 33;
+      if (protocoloConfig.showForjaAdmin === undefined) protocoloConfig.showForjaAdmin = true;
+      digestConfig = safeParseJSON('habitDigestConfig', { email: '', telegramBotToken: '', telegramChatId: '' });
       if (!['A', 'B', 'C', 'D'].includes(protocoloConfig.nextSession)) protocoloConfig.nextSession = 'A';
       if (!protocoloConfig.docUrl) protocoloConfig.docUrl = DEFAULT_PROTOCOLO_DOC_URL;
       if (!protocoloConfig.mobileDocUrl) protocoloConfig.mobileDocUrl = DEFAULT_PROTOCOLO_MOBILE_URL;
@@ -1857,8 +2075,17 @@
         if (b.id === 'sb3' && b.autoType === 'manual') b.autoType = 'simulados';
       });
 
+      const buyerCleanHabits = [
+        { id: 1792680210824, name: 'Estudo', days: [false, false, false, false, false, false, false], scheduleMode: 'fixed', cycleOn: 3, cycleOff: 1, cycleAnchor: TODAY_ISO, scheduledDays: [false, true, true, true, true, true, true] },
+        { id: 1792692829100, name: 'Questões', days: [false, false, false, false, false, false, false], scheduleMode: 'fixed', cycleOn: 2, cycleOff: 1, cycleAnchor: TODAY_ISO, scheduledDays: [false, true, true, true, true, true, false] },
+        { id: 1792699999999, name: 'Revisão de Erros', days: [false, false, false, false, false, false, false], scheduleMode: 'fixed', cycleOn: 2, cycleOff: 1, cycleAnchor: TODAY_ISO, scheduledDays: [true, false, true, false, true, false, true] }
+      ];
       simuladosHistory = safeParseJSON('habitSimuladosHistory', isAdmin ? JSON.parse(JSON.stringify(ADMIN_CLOUD_SNAPSHOT.simuladosHistory)) : []);
-      habits = safeParseJSON('habitDashboardData', JSON.parse(JSON.stringify(isAdmin ? ADMIN_CLOUD_SNAPSHOT.habits : defaultHabits)));
+      habits = safeParseJSON('habitDashboardData', JSON.parse(JSON.stringify(isAdmin ? ADMIN_CLOUD_SNAPSHOT.habits : buyerCleanHabits)));
+      if (!hasLocalData && pendingUrlPreset && NICHE_PRESETS[pendingUrlPreset]) {
+        customAreas = [...NICHE_PRESETS[pendingUrlPreset].areas];
+        quickQButtons = JSON.parse(JSON.stringify(NICHE_PRESETS[pendingUrlPreset].quickButtons));
+      }
       habits.forEach(h => {
         if (!Array.isArray(h.days) || h.days.length !== 7) h.days = [false, false, false, false, false, false, false];
         if (!Array.isArray(h.scheduledDays) || h.scheduledDays.length !== 7) h.scheduledDays = [true, true, true, true, true, true, true];
@@ -2383,6 +2610,7 @@
         enamedWeek,
         enamedTotalWeeks,
         protocoloConfig,
+        digestConfig,
         tafHistory,
         pomoConfig,
         weekStartIso: storedWeekStartIso,
@@ -2431,6 +2659,7 @@
           nextSession: ['A', 'B', 'C', 'D'].includes(data.protocoloConfig.nextSession) ? data.protocoloConfig.nextSession : 'A'
         };
       }
+      if (data.digestConfig) digestConfig = { ...digestConfig, ...data.digestConfig };
       if (Array.isArray(data.tafHistory)) tafHistory = data.tafHistory;
       if (data.pomoConfig) {
         pomoConfig = {
@@ -2497,6 +2726,7 @@
       safeSetStorage('habitEnamedWeek', String(enamedWeek));
       safeSetStorage('habitEnamedTotalWeeks', String(enamedTotalWeeks));
       safeSetStorage('habitProtocoloConfig', JSON.stringify(protocoloConfig));
+      safeSetStorage('habitDigestConfig', JSON.stringify(digestConfig));
       safeSetStorage('habitTafHistory', JSON.stringify(tafHistory));
       safeSetStorage('habitPomoConfig', JSON.stringify(pomoConfig));
       safeSetStorage('habitDashboardData', JSON.stringify(habits));
@@ -2560,6 +2790,72 @@
       } else if (state === 'error') {
         dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-500';
         text.textContent = customText || 'Na Fila Local';
+      }
+    }
+
+    function saveDigestConfig() {
+      const em = document.getElementById('cfgDigestEmail');
+      const tk = document.getElementById('cfgTelegramToken');
+      const ch = document.getElementById('cfgTelegramChatId');
+      if (em) digestConfig.email = em.value.trim();
+      if (tk) digestConfig.telegramBotToken = tk.value.trim();
+      if (ch) digestConfig.telegramChatId = ch.value.trim();
+      saveState();
+      showToast('Configurações do Boletim Semanal salvas!', '📩');
+    }
+
+    async function triggerWeeklyDigestNow() {
+      if (!gasWebAppUrl) return showToast('Configure a URL do Google Apps Script primeiro.', '⚠️');
+      saveDigestConfig();
+      showToast('Gerando e enviando seu Resumo Semanal...', '📩');
+      try {
+        const payload = { ...buildFullPayload(), action: 'send_weekly_digest' };
+        const response = await fetch(String(gasWebAppUrl), {
+          method: 'POST',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        const res = await response.json();
+        if (res.status === 'digest_sent') {
+          const chStr = Array.isArray(res.channels) && res.channels.length > 0 ? res.channels.join(' e ') : 'planilha';
+          openAppModal({
+            title: '📩 Resumo Semanal Enviado!',
+            bodyHtml: `
+              <div class="space-y-2 text-xs">
+                <p class="text-emerald-400 font-semibold">Disparado via: ${escapeHtml(chStr)}</p>
+                <pre class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono whitespace-pre-wrap text-slate-200">${escapeHtml(res.preview || '')}</pre>
+              </div>
+            `,
+            confirmText: 'Fechar',
+            onConfirm: () => closeAppModal()
+          });
+        } else {
+          showToast('Erro ao enviar resumo: ' + (res.message || 'verifique o Apps Script'), '⚠️');
+        }
+      } catch (e) {
+        showToast('Sem conexão com o Apps Script no momento.', '⚠️');
+      }
+    }
+
+    async function installSundayTriggerFromApp() {
+      if (!gasWebAppUrl) return showToast('Configure a URL do Google Apps Script primeiro.', '⚠️');
+      showToast('Ativando gatilho de Domingo (20h) no Apps Script...', '⏰');
+      try {
+        const response = await fetch(String(gasWebAppUrl), {
+          method: 'POST',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'install_sunday_trigger' })
+        });
+        const res = await response.json();
+        if (res.status === 'trigger_installed') {
+          showToast('Gatilho de Domingo às 20h ativado com sucesso!', '⏰');
+        } else {
+          showToast('Para ativar gatilhos, execute "instalarGatilhoResumoDomingo" 1 vez no editor do Apps Script.', 'ℹ️');
+        }
+      } catch (e) {
+        showToast('Execute "instalarGatilhoResumoDomingo" 1 vez no editor do Apps Script para autorizar.', 'ℹ️');
       }
     }
 
@@ -2728,7 +3024,12 @@
     }, 45000);
 
     // ==================== 7. AUTÓPSIA MINIMALISTA & CÁLCULO DE NOTA POTENCIAL ====================
-    function toggleFormErrorTag(tagName) {
+    function toggleFormErrorTag(tagNameOrIndex) {
+      let tagName = tagNameOrIndex;
+      if (typeof tagNameOrIndex === 'number' && customErrorTags[tagNameOrIndex]) {
+        tagName = customErrorTags[tagNameOrIndex].name;
+      }
+      if (!tagName) return;
       const idx = selectedErrorTagsForForm.indexOf(tagName);
       if (idx === -1) selectedErrorTagsForForm.push(tagName);
       else selectedErrorTagsForForm.splice(idx, 1);
@@ -2820,14 +3121,14 @@
       }
 
       if (pickerEl) {
-        pickerEl.innerHTML = customErrorTags.map(tag => {
+        pickerEl.innerHTML = customErrorTags.map((tag, tagIdx) => {
           const isSelected = selectedErrorTagsForForm.includes(tag.name);
           const isOp = tag.category === 'operational';
           const activeClass = isSelected
             ? (isOp ? 'bg-amber-500 text-slate-950 font-bold border-amber-400 shadow' : 'bg-rose-500 text-white font-bold border-rose-400 shadow')
             : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800';
           return `
-            <button type="button" onclick="toggleFormErrorTag('${escapeHtml(tag.name)}')" class="px-3 py-1.5 rounded-xl text-xs border transition flex items-center gap-1.5 ${activeClass}">
+            <button type="button" onclick="toggleFormErrorTag(${tagIdx})" class="px-3 py-1.5 rounded-xl text-xs border transition flex items-center gap-1.5 ${activeClass}">
               <span>${escapeHtml(tag.name)}</span>
               <span class="text-[9px] opacity-75">(${isOp ? 'Operacional' : 'Teoria'})</span>
               ${isSelected ? '<span>✓</span>' : ''}
@@ -3143,8 +3444,10 @@
         simTimerRunning = false;
         clearInterval(simTimerInterval);
         btn.textContent = '▶ Retomar';
+        if (!isRunning) releaseScreenWakeLock();
       } else {
         simTimerRunning = true;
+        requestScreenWakeLock();
         simLastTick = Date.now();
         btn.textContent = '⏸ Pausar';
         simTimerInterval = setInterval(() => {
@@ -3161,6 +3464,7 @@
 
     function resetSimStopwatch() {
       simTimerRunning = false;
+      if (!isRunning) releaseScreenWakeLock();
       clearInterval(simTimerInterval);
       simElapsedSeconds = 0;
       document.getElementById('simStopwatchDisplay').textContent = '00:00:00';
@@ -3177,9 +3481,9 @@
         <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-2">
           <span class="text-xs font-semibold text-slate-200 truncate">${escapeHtml(area)}</span>
           <div class="flex items-center gap-1.5 shrink-0 font-mono text-xs">
-            <input type="number" min="0" max="200" placeholder="Certas" data-sim-area="${escapeHtml(area)}" data-sim-type="correct" oninput="updateSimLivePreview()" class="w-16 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-center accent-text font-bold">
+            <input type="number" inputmode="numeric" pattern="[0-9]*" min="0" max="200" placeholder="Certas" data-sim-area="${escapeHtml(area)}" data-sim-type="correct" oninput="updateSimLivePreview()" class="w-16 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-center accent-text font-bold">
             <span class="text-slate-500">/</span>
-            <input type="number" min="0" max="200" placeholder="Total" data-sim-area="${escapeHtml(area)}" data-sim-type="solved" oninput="updateSimLivePreview()" class="w-16 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-center text-white font-bold">
+            <input type="number" inputmode="numeric" pattern="[0-9]*" min="0" max="200" placeholder="Total" data-sim-area="${escapeHtml(area)}" data-sim-type="solved" oninput="updateSimLivePreview()" class="w-16 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-center text-white font-bold">
           </div>
         </div>
       `).join('');
@@ -3432,6 +3736,36 @@
       saveState();
     }
 
+    function adjustQuestionInput(inputId, delta) {
+      const el = document.getElementById(inputId);
+      if (!el) return;
+      if (delta === 0) {
+        el.value = '';
+      } else {
+        const cur = Math.max(0, parseInt(el.value || '0', 10));
+        let nextVal = cur + delta;
+        if (inputId === 'qCorrectInput') {
+          const solvedVal = Math.max(0, parseInt(document.getElementById('qSolvedInput')?.value || '0', 10));
+          if (solvedVal > 0) nextVal = Math.min(solvedVal, nextVal);
+        }
+        el.value = Math.max(0, nextVal);
+      }
+      autoPreviewAccuracy();
+    }
+
+    function setQuestionAccuracyPreset(ratio) {
+      const solvedEl = document.getElementById('qSolvedInput');
+      const correctEl = document.getElementById('qCorrectInput');
+      if (!solvedEl || !correctEl) return;
+      let s = Math.max(0, parseInt(solvedEl.value || '0', 10));
+      if (s === 0) {
+        s = 10;
+        solvedEl.value = 10;
+      }
+      correctEl.value = Math.round(s * ratio);
+      autoPreviewAccuracy();
+    }
+
     function autoPreviewAccuracy() {
       const s = Number(document.getElementById('qSolvedInput').value) || 0;
       const c = Number(document.getElementById('qCorrectInput').value) || 0;
@@ -3449,9 +3783,13 @@
     }
 
     function renderStudyBanks() {
+      const showForja = isForjaVisible();
+      const visibleBanks = showForja
+        ? studyBanks
+        : studyBanks.filter(b => b.autoType !== 'workouts' && b.id !== 'sb4');
       const compactBar = document.getElementById('compactBanksBar');
       if (compactBar) {
-        compactBar.innerHTML = studyBanks.slice(0, 4).map(b => {
+        compactBar.innerHTML = visibleBanks.slice(0, 4).map(b => {
           const pct = b.target > 0 ? Math.min(100, Math.round((b.current / b.target) * 100)) : 0;
           const icon = b.autoType === 'questions' ? '🎯' : (b.autoType === 'hours' ? '⏱️' : (b.autoType === 'workouts' ? '🏋️' : '📄'));
           return `
@@ -3467,7 +3805,7 @@
 
       const grid = document.getElementById('studyBanksGrid');
       if (!grid) return;
-      grid.innerHTML = studyBanks.map(b => {
+      grid.innerHTML = visibleBanks.map(b => {
         const pct = b.target > 0 ? Math.min(100, (b.current / b.target) * 100) : 0;
         const stepSmall = b.unit === 'questões' ? 20 : 1;
 
@@ -3996,11 +4334,63 @@
       updateTimerDisplay();
     }
 
+    async function requestScreenWakeLock() {
+      if (!('wakeLock' in navigator)) return;
+      try {
+        if (!wakeLockSentinel) {
+          wakeLockSentinel = await navigator.wakeLock.request('screen');
+          wakeLockSentinel.addEventListener('release', () => {
+            wakeLockSentinel = null;
+            updateWakeLockUI();
+          });
+        }
+      } catch (e) {}
+      updateWakeLockUI();
+    }
+
+    async function releaseScreenWakeLock() {
+      try {
+        if (wakeLockSentinel) {
+          await wakeLockSentinel.release();
+          wakeLockSentinel = null;
+        }
+      } catch (e) {}
+      updateWakeLockUI();
+    }
+
+    function updateWakeLockUI() {
+      const active = Boolean(wakeLockSentinel);
+      const badge = document.getElementById('wakeLockBadge');
+      const miniIcon = document.getElementById('miniWakeLockIcon');
+      if (badge) badge.classList.toggle('hidden', !active);
+      if (miniIcon) miniIcon.classList.toggle('hidden', !active);
+    }
+
     function updateTimerDisplay() {
       const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
       const secs = (timeLeft % 60).toString().padStart(2, '0');
-      document.getElementById('timerDisplay').textContent = `${mins}:${secs}`;
-      document.title = isRunning ? `(${mins}:${secs}) ${brandTitle}` : brandTitle;
+      const formatted = `${mins}:${secs}`;
+      document.getElementById('timerDisplay').textContent = formatted;
+      document.title = isRunning ? `(${formatted}) ${brandTitle}` : brandTitle;
+
+      // Atualiza o Mini-Pomodoro Flutuante em todos os dispositivos
+      const miniTime = document.getElementById('miniPomoTime');
+      const miniMode = document.getElementById('miniPomoModeLabel');
+      const miniBtn = document.getElementById('miniPomoToggleBtn');
+      const miniDot = document.getElementById('miniPomoDot');
+      if (miniTime) miniTime.textContent = formatted;
+      if (miniMode) {
+        miniMode.textContent = timerMode === 'focus1' ? `Foco ${pomoConfig.focus1}m` : (timerMode === 'focus2' ? `Foco ${pomoConfig.focus2}m` : `Pausa ${pomoConfig.breakMins}m`);
+      }
+      if (miniBtn) {
+        miniBtn.textContent = isRunning ? '⏸' : '▶';
+        miniBtn.className = isRunning
+          ? 'px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs shadow'
+          : 'px-2.5 py-1.5 rounded-xl accent-bg text-slate-950 font-bold text-xs shadow';
+      }
+      if (miniDot) {
+        miniDot.className = isRunning ? 'w-2 h-2 rounded-full bg-emerald-400 animate-ping' : 'w-2 h-2 rounded-full bg-slate-500';
+      }
     }
 
     function toggleTimer() {
@@ -4039,6 +4429,7 @@
 
       if (timeLeft <= 0) {
         playBeep(880, 0.6);
+        try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) {}
         if (timerMode === 'focus1' || timerMode === 'focus2') {
           pomodoroCycles[selectedDayIndex] = (pomodoroCycles[selectedDayIndex] || 0) + 1;
           checkAutoCompleteStudyHabit(selectedDayIndex);
@@ -4061,6 +4452,8 @@
       btn.className = 'flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm transition';
       clearInterval(timerInterval);
       timerInterval = setInterval(processTimerDelta, 1000);
+      requestScreenWakeLock();
+      updateTimerDisplay();
     }
 
     function pauseTimer() {
@@ -4071,6 +4464,7 @@
       const btn = document.getElementById('startPauseBtn');
       btn.textContent = '▶ Retomar';
       btn.className = 'flex-1 accent-bg text-slate-950 font-bold py-2.5 rounded-xl text-sm transition shadow-lg';
+      if (!simTimerRunning) releaseScreenWakeLock();
       saveState();
       updateTimerDisplay();
     }
@@ -4085,6 +4479,7 @@
       if (isRunning) {
         processTimerDelta();
         if (document.visibilityState === 'hidden') saveState();
+        else if (document.visibilityState === 'visible') requestScreenWakeLock();
       } else if (document.visibilityState === 'visible' && navigator.onLine && hasPendingOfflineSync) {
         pushToCloud(false);
       }
@@ -4722,7 +5117,7 @@
         const isScheduled = isHabitActiveOnDay(habit, selectedDayIndex);
         const isStudyLinked = habit.id === Number(linkedHabitId);
         const isQLinked = habit.id === Number(linkedQuestionHabitId);
-        const isWorkoutLinked = habit.id === Number(protocoloConfig.linkedWorkoutHabitId);
+        const isWorkoutLinked = isForjaVisible() && habit.id === Number(protocoloConfig.linkedWorkoutHabitId);
         const isEditingDays = editingScheduleHabitId === habit.id;
         const isCycle = habit.scheduleMode === 'cycle';
 
@@ -5040,6 +5435,28 @@
       if (accLbl) accLbl.textContent = currentAccountKey.length > 14 ? currentAccountKey.slice(0, 12) + '…' : currentAccountKey;
       const studioAccBadge = document.getElementById('studioAccountBadge');
       if (studioAccBadge) studioAccBadge.textContent = currentAccountKey;
+
+      // Controle Opção A: Protocolo 33 & TAF visível apenas para Admin (e oculto para compradores)
+      const isAdminAccount = (!currentAccountKey || currentAccountKey === 'admin');
+      const showForja = isForjaVisible();
+      ['headerP33Divider', 'headerP33Block', 'todayP33Card', 'tab-forja', 'studioP33WeekBox'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('hidden', !showForja);
+      });
+      const studioP33Cfg = document.getElementById('studioP33ConfigBlock');
+      if (studioP33Cfg) studioP33Cfg.classList.toggle('hidden', !isAdminAccount);
+      const showForjaCheck = document.getElementById('cfgShowForjaAdminCheck');
+      if (showForjaCheck) showForjaCheck.checked = protocoloConfig.showForjaAdmin !== false;
+
+      // Preenche campos do Boletim Semanal (Ideia 5)
+      const digEmail = document.getElementById('cfgDigestEmail');
+      const digToken = document.getElementById('cfgTelegramToken');
+      const digChat = document.getElementById('cfgTelegramChatId');
+      if (digEmail && document.activeElement !== digEmail) digEmail.value = digestConfig.email || '';
+      if (digToken && document.activeElement !== digToken) digToken.value = digestConfig.telegramBotToken || '';
+      if (digChat && document.activeElement !== digChat) digChat.value = digestConfig.telegramChatId || '';
+
+      updateTimerDisplay();
 
       renderPomodoroLabels();
       updateNotificationButtonUI();
