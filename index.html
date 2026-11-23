@@ -1423,6 +1423,9 @@
           }
           isAdminSession = Boolean(data.isAdmin);
           rawSet('ps_isAdmin', String(isAdminSession));
+          if (!data.globalConfig && showNotif) {
+            showToast('Publique uma Nova Versão do Code.gs.js no Apps Script para ativar o Super-Admin!', '⚠️');
+          }
 
           if (data.hasData && data.data) {
             const cloudT = data.data.updatedAt ? Date.parse(data.data.updatedAt) : 0;
