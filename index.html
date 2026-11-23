@@ -117,6 +117,43 @@
     .metric-val { font-family: 'JetBrains Mono', monospace; transition: filter 0.2s ease; }
     .privacy-blur .metric-val, .privacy-blur .private-text { filter: blur(7px); user-select: none; }
     .timer-glow { text-shadow: 0 0 24px color-mix(in srgb, var(--accent-primary) 30%, transparent); }
+    input[type="color"] {
+      -webkit-appearance: none;
+      border: none;
+      width: 34px;
+      height: 34px;
+      border-radius: 9999px;
+      cursor: pointer;
+      padding: 0;
+      background: transparent;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    input[type="color"]::-webkit-color-swatch {
+      border: 2px solid rgba(148, 163, 184, 0.5);
+      border-radius: 9999px;
+    }
+
+    /* MODO FOCO ZEN */
+    body.zen-mode header,
+    body.zen-mode #bottomAppNav,
+    body.zen-mode #daySelectorBar,
+    body.zen-mode #globalAnnouncementBanner,
+    body.zen-mode #todayKpiStrip,
+    body.zen-mode #todayHabitsCard,
+    body.zen-mode #todayChartCard,
+    body.zen-mode #floatingMiniPomodoro { display: none !important; }
+    body.zen-mode #todayMainGrid { display: flex !important; justify-content: center; align-items: center; min-height: 82vh; }
+    body.zen-mode #todayPomoCard { width: 100%; max-width: 440px; }
+
+    /* RESUMO SEMANAL IMPRIMÍVEL (PDF LIMPO) */
+    @media print {
+      header, #bottomAppNav, #daySelectorBar, #floatingMiniPomodoro, #globalAnnouncementBanner, #toastNotification, button, select { display: none !important; }
+      body { background: #ffffff !important; color: #0f172a !important; padding: 0 !important; }
+      .glass-card { background: #ffffff !important; border: 1px solid #cbd5e1 !important; color: #0f172a !important; box-shadow: none !important; break-inside: avoid; }
+      .text-white, .text-slate-100, .text-slate-200, .text-slate-300 { color: #0f172a !important; }
+      .text-slate-400, .text-slate-500 { color: #475569 !important; }
+    }
+
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
   </style>
@@ -142,6 +179,33 @@
       <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
         <button type="button" onclick="closeAppModal()" class="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-300 text-xs">Cancelar</button>
         <button type="button" id="appModalConfirmBtn" class="px-4 py-1.5 rounded-xl accent-bg text-slate-950 text-xs font-bold">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL SESSÃO FLASH-REVIEW (CARD ÚNICO PARA CELULAR/PC) -->
+  <div id="flashSessionModal" class="fixed inset-0 z-50 hidden bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass-card max-w-md w-full p-6 space-y-5 border border-amber-500/40 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-base">⚡</span>
+          <span class="text-xs font-bold uppercase tracking-wider text-amber-300">Flash-Review</span>
+          <span id="flashProgressBadge" class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">1 / 5</span>
+        </div>
+        <button type="button" onclick="closeFlashSessionModal()" class="text-xs text-slate-400 hover:text-white">Fechar ✕</button>
+      </div>
+      <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2.5 min-h-[130px] flex flex-col justify-center">
+        <div class="flex items-center justify-between text-[11px]">
+          <span id="flashCardArea" class="font-bold text-cyan-300">Área</span>
+          <span id="flashCardDate" class="font-mono text-slate-500">Data</span>
+        </div>
+        <p id="flashCardTopic" class="text-sm sm:text-base font-medium text-white leading-relaxed"></p>
+        <div id="flashCardTags" class="flex flex-wrap gap-1 pt-1"></div>
+      </div>
+      <div class="grid grid-cols-3 gap-2 text-xs">
+        <button type="button" onclick="flashSessionAction('skip')" class="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold">Pular →</button>
+        <button type="button" id="flashNextBtn" onclick="flashSessionAction('advance')" class="py-2.5 rounded-xl accent-bg text-slate-950 font-bold">✓ Li (+14d)</button>
+        <button type="button" onclick="flashSessionAction('master')" class="py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold">🏆 Dominei</button>
       </div>
     </div>
   </div>
@@ -300,7 +364,7 @@
     </div>
 
     <!-- SELETOR COMPACTO DE DIAS (DOM A SÁB) -->
-    <div class="flex flex-wrap items-center justify-between gap-2">
+    <div id="daySelectorBar" class="flex flex-wrap items-center justify-between gap-2">
       <div class="grid grid-cols-7 gap-1.5 flex-1 max-w-xl" id="daySelector"></div>
       <button id="busyDayBtn" onclick="toggleBusyDay()" class="text-[11px] font-semibold px-3 py-2 rounded-xl border border-slate-800 bg-slate-900/80 text-slate-300 hover:border-amber-500/50 transition" title="Reduz metas do dia pela metade">
         ⚡ <span id="busyDayBtnText">Dia Corrido (-50%)</span>
@@ -311,7 +375,7 @@
     <section id="view-today" class="space-y-5">
 
       <!-- BLOCO 1: FAIXA ÚNICA DE 4 NÚMEROS -->
-      <div class="glass-card p-4 grid grid-cols-2 lg:grid-cols-4 gap-4 divide-y sm:divide-y-0 lg:divide-x divide-slate-800/80">
+      <div id="todayKpiStrip" class="glass-card p-4 grid grid-cols-2 lg:grid-cols-4 gap-4 divide-y sm:divide-y-0 lg:divide-x divide-slate-800/80">
         <div class="flex items-center justify-between lg:pr-4">
           <div>
             <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Sequência</span>
@@ -346,13 +410,13 @@
       </div>
 
       <!-- BLOCOS 2 E 3: POMODORO + HÁBITOS + CURVA -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <div id="todayMainGrid" class="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
         <!-- Pomodoro & Meta Diária -->
-        <div class="lg:col-span-4 glass-card p-5 flex flex-col justify-between space-y-4">
+        <div id="todayPomoCard" class="lg:col-span-4 glass-card p-5 flex flex-col justify-between space-y-4">
           <div class="space-y-4">
             <div class="flex items-center justify-between">
-              <h2 class="text-sm font-bold text-white">Pomodoro & Meta</h2>
+              <div class="flex items-center gap-2"><h2 class="text-sm font-bold text-white">Pomodoro & Meta</h2><button type="button" id="zenModeBtn" onclick="toggleZenMode()" class="text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition" title="Ocultar distrações e focar apenas no cronômetro">🧘 Zen</button></div>
               <div class="flex items-center gap-1.5">
                 <span id="wakeLockBadge" class="hidden text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300">🔆 Ativa</span>
                 <span id="timerStatusBadge" class="text-[11px] font-mono font-semibold px-2.5 py-0.5 bg-slate-800 secondary-text rounded-full">Foco 50m</span>
@@ -409,7 +473,7 @@
         </div>
 
         <!-- Hábitos do Dia -->
-        <div class="lg:col-span-4 glass-card p-5 flex flex-col justify-between space-y-4">
+        <div id="todayHabitsCard" class="lg:col-span-4 glass-card p-5 flex flex-col justify-between space-y-4">
           <div>
             <div class="flex items-center justify-between mb-3">
               <h2 class="text-sm font-bold text-white">Rotina do Dia</h2>
@@ -425,7 +489,7 @@
         </div>
 
         <!-- Curva Semanal -->
-        <div class="lg:col-span-4 glass-card p-5 flex flex-col justify-between">
+        <div id="todayChartCard" class="lg:col-span-4 glass-card p-5 flex flex-col justify-between">
           <div>
             <h2 class="text-sm font-bold text-white">Curva da Semana</h2>
             <p class="text-[11px] text-slate-400 mb-3">Hábitos (%) • Acerto (%) • Horas Líquidas</p>
@@ -562,8 +626,9 @@
             <h2 class="text-sm font-bold text-white">⚡ Flash-Review (14d • 30d • 60d)</h2>
             <span id="srsDueBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">0 hoje</span>
           </div>
-          <div class="flex items-center gap-2">
-            <button onclick="addStandaloneErrorTopic()" class="px-3 py-1.5 bg-slate-800 text-cyan-300 rounded-xl text-xs font-semibold">+ Esquema</button>
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" onclick="startFlashSessionModal()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition">🎲 Sortear 5</button>
+            <button type="button" onclick="addStandaloneErrorTopic()" class="px-3 py-1.5 bg-slate-800 text-cyan-300 rounded-xl text-xs font-semibold">+ Esquema</button>
             <select id="errorFilterSelect" onchange="renderErrorNotebook()" class="bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-300">
               <option value="due">Maduros Hoje</option>
               <option value="all">Todos Ativos</option>
@@ -606,7 +671,13 @@
         </div>
 
         <div class="lg:col-span-5 glass-card p-5 flex flex-col justify-between space-y-3">
-          <h3 class="text-sm font-bold text-white">Evolução em Simulados</h3>
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="text-sm font-bold text-white">Evolução em Simulados</h3>
+            <div class="flex items-center gap-1.5 text-xs">
+              <span class="text-[10px] text-amber-300 font-semibold">Corte (%):</span>
+              <input type="number" inputmode="numeric" id="simCutoffInput" min="1" max="100" value="75" onchange="updateSimCutoffScore(this.value)" class="w-14 bg-slate-900 border border-amber-500/40 rounded-lg px-2 py-1 text-center font-mono font-bold text-amber-300 text-xs focus:outline-none" />
+            </div>
+          </div>
           <div class="relative h-56 w-full"><canvas id="simuladosEvolutionChart"></canvas></div>
           <div class="text-xs text-slate-400 text-center font-mono" id="simSummaryFooter">Nenhum simulado ainda</div>
         </div>
@@ -618,17 +689,73 @@
       </div>
     </section>
 
-    <!-- ==================== ABA 4: 📅 SEMANA & METAS ==================== -->
+    <!-- ==================== ABA 4: 📅 SEMANA, NÍVEL, MAPA 90D & CARGA ==================== -->
     <section id="view-week" class="hidden space-y-5">
+
+      <!-- ÍNDICE DE PRONTIDÃO (0-100) + MAPA DE CALOR 90 DIAS -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div class="lg:col-span-5 glass-card p-5 flex flex-col justify-between space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Índice de Prontidão</span>
+              <h2 id="readinessLevelTitle" class="text-base font-bold text-white mt-0.5">Nível 1 • Base</h2>
+            </div>
+            <div class="text-right">
+              <div id="readinessScoreVal" class="text-3xl font-extrabold font-mono accent-text metric-val">0</div>
+              <span class="text-[10px] text-slate-500 font-mono">de 100 pts</span>
+            </div>
+          </div>
+          <div class="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+            <div id="readinessBar" class="h-full accent-bg transition-all duration-500" style="width: 0%"></div>
+          </div>
+          <div id="readinessBreakdown" class="grid grid-cols-3 gap-2 text-center text-[11px] font-mono"></div>
+        </div>
+
+        <div class="lg:col-span-7 glass-card p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-sm font-bold text-white">Mapa de Calor (Últimos 90 Dias)</h2>
+              <p class="text-[11px] text-slate-400">Intensidade baseada nas horas e questões de cada dia.</p>
+            </div>
+            <span id="heatmapActiveDaysBadge" class="text-[11px] font-mono accent-text font-bold">0 dias ativos</span>
+          </div>
+          <div id="heatmapGrid90" class="grid grid-cols-[repeat(18,minmax(0,1fr))] sm:grid-cols-[repeat(30,minmax(0,1fr))] gap-1"></div>
+        </div>
+      </div>
+
+      <!-- MATRIZ SEMANAL + BOTÃO IMPRIMIR PDF -->
       <div class="glass-card p-5 overflow-x-auto">
-        <div class="flex items-center justify-between gap-2 mb-3">
-          <h2 class="text-sm font-bold text-white">Matriz da Semana</h2>
-          <button onclick="archiveAndResetWeek()" class="px-3 py-1.5 text-xs font-semibold text-amber-300 bg-amber-500/15 rounded-xl border border-amber-500/30">📦 Arquivar Semana</button>
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div>
+            <h2 class="text-sm font-bold text-white">Matriz da Semana</h2>
+            <p class="text-[10px] text-slate-400">✓ Concluído • · Dia Ativo (ON) • — Descanso (OFF)</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="window.print()" class="px-3 py-1.5 text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 rounded-xl border border-slate-700">🖨️ Imprimir / PDF</button>
+            <button type="button" onclick="archiveAndResetWeek()" class="px-3 py-1.5 text-xs font-semibold text-amber-300 bg-amber-500/15 rounded-xl border border-amber-500/30">📦 Arquivar Semana</button>
+          </div>
         </div>
         <table class="w-full text-left border-collapse min-w-[580px]">
           <thead><tr class="border-b border-slate-800 text-[11px] uppercase text-slate-400" id="matrixHeaderRow"></tr></thead>
           <tbody id="matrixBody" class="divide-y divide-slate-800/60 text-xs"></tbody>
         </table>
+      </div>
+
+      <!-- DISTRIBUIÇÃO DE CARGA POR MATÉRIA + CONQUISTAS POR MARCOS REAIS -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div class="lg:col-span-6 glass-card p-5 space-y-3">
+          <h2 class="text-sm font-bold text-white">Distribuição de Carga na Semana</h2>
+          <div id="subjectLoadBar" class="w-full h-3 rounded-full overflow-hidden bg-slate-900 flex"></div>
+          <div id="subjectLoadList" class="space-y-1.5 text-xs"></div>
+        </div>
+
+        <div class="lg:col-span-6 glass-card p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-bold text-white">🏅 Conquistas por Marcos Reais</h2>
+            <span id="achievementsCountBadge" class="text-[11px] font-mono text-amber-300 font-bold">0/6</span>
+          </div>
+          <div id="achievementsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
+        </div>
       </div>
 
       <div class="glass-card p-5 space-y-3">
@@ -668,7 +795,7 @@
           </div>
           <div class="grid grid-cols-2 gap-2.5">
             <div>
-              <label class="text-slate-400">Tema</label>
+              <label class="text-slate-400">Superfície</label>
               <select id="cfgSurfaceSelect" onchange="changeSurfaceMode(this.value)" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
                 <option value="dark">🌑 Escuro</option>
                 <option value="oled">🖤 OLED Preto</option>
@@ -680,8 +807,33 @@
               <input type="text" id="cfgBrandTitle" oninput="updateBrandTitle(this.value)" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white" />
             </div>
           </div>
+
+          <!-- RODA DE CORES PERSONALIZÁVEL -->
+          <div class="p-3 rounded-xl bg-slate-900/70 border border-slate-800 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-white">🎨 Roda de Cores & Paleta Pessoal</span>
+              <div class="flex gap-1">
+                <button type="button" onclick="applyColorPreset('#10b981','#6366f1')" class="w-4 h-4 rounded-full bg-emerald-500 border border-white/30" title="Esmeralda"></button>
+                <button type="button" onclick="applyColorPreset('#06b6d4','#3b82f6')" class="w-4 h-4 rounded-full bg-cyan-500 border border-white/30" title="Ciano"></button>
+                <button type="button" onclick="applyColorPreset('#f59e0b','#ec4899')" class="w-4 h-4 rounded-full bg-amber-500 border border-white/30" title="Âmbar"></button>
+                <button type="button" onclick="applyColorPreset('#a855f7','#14b8a6')" class="w-4 h-4 rounded-full bg-purple-500 border border-white/30" title="Violeta"></button>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="color" id="cfgPrimaryColor" value="#10b981" oninput="updateCustomColors()">
+                <span class="text-slate-300">Cor Principal</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="color" id="cfgSecondaryColor" value="#6366f1" oninput="updateCustomColors()">
+                <span class="text-slate-300">Cor Secundária</span>
+              </label>
+            </div>
+          </div>
+
           <div class="flex flex-wrap gap-2 pt-2 border-t border-slate-800">
             <button onclick="exportJSON()" class="px-3 py-1.5 bg-slate-800 text-slate-200 rounded-xl">⬇️ Backup JSON</button>
+            <button onclick="exportProfileTheme()" class="px-3 py-1.5 bg-slate-800 text-cyan-300 rounded-xl">🎨 Exportar Perfil</button>
             <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="handleFileImport(event)">
             <button onclick="document.getElementById('importFileInput').click()" class="px-3 py-1.5 bg-slate-800 text-slate-200 rounded-xl">⬆️ Importar</button>
             <button onclick="logoutAndSwitchAccount()" class="px-3 py-1.5 bg-rose-950/50 text-rose-300 rounded-xl ml-auto">Sair da Conta</button>
@@ -984,6 +1136,50 @@
     let archivedWeeks = [];
     let storedWeekStartIso = CURRENT_WEEK_SUNDAY_ISO;
     let themeConfig = { surface: 'dark', primary: '#10b981', secondary: '#6366f1' };
+    let simCutoffScore = 75;
+    let dailyActivityLog = {};
+    let editingHabitScheduleId = null;
+    let flashSessionQueue = [];
+    let flashSessionIndex = 0;
+
+    function hexToRgba(hex, alpha = 0.5) {
+      let c = String(hex || '#10b981').replace('#', '').trim();
+      if (c.length === 3) c = c.split('').map(x => x + x).join('');
+      const n = parseInt(c, 16);
+      if (isNaN(n)) return `rgba(16, 185, 129, ${alpha})`;
+      return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+    }
+
+    function normalizeHabitObj(h) {
+      return {
+        ...h,
+        days: Array.isArray(h.days) && h.days.length === 7 ? h.days.map(Boolean) : [false,false,false,false,false,false,false],
+        scheduledDays: Array.isArray(h.scheduledDays) && h.scheduledDays.length === 7 ? h.scheduledDays.map(Boolean) : [true,true,true,true,true,true,true],
+        scheduleMode: h.scheduleMode === 'cycle' ? 'cycle' : 'fixed',
+        cycleOn: Math.max(1, Number(h.cycleOn) || 2),
+        cycleOff: Math.max(1, Number(h.cycleOff) || 1),
+        cycleAnchor: h.cycleAnchor || TODAY_ISO
+      };
+    }
+
+    function isHabitActiveOnDay(habit, dayIdx) {
+      if (!habit) return true;
+      if (habit.scheduleMode === 'cycle') {
+        const onD = Math.max(1, Number(habit.cycleOn) || 2);
+        const offD = Math.max(1, Number(habit.cycleOff) || 1);
+        const cycleLen = onD + offD;
+        const anchorParts = String(habit.cycleAnchor || TODAY_ISO).split('-').map(Number);
+        const targetParts = String(WEEK_DATES[dayIdx].iso).split('-').map(Number);
+        if (anchorParts.length === 3 && targetParts.length === 3) {
+          const tAnchor = Date.UTC(anchorParts[0], anchorParts[1] - 1, anchorParts[2]);
+          const tTarget = Date.UTC(targetParts[0], targetParts[1] - 1, targetParts[2]);
+          const diffDays = Math.round((tTarget - tAnchor) / 86400000);
+          const pos = ((diffDays % cycleLen) + cycleLen) % cycleLen;
+          return pos < onD;
+        }
+      }
+      return Array.isArray(habit.scheduledDays) ? Boolean(habit.scheduledDays[dayIdx]) : true;
+    }
     let digestConfig = { email: '', telegramBotToken: '', telegramChatId: '' };
     let localUpdatedAt = '';
     let hasPendingOfflineSync = false;
@@ -1039,7 +1235,10 @@
       busyDays = safeJSON('habitBusyDays', [false,false,false,false,false,false,false]);
       archivedWeeks = safeJSON('habitArchivedWeeks', []);
       storedWeekStartIso = safeGet('habitWeekStartIso', CURRENT_WEEK_SUNDAY_ISO);
-      themeConfig = safeJSON('habitThemeConfig', { surface: 'dark', primary: '#10b981', secondary: '#6366f1' });
+      habits = habits.map(normalizeHabitObj);
+      simCutoffScore = Math.min(100, Math.max(1, Number(safeGet('habitSimCutoff', '75')) || 75));
+      dailyActivityLog = safeJSON('habitDailyActivityLog', {});
+      themeConfig = Object.assign({ surface: 'dark', primary: '#10b981', secondary: '#6366f1' }, safeJSON('habitThemeConfig', {}));
       digestConfig = safeJSON('habitDigestConfig', { email: '', telegramBotToken: '', telegramChatId: '' });
       localUpdatedAt = safeGet('habitUpdatedAt', '');
       hasPendingOfflineSync = safeGet('habitPendingSync', 'false') === 'true';
@@ -1073,6 +1272,17 @@
       safeSet('habitBusyDays', JSON.stringify(busyDays));
       safeSet('habitArchivedWeeks', JSON.stringify(archivedWeeks));
       safeSet('habitWeekStartIso', storedWeekStartIso);
+      // Atualiza automaticamente o log de 90 dias para o Mapa de Calor
+      WEEK_DATES.forEach((wd, i) => {
+        const secs = studySeconds[i] || 0;
+        const q = questionsSolved[i] || 0;
+        const done = habits.filter(h => h.days[i]).length;
+        if (secs > 0 || q > 0 || done > 0) {
+          dailyActivityLog[wd.iso] = { secs, q, done };
+        }
+      });
+      safeSet('habitSimCutoff', String(simCutoffScore));
+      safeSet('habitDailyActivityLog', JSON.stringify(dailyActivityLog));
       safeSet('habitThemeConfig', JSON.stringify(themeConfig));
       safeSet('habitDigestConfig', JSON.stringify(digestConfig));
     }
@@ -1248,7 +1458,10 @@
     // ==================== 5. SINCRONIZAÇÃO ROBUSTA & FILA ANTI-CONFLITO ====================
     function buildFullPayload() {
       return {
-        version: 13,
+        version: 15,
+        schemaVersion: 15,
+        simCutoffScore,
+        dailyActivityLog,
         userKey: currentAccountKey,
         userPin: currentAccountPin,
         googleToken: currentGoogleToken,
@@ -1287,7 +1500,9 @@
       if (Array.isArray(data.customErrorTags) && data.customErrorTags.length) customErrorTags = data.customErrorTags;
       if (Array.isArray(data.quickQButtons)) quickQButtons = data.quickQButtons;
       if (Array.isArray(data.studyBanks)) studyBanks = data.studyBanks.filter(b => b.autoType !== 'workouts' && b.id !== 'sb4');
-      if (Array.isArray(data.habits)) habits = data.habits;
+      if (Array.isArray(data.habits)) habits = data.habits.map(normalizeHabitObj);
+      if (data.simCutoffScore) simCutoffScore = Math.min(100, Math.max(1, Number(data.simCutoffScore)));
+      if (data.dailyActivityLog && typeof data.dailyActivityLog === 'object') dailyActivityLog = Object.assign({}, dailyActivityLog, data.dailyActivityLog);
       if (Array.isArray(data.studySeconds) && data.studySeconds.length === 7) studySeconds = data.studySeconds.map(v => Math.max(0, Number(v) || 0));
       if (Array.isArray(data.questionsSolved) && data.questionsSolved.length === 7) questionsSolved = data.questionsSolved.map(v => Math.max(0, Number(v) || 0));
       if (Array.isArray(data.questionsCorrect) && data.questionsCorrect.length === 7) questionsCorrect = data.questionsCorrect.map(v => Math.max(0, Number(v) || 0));
@@ -1499,9 +1714,52 @@
       document.body.classList.remove('surface-oled', 'surface-light');
       if (themeConfig.surface === 'oled') document.body.classList.add('surface-oled');
       if (themeConfig.surface === 'light') document.body.classList.add('surface-light');
+      document.documentElement.style.setProperty('--accent-primary', themeConfig.primary || '#10b981');
+      document.documentElement.style.setProperty('--accent-secondary', themeConfig.secondary || '#6366f1');
       const sel = document.getElementById('cfgSurfaceSelect');
       if (sel) sel.value = themeConfig.surface || 'dark';
+      const pCol = document.getElementById('cfgPrimaryColor');
+      const sCol = document.getElementById('cfgSecondaryColor');
+      if (pCol) pCol.value = themeConfig.primary || '#10b981';
+      if (sCol) sCol.value = themeConfig.secondary || '#6366f1';
     }
+
+    function updateCustomColors() {
+      const p = document.getElementById('cfgPrimaryColor')?.value;
+      const s = document.getElementById('cfgSecondaryColor')?.value;
+      if (p) themeConfig.primary = p;
+      if (s) themeConfig.secondary = s;
+      applyTheme();
+      saveState();
+    }
+
+    function applyColorPreset(primary, secondary) {
+      themeConfig.primary = primary;
+      themeConfig.secondary = secondary;
+      applyTheme();
+      saveState();
+      showToast('Paleta de cores aplicada!', '🎨');
+    }
+
+    function toggleZenMode() {
+      const active = document.body.classList.toggle('zen-mode');
+      const btn = document.getElementById('zenModeBtn');
+      if (btn) btn.textContent = active ? '✕ Sair do Zen' : '🧘 Zen';
+    }
+
+    function exportProfileTheme() {
+      const prof = { type: 'perf_studio_profile', brandTitle, themeConfig, pomoConfig, customAreas, quickQButtons };
+      const blob = new Blob([JSON.stringify(prof, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'perfil-performance-studio.json'; a.click();
+      showToast('Perfil de personalização exportado!', '🎨');
+    }
+
+    window.addEventListener('beforeunload', (e) => {
+      if (hasPendingOfflineSync && navigator.onLine && currentAccountKey) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
 
     function changeSurfaceMode(surf) { themeConfig.surface = surf; applyTheme(); saveState(); }
     function togglePrivacy() { document.body.classList.toggle('privacy-blur'); }
@@ -1803,6 +2061,53 @@
 
     function deleteErrorItem(id) { errorNotebook = errorNotebook.filter(e => e.id !== id); saveState(); }
 
+    function startFlashSessionModal() {
+      let pool = errorNotebook.filter(e => !e.reviewed && (e.nextReviewIso || TODAY_ISO) <= TODAY_ISO);
+      if (!pool.length) pool = errorNotebook.filter(e => !e.reviewed);
+      if (!pool.length) return showToast('Nenhum micro-esquema pendente para revisar!', '🎉');
+      flashSessionQueue = [...pool].sort(() => Math.random() - 0.5).slice(0, 5);
+      flashSessionIndex = 0;
+      renderFlashSessionCard();
+      document.getElementById('flashSessionModal').classList.remove('hidden');
+    }
+
+    function closeFlashSessionModal() {
+      document.getElementById('flashSessionModal').classList.add('hidden');
+    }
+
+    function renderFlashSessionCard() {
+      if (flashSessionIndex >= flashSessionQueue.length) {
+        closeFlashSessionModal();
+        showToast('Sessão Flash-Review concluída!', '🏆');
+        return;
+      }
+      const item = flashSessionQueue[flashSessionIndex];
+      const stg = Math.min(2, Number(item.srsStage) || 0);
+      document.getElementById('flashProgressBadge').textContent = `${flashSessionIndex + 1} / ${flashSessionQueue.length}`;
+      document.getElementById('flashCardArea').textContent = item.area || 'Geral';
+      document.getElementById('flashCardDate').textContent = item.dateStr || '';
+      document.getElementById('flashCardTopic').textContent = item.topic || '';
+      document.getElementById('flashCardTags').innerHTML = (item.tags || []).map(t => `<span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-amber-300">${escapeHtml(t)}</span>`).join('');
+      document.getElementById('flashNextBtn').textContent = `✓ Li (+${SRS_INTERVAL_DAYS[stg]}d)`;
+    }
+
+    function flashSessionAction(mode) {
+      const item = flashSessionQueue[flashSessionIndex];
+      if (item) {
+        const real = errorNotebook.find(e => e.id === item.id);
+        if (real && mode === 'advance') advanceErrorItemSrs(real.id);
+        else if (real && mode === 'master') { real.reviewed = true; real.srsStage = 3; saveState(); }
+      }
+      flashSessionIndex++;
+      renderFlashSessionCard();
+    }
+
+    function updateSimCutoffScore(val) {
+      simCutoffScore = Math.min(100, Math.max(1, Number(val) || 75));
+      saveState();
+      renderSimuladosChart();
+    }
+
     // ==================== 9. SIMULADOS ====================
     function formatStopwatch(secs) {
       return `${String(Math.floor(secs / 3600)).padStart(2,'0')}:${String(Math.floor((secs % 3600) / 60)).padStart(2,'0')}:${String(secs % 60).padStart(2,'0')}`;
@@ -1891,8 +2196,36 @@
       e.preventDefault();
       const name = document.getElementById('newHabitInput').value.trim();
       if (!name) return;
-      habits.push({ id: Date.now(), name, days: [false,false,false,false,false,false,false], scheduledDays: [true,true,true,true,true,true,true] });
+      habits.push(normalizeHabitObj({ id: Date.now(), name }));
       document.getElementById('newHabitInput').value = '';
+      saveState();
+    }
+
+    function toggleHabitScheduleEditor(id) {
+      editingHabitScheduleId = editingHabitScheduleId === id ? null : id;
+      renderHabitList();
+    }
+
+    function setHabitScheduleMode(id, mode) {
+      const h = habits.find(x => x.id === id);
+      if (!h) return;
+      h.scheduleMode = mode === 'cycle' ? 'cycle' : 'fixed';
+      if (!h.cycleAnchor) h.cycleAnchor = TODAY_ISO;
+      saveState();
+    }
+
+    function toggleHabitScheduledDay(id, dIdx) {
+      const h = habits.find(x => x.id === id);
+      if (!h) return;
+      h.scheduledDays[dIdx] = !h.scheduledDays[dIdx];
+      saveState();
+    }
+
+    function updateHabitCycleParam(id, field, val) {
+      const h = habits.find(x => x.id === id);
+      if (!h) return;
+      if (field === 'cycleAnchor') h.cycleAnchor = val || TODAY_ISO;
+      else h[field] = Math.min(30, Math.max(1, parseInt(val, 10) || 1));
       saveState();
     }
     function deleteHabit(id) { habits = habits.filter(h => h.id !== id); saveState(); }
@@ -2197,8 +2530,9 @@
     function renderKPIs() {
       let streak = 0;
       for (let i = selectedDayIndex; i >= 0; i--) {
-        const done = habits.filter(h => h.days[i]).length;
-        if (habits.length > 0 && done / habits.length >= 0.6) streak++;
+        const onHabits = habits.filter(h => isHabitActiveOnDay(h, i) || h.days[i]);
+        const done = onHabits.filter(h => h.days[i]).length;
+        if (onHabits.length === 0 || done / onHabits.length >= 0.6) streak++;
         else break;
       }
       document.getElementById('streakCount').textContent = `${streak} ${streak === 1 ? 'dia' : 'dias'}`;
@@ -2243,18 +2577,63 @@
     function renderHabitList() {
       const list = document.getElementById('habitList');
       if (!list) return;
-      const doneCount = habits.filter(h => h.days[selectedDayIndex]).length;
-      document.getElementById('dailyProgressText').textContent = `${doneCount}/${habits.length}`;
+      const activeToday = habits.filter(h => isHabitActiveOnDay(h, selectedDayIndex) || h.days[selectedDayIndex]);
+      const doneCount = activeToday.filter(h => h.days[selectedDayIndex]).length;
+      document.getElementById('dailyProgressText').textContent = `${doneCount}/${activeToday.length} ON`;
+
       list.innerHTML = habits.map(h => {
         const done = h.days[selectedDayIndex];
+        const isSched = isHabitActiveOnDay(h, selectedDayIndex);
+        const isCycle = h.scheduleMode === 'cycle';
+        const isEditing = editingHabitScheduleId === h.id;
+
+        const drawer = isEditing ? `
+          <div class="mt-2.5 pt-2.5 border-t border-slate-800 space-y-2 text-[11px]">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400">Regra:</span>
+              <div class="flex gap-1 bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+                <button type="button" onclick="setHabitScheduleMode(${h.id}, 'fixed')" class="px-2 py-0.5 rounded text-[10px] font-semibold ${!isCycle ? 'accent-bg text-slate-950' : 'text-slate-400'}">Dias Fixos</button>
+                <button type="button" onclick="setHabitScheduleMode(${h.id}, 'cycle')" class="px-2 py-0.5 rounded text-[10px] font-semibold ${isCycle ? 'accent-bg text-slate-950' : 'text-slate-400'}">Ciclo ON/OFF</button>
+              </div>
+            </div>
+            ${!isCycle ? `
+              <div class="flex flex-wrap gap-1 justify-between">
+                ${DAYS.map((d, dIdx) => `<button type="button" onclick="toggleHabitScheduledDay(${h.id}, ${dIdx})" class="px-1.5 py-0.5 rounded text-[10px] font-semibold ${h.scheduledDays[dIdx] ? 'accent-bg text-slate-950' : 'bg-slate-800 text-slate-500'}">${d}</button>`).join('')}
+              </div>
+            ` : `
+              <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-950/80 p-2 rounded-lg border border-slate-800">
+                <div class="flex items-center gap-1">
+                  <input type="number" inputmode="numeric" min="1" max="30" value="${h.cycleOn}" onchange="updateHabitCycleParam(${h.id}, 'cycleOn', this.value)" class="w-10 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-center text-white font-mono font-bold">
+                  <span class="accent-text font-semibold text-[10px]">ON</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <input type="number" inputmode="numeric" min="1" max="30" value="${h.cycleOff}" onchange="updateHabitCycleParam(${h.id}, 'cycleOff', this.value)" class="w-10 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-center text-white font-mono font-bold">
+                  <span class="text-slate-400 font-semibold text-[10px]">OFF</span>
+                </div>
+                <input type="date" value="${h.cycleAnchor || TODAY_ISO}" onchange="updateHabitCycleParam(${h.id}, 'cycleAnchor', this.value)" class="bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-[10px] text-slate-200 font-mono">
+              </div>
+            `}
+          </div>
+        ` : '';
+
         return `
-          <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-between gap-2">
-            <label class="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0">
-              <input type="checkbox" class="hidden custom-checkbox" ${done ? 'checked' : ''} onchange="toggleHabitDay(${h.id}, ${selectedDayIndex})">
-              <div class="w-5 h-5 shrink-0 rounded-md border-2 border-slate-600 flex items-center justify-center">${done ? '✓' : ''}</div>
-              <span class="text-xs truncate ${done ? 'line-through text-slate-500' : 'text-slate-200'}">${escapeHtml(h.name)}</span>
-            </label>
-            <button onclick="deleteHabit(${h.id})" class="text-slate-600 hover:text-rose-400 text-xs px-1">✕</button>
+          <div class="p-2.5 rounded-xl bg-slate-900/60 border ${!isSched && !done ? 'border-slate-800/40 opacity-55' : 'border-slate-800'} transition">
+            <div class="flex items-center justify-between gap-2">
+              <label class="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0">
+                <input type="checkbox" class="hidden custom-checkbox" ${done ? 'checked' : ''} onchange="toggleHabitDay(${h.id}, ${selectedDayIndex})">
+                <div class="w-5 h-5 shrink-0 rounded-md border-2 border-slate-600 flex items-center justify-center text-slate-950 font-bold text-xs">${done ? '✓' : ''}</div>
+                <div class="truncate flex items-center gap-1.5">
+                  <span class="text-xs truncate ${done ? 'line-through text-slate-500' : 'text-slate-200'}">${escapeHtml(h.name)}</span>
+                  ${isCycle ? `<span class="text-[9px] font-mono px-1 rounded bg-slate-800 text-amber-300">${h.cycleOn}x${h.cycleOff}</span>` : ''}
+                  ${!isSched && !done ? '<span class="text-[9px] px-1 rounded bg-slate-800 text-slate-400">OFF</span>' : ''}
+                </div>
+              </label>
+              <div class="flex items-center gap-1 shrink-0">
+                <button type="button" onclick="toggleHabitScheduleEditor(${h.id})" class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white text-[10px]" title="Configurar dias ou ciclo ON/OFF">📅</button>
+                <button type="button" onclick="deleteHabit(${h.id})" class="text-slate-600 hover:text-rose-400 text-xs px-1">✕</button>
+              </div>
+            </div>
+            ${drawer}
           </div>
         `;
       }).join('');
@@ -2376,16 +2755,36 @@
     }
 
     function renderSimuladosChart() {
+      const cutInp = document.getElementById('simCutoffInput');
+      if (cutInp && document.activeElement !== cutInp) cutInp.value = simCutoffScore;
       const ctx = document.getElementById('simuladosEvolutionChart');
       const hist = document.getElementById('simuladosHistoryContainer');
       const ord = [...simuladosHistory].reverse();
-      document.getElementById('simSummaryFooter').textContent = ord.length ? `${ord.length} simulados • Média: ${Math.round(ord.reduce((a,b)=>a+b.accuracy,0)/ord.length)}%` : 'Nenhum simulado registrado';
+
+      if (ord.length) {
+        const avg = Math.round(ord.reduce((a, b) => a + b.accuracy, 0) / ord.length);
+        const lastAcc = ord[ord.length - 1].accuracy;
+        const diff = lastAcc - simCutoffScore;
+        const diffStr = diff >= 0 ? `+${diff}% acima do corte` : `Faltam ${Math.abs(diff)}% p/ corte`;
+        document.getElementById('simSummaryFooter').textContent = `${ord.length} simulados • Média: ${avg}% • ${diffStr}`;
+      } else {
+        document.getElementById('simSummaryFooter').textContent = `Linha de corte definida em ${simCutoffScore}%`;
+      }
 
       if (ctx && typeof window.Chart !== 'undefined') {
         if (simuladosChartInstance) simuladosChartInstance.destroy();
+        const labels = ord.length ? ord.map(s => s.dateStr) : ['Meta', 'Atual'];
+        const vals = ord.length ? ord.map(s => s.accuracy) : [0, 0];
+        const cutArr = labels.map(() => simCutoffScore);
         simuladosChartInstance = new Chart(ctx, {
           type: 'line',
-          data: { labels: ord.length ? ord.map(s => s.dateStr) : ['—'], datasets: [{ data: ord.length ? ord.map(s => s.accuracy) : [0], borderColor: '#10b981', tension: 0.3, borderWidth: 3 }] },
+          data: {
+            labels,
+            datasets: [
+              { label: 'Nota (%)', data: vals, borderColor: themeConfig.primary || '#10b981', backgroundColor: hexToRgba(themeConfig.primary, 0.14), fill: true, tension: 0.3, borderWidth: 3 },
+              { label: `Corte (${simCutoffScore}%)`, data: cutArr, borderColor: '#f59e0b', borderDash: [6, 4], borderWidth: 2, pointRadius: 0, fill: false }
+            ]
+          },
           options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } }, plugins: { legend: { display: false } } }
         });
       }
@@ -2396,12 +2795,129 @@
       }
     }
 
+    function renderWeekAnalytics() {
+      // 1. Índice de Prontidão (0-100) & Nível
+      let schedTot = 0, doneTot = 0;
+      habits.forEach(h => {
+        DAYS.forEach((_, i) => {
+          const isOn = isHabitActiveOnDay(h, i);
+          if (isOn || h.days[i]) { schedTot++; if (h.days[i]) doneTot++; }
+        });
+      });
+      const consPct = schedTot > 0 ? Math.round((doneTot / schedTot) * 100) : 0;
+      const totQ = questionsSolved.reduce((a, b) => a + b, 0);
+      const totC = questionsCorrect.reduce((a, b) => a + b, 0);
+      const accPct = totQ > 0 ? Math.round((totC / totQ) * 100) : (simuladosHistory.length ? simuladosHistory[0].accuracy : 0);
+      const totSecs = studySeconds.reduce((a, b) => a + b, 0);
+      const weeklyGoalSecs = dailyGoalHours * 3600 * 5;
+      const volPct = weeklyGoalSecs > 0 ? Math.min(100, Math.round((totSecs / weeklyGoalSecs) * 100)) : 0;
+
+      const ptsCons = Math.round(consPct * 0.4);
+      const ptsAcc = Math.round(accPct * 0.4);
+      const ptsVol = Math.round(volPct * 0.2);
+      const score = Math.min(100, ptsCons + ptsAcc + ptsVol);
+
+      const levelLabel = score >= 85 ? 'Nível 5 • Alta Performance' : (score >= 70 ? 'Nível 4 • Competitivo' : (score >= 50 ? 'Nível 3 • Consistente' : (score >= 25 ? 'Nível 2 • Em Ritmo' : 'Nível 1 • Base')));
+      const lvlEl = document.getElementById('readinessLevelTitle');
+      const scEl = document.getElementById('readinessScoreVal');
+      const barEl = document.getElementById('readinessBar');
+      const brkEl = document.getElementById('readinessBreakdown');
+      if (lvlEl) lvlEl.textContent = levelLabel;
+      if (scEl) scEl.textContent = score;
+      if (barEl) barEl.style.width = `${score}%`;
+      if (brkEl) {
+        brkEl.innerHTML = `
+          <div class="p-2 rounded-xl bg-slate-900/70 border border-slate-800"><div class="text-slate-400 text-[9px]">Consistência</div><div class="accent-text font-bold">${consPct}%</div></div>
+          <div class="p-2 rounded-xl bg-slate-900/70 border border-slate-800"><div class="text-slate-400 text-[9px]">Acurácia</div><div class="text-cyan-400 font-bold">${accPct}%</div></div>
+          <div class="p-2 rounded-xl bg-slate-900/70 border border-slate-800"><div class="text-slate-400 text-[9px]">Volume Sem.</div><div class="secondary-text font-bold">${volPct}%</div></div>
+        `;
+      }
+
+      // 2. Mapa de Calor 90 Dias
+      const hmGrid = document.getElementById('heatmapGrid90');
+      if (hmGrid) {
+        let activeCount = 0;
+        const cells = [];
+        for (let offset = 89; offset >= 0; offset--) {
+          const iso = addDaysToIso(TODAY_ISO, -offset);
+          const rec = dailyActivityLog[iso];
+          const intensity = rec ? (rec.secs >= 7200 || rec.q >= 40 ? 4 : (rec.secs >= 3600 || rec.q >= 20 ? 3 : (rec.secs >= 1800 || rec.q >= 10 ? 2 : 1))) : 0;
+          if (intensity > 0) activeCount++;
+          const bg = intensity === 0 ? 'rgba(148,163,184,0.12)' : hexToRgba(themeConfig.primary, intensity === 1 ? 0.28 : (intensity === 2 ? 0.52 : (intensity === 3 ? 0.78 : 1)));
+          const parts = iso.split('-');
+          const tip = rec ? `${parts[2]}/${parts[1]}: ${formatHoursMinutes(rec.secs)} • ${rec.q}q` : `${parts[2]}/${parts[1]}: sem registro`;
+          cells.push(`<div class="aspect-square rounded-[3px]" style="background:${bg}" title="${tip}"></div>`);
+        }
+        hmGrid.innerHTML = cells.join('');
+        const hmBadge = document.getElementById('heatmapActiveDaysBadge');
+        if (hmBadge) hmBadge.textContent = `${activeCount} dias ativos`;
+      }
+
+      // 3. Distribuição de Carga por Matéria
+      const loadBar = document.getElementById('subjectLoadBar');
+      const loadList = document.getElementById('subjectLoadList');
+      if (loadBar && loadList) {
+        const map = {};
+        let sumQ = 0;
+        questionLogs.forEach(l => { map[l.area] = (map[l.area] || 0) + l.solved; sumQ += l.solved; });
+        const entries = Object.entries(map).sort((a, b) => b[1] - a[1]);
+        if (!entries.length) {
+          loadBar.innerHTML = '';
+          loadList.innerHTML = '<p class="text-slate-500">Registre blocos de questões na semana para ver a distribuição de carga.</p>';
+        } else {
+          loadBar.innerHTML = entries.map(([a, q], i) => `<div style="width:${(q/sumQ)*100}%;background:${CHART_PALETTE[i%CHART_PALETTE.length]}" title="${escapeHtml(a)}"></div>`).join('');
+          loadList.innerHTML = entries.map(([a, q], i) => `
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full" style="background:${CHART_PALETTE[i%CHART_PALETTE.length]}"></span><span class="text-slate-200">${escapeHtml(a)}</span></div>
+              <span class="font-mono text-slate-400">${q}q (${Math.round((q/sumQ)*100)}%)</span>
+            </div>
+          `).join('');
+        }
+      }
+
+      // 4. Conquistas por Marcos Reais
+      const achGrid = document.getElementById('achievementsGrid');
+      if (achGrid) {
+        const totalHoursAll = (studyBanks.find(b => b.autoType === 'hours')?.current || 0) + (archivedWeeks.length ? 0 : 0);
+        const totalQAll = (studyBanks.find(b => b.autoType === 'questions')?.current || 0);
+        const bestSim = simuladosHistory.reduce((mx, s) => Math.max(mx, s.accuracy || 0), 0);
+        const badges = [
+          { icon: '⏱️', title: '1ª Hora Líquida', ok: totalHoursAll >= 1 || totSecs >= 3600 },
+          { icon: '🔥', title: '50h Acumuladas', ok: totalHoursAll >= 50 },
+          { icon: '📝', title: '100 Questões', ok: totalQAll >= 100 || totQ >= 100 },
+          { icon: '🎯', title: '1.000 Questões', ok: totalQAll >= 1000 },
+          { icon: '🏆', title: 'Simulado ≥80%', ok: bestSim >= 80 },
+          { icon: '⚡', title: 'Semana ≥80%', ok: consPct >= 80 && doneTot >= 5 }
+        ];
+        const unlocked = badges.filter(b => b.ok).length;
+        const cntEl = document.getElementById('achievementsCountBadge');
+        if (cntEl) cntEl.textContent = `${unlocked}/${badges.length}`;
+        achGrid.innerHTML = badges.map(b => `
+          <div class="p-2.5 rounded-xl border text-center transition ${b.ok ? 'bg-emerald-500/10 border-emerald-500/40 text-white' : 'bg-slate-900/40 border-slate-800/60 text-slate-500 opacity-55'}">
+            <div class="text-lg">${b.icon}</div>
+            <div class="text-[10px] font-semibold mt-1">${b.title}</div>
+          </div>
+        `).join('');
+      }
+    }
+
     function renderMatrixAndBanks() {
+      renderWeekAnalytics();
       const hdr = document.getElementById('matrixHeaderRow');
       if (hdr) hdr.innerHTML = `<th class="py-2">Indicador</th>${WEEK_DATES.map(d => `<th class="py-2 text-center font-mono">${d.dayLabel}</th>`).join('')}<th class="py-2 text-right">Total</th>`;
       const body = document.getElementById('matrixBody');
       if (body) {
-        const hRows = habits.map(h => `<tr><td class="py-2.5 text-slate-200">${escapeHtml(h.name)}</td>${h.days.map((d,i)=>`<td class="py-2.5 text-center"><button onclick="toggleHabitDay(${h.id},${i})" class="w-6 h-6 rounded-full ${d ? 'accent-bg text-slate-950 font-bold' : 'bg-slate-800 text-slate-500'}">${d?'✓':'·'}</button></td>`).join('')}<td class="py-2.5 text-right font-mono accent-text">${h.days.filter(Boolean).length}/7</td></tr>`).join('');
+        const hRows = habits.map(h => {
+          let onCnt = 0, dnCnt = 0;
+          const cells = h.days.map((d, i) => {
+            const isOn = isHabitActiveOnDay(h, i);
+            if (isOn || d) { onCnt++; if (d) dnCnt++; }
+            if (d) return `<td class="py-2.5 text-center"><button onclick="toggleHabitDay(${h.id},${i})" class="w-6 h-6 rounded-full accent-bg text-slate-950 font-bold">✓</button></td>`;
+            if (isOn) return `<td class="py-2.5 text-center"><button onclick="toggleHabitDay(${h.id},${i})" class="w-6 h-6 rounded-full bg-slate-800 text-slate-400">·</button></td>`;
+            return `<td class="py-2.5 text-center"><button onclick="toggleHabitDay(${h.id},${i})" class="w-6 h-6 rounded-full bg-slate-900/50 text-slate-700 font-mono">—</button></td>`;
+          }).join('');
+          return `<tr><td class="py-2.5 text-slate-200">${escapeHtml(h.name)}</td>${cells}<td class="py-2.5 text-right font-mono accent-text">${dnCnt}/${onCnt}</td></tr>`;
+        }).join('');
         body.innerHTML = hRows + `<tr><td class="py-2.5 secondary-text font-semibold">⏱️ Horas</td>${studySeconds.map(s=>`<td class="py-2.5 text-center font-mono">${formatHoursMinutes(s)}</td>`).join('')}<td class="py-2.5 text-right font-mono font-bold secondary-text">${formatHoursMinutes(studySeconds.reduce((a,b)=>a+b,0))}</td></tr>`;
       }
       const grid = document.getElementById('studyBanksGrid');
@@ -2427,8 +2943,10 @@
 
       if (chartInstance) {
         chartInstance.data.datasets[0].data = hPct;
+        chartInstance.data.datasets[0].borderColor = themeConfig.primary || '#10b981';
         chartInstance.data.datasets[1].data = qAcc;
         chartInstance.data.datasets[2].data = hrs;
+        chartInstance.data.datasets[2].backgroundColor = hexToRgba(themeConfig.secondary, 0.55);
         chartInstance.update();
         return;
       }
@@ -2436,9 +2954,9 @@
         data: {
           labels: DAYS,
           datasets: [
-            { type: 'line', label: 'Hábitos %', data: hPct, borderColor: '#10b981', borderWidth: 2.5, tension: 0.35, yAxisID: 'y' },
+            { type: 'line', label: 'Hábitos %', data: hPct, borderColor: themeConfig.primary || '#10b981', borderWidth: 2.5, tension: 0.35, yAxisID: 'y' },
             { type: 'line', label: 'Acerto %', data: qAcc, borderColor: '#06b6d4', borderDash: [4,4], borderWidth: 2, tension: 0.35, yAxisID: 'y' },
-            { type: 'bar', label: 'Horas', data: hrs, backgroundColor: 'rgba(99, 102, 241, 0.5)', borderRadius: 6, yAxisID: 'y1' }
+            { type: 'bar', label: 'Horas', data: hrs, backgroundColor: hexToRgba(themeConfig.secondary, 0.55), borderRadius: 6, yAxisID: 'y1' }
           ]
         },
         options: {
