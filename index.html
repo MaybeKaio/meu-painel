@@ -190,14 +190,27 @@
     <div class="glass-card max-w-sm w-full p-6 space-y-4 border border-rose-500/40 text-center shadow-2xl">
       <div class="text-3xl">🔒</div>
       <h2 class="text-base font-bold text-white">Acesso Suspenso</h2>
-      <p class="text-xs text-slate-400 leading-relaxed">
+      <p id="blockedAccountMessage" class="text-xs text-slate-400 leading-relaxed">
         A assinatura vinculada à conta <strong id="blockedAccountEmail" class="text-slate-200 font-mono"></strong> está inativa ou bloqueada no momento.
       </p>
       <div class="pt-2 flex flex-col gap-2">
+        <a id="blockedSupportLink" href="#" target="_blank" rel="noopener noreferrer" class="hidden w-full py-2.5 rounded-xl accent-bg text-slate-950 text-xs font-bold transition">
+          💬 Renovar / Falar com Suporte
+        </a>
         <button type="button" onclick="logoutAndSwitchAccount()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold transition">
           Trocar de Conta
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- TELA DE MANUTENÇÃO (ADMIN IGNORA AUTOMATICAMENTE) -->
+  <div id="maintenanceOverlay" class="fixed inset-0 z-50 hidden bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass-card max-w-sm w-full p-6 space-y-4 border border-amber-500/40 text-center shadow-2xl">
+      <div class="text-3xl">🛠️</div>
+      <h2 class="text-base font-bold text-white">Atualização em Andamento</h2>
+      <p class="text-xs text-slate-400 leading-relaxed">O Performance Studio está passando por uma manutenção rápida. Voltaremos em instantes.</p>
+      <button type="button" onclick="logoutAndSwitchAccount()" class="w-full py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold">Entrar como Admin</button>
     </div>
   </div>
 
@@ -218,6 +231,7 @@
       </div>
 
       <div class="flex items-center gap-1.5 shrink-0">
+        <button id="headerAdminBadge" onclick="switchTab('studio'); loadAdminUsersList();" class="hidden text-[10px] font-mono font-bold px-2.5 py-1.5 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 hover:bg-indigo-500/30 transition" title="Abrir Centro de Comando Super-Admin">🛡️ ADMIN</button>
         <button id="installPwaBtn" onclick="triggerPwaInstall()" class="hidden text-xs font-bold px-2.5 py-1.5 rounded-xl accent-bg text-slate-950 transition">📲 App</button>
         <button onclick="togglePrivacy()" class="text-xs px-2.5 py-1.5 rounded-xl border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 transition" title="Modo Biblioteca (Ocultar números)">👁️</button>
         <button onclick="openLoginModalForSwitch()" class="text-xs px-2.5 py-1.5 rounded-xl border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-200 transition flex items-center gap-1.5 max-w-[140px]" title="Conta ativa">
@@ -267,6 +281,12 @@
 
   <!-- CONTEÚDO PRINCIPAL -->
   <main class="max-w-6xl mx-auto px-4 pt-4 space-y-5">
+
+    <!-- Aviso Global controlado pelo Super-Admin -->
+    <div id="globalAnnouncementBanner" class="hidden glass-card px-4 py-2.5 border border-indigo-500/40 bg-indigo-500/10 flex items-center justify-between gap-2 text-xs text-indigo-200">
+      <span id="globalAnnouncementText"></span>
+      <button type="button" onclick="document.getElementById('globalAnnouncementBanner').classList.add('hidden')" class="text-slate-400 hover:text-white text-xs">✕</button>
+    </div>
 
     <!-- Banner de Nova Semana -->
     <div id="newWeekBanner" class="hidden glass-card p-3.5 border border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -684,19 +704,91 @@
         </div>
       </div>
 
-      <!-- PAINEL ADMINISTRATIVO RESTRITO (VISÍVEL APENAS PARA O DONO/ADMIN — OCULTO PARA ALUNOS) -->
-      <div id="adminOnlyPanel" class="hidden glass-card p-5 border border-indigo-500/40 space-y-5 text-xs">
-        <div class="flex items-center justify-between">
+      <!-- CENTRO DE COMANDO SUPER-ADMIN (VISÍVEL APENAS PARA O DONO — OCULTO PARA ALUNOS) -->
+      <div id="adminOnlyPanel" class="hidden glass-card p-5 border border-indigo-500/40 space-y-6 text-xs">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-800">
           <div>
-            <h3 class="text-sm font-bold text-indigo-300">🛡️ Painel do Administrador (Oculto para Alunos)</h3>
-            <p class="text-slate-400 mt-0.5">Links de venda, Webhook Kiwify/Hotmart, Login Google e Boletim de Domingo.</p>
+            <h3 class="text-sm font-bold text-indigo-300">🛡️ Centro de Comando Super-Admin</h3>
+            <p class="text-slate-400 mt-0.5">Controle total sobre alunos, acessos, parâmetros globais e automações de venda.</p>
           </div>
-          <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300">ADMIN</span>
+          <button type="button" onclick="loadAdminUsersList()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold">🔄 Atualizar Painel Admin</button>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- 1. GESTÃO DE ALUNOS EM TEMPO REAL -->
+        <div class="space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="font-bold text-white">👥 1. Contas & Assinantes (<span id="adminUsersCount">0</span>)</span>
+            <div class="flex flex-wrap gap-1.5">
+              <input type="text" id="adminNewUserEmail" placeholder="email@novoaluno.com" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-white font-mono text-xs" />
+              <input type="text" inputmode="numeric" id="adminNewUserPin" placeholder="PIN (opc)" class="w-24 bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-white font-mono text-xs" />
+              <button type="button" onclick="adminCreateUserNow()" class="px-3 py-1.5 rounded-xl accent-bg text-slate-950 font-bold">+ Liberar Aluno</button>
+            </div>
+          </div>
+          <div id="adminUsersTableContainer" class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-slate-400">
+            Clique em "Atualizar Painel Admin" para carregar os usuários da planilha.
+          </div>
+        </div>
+
+        <!-- 2. PARÂMETROS GLOBAIS DO APP (SEM MEXER NO CÓDIGO) -->
+        <div class="pt-4 border-t border-slate-800 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-white">🎛️ 2. Parâmetros Globais do App (Aplicados a Todos os Alunos)</span>
+            <button type="button" onclick="adminSaveGlobalConfig()" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold">💾 Salvar Parâmetros Globais</button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <label class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between gap-2 cursor-pointer">
+              <div>
+                <div class="font-semibold text-white">Cadastro Aberto</div>
+                <div class="text-[10px] text-slate-400">Desligue p/ aceitar só pagantes</div>
+              </div>
+              <input type="checkbox" id="admAllowSignup" checked class="w-4 h-4 accent-emerald-500">
+            </label>
+
+            <label class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between gap-2 cursor-pointer">
+              <div>
+                <div class="font-semibold text-amber-300">Modo Manutenção</div>
+                <div class="text-[10px] text-slate-400">Trava alunos (Admin continua livre)</div>
+              </div>
+              <input type="checkbox" id="admMaintenanceMode" class="w-4 h-4 accent-amber-500">
+            </label>
+
+            <div>
+              <label class="text-slate-400">Teto de Meta Diária (Horas)</label>
+              <input type="number" inputmode="numeric" id="admMaxGoalHours" min="1" max="12" value="4" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono font-bold" />
+            </div>
+
+            <div>
+              <label class="text-slate-400">Google OAuth Client ID (Login Google)</label>
+              <input type="text" id="admGoogleClientId" placeholder="123456-abc.apps.googleusercontent.com" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-cyan-300 font-mono" />
+            </div>
+
+            <div>
+              <label class="text-slate-400">Aviso Global (Banner no topo)</label>
+              <input type="text" id="admGlobalAnnouncement" placeholder="Deixe vazio para ocultar" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white" />
+            </div>
+
+            <div>
+              <label class="text-slate-400">Link de Suporte / Renovação (Tela Bloqueio)</label>
+              <input type="url" id="admSupportUrl" placeholder="https://wa.me/55... ou checkout" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-emerald-300 font-mono" />
+            </div>
+
+            <div>
+              <label class="text-slate-400">Intervalos SRS Padrão (dias)</label>
+              <input type="text" id="admSrsDays" value="14,30,60" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono" />
+            </div>
+
+            <div>
+              <label class="text-slate-400">Nome Global do Produto</label>
+              <input type="text" id="admAppName" value="Performance Studio" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. WEBHOOK DE VENDA & RESUMO SEMANAL -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-4 border-t border-slate-800">
           <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2.5">
-            <div class="font-bold text-white">💼 Onboarding de Alunos & Webhook</div>
+            <div class="font-bold text-white">💼 3. Link Mágico & Webhook (Kiwify / Hotmart)</div>
             <div class="grid grid-cols-3 gap-2">
               <input type="text" id="buyerEmailGenInput" placeholder="email@aluno.com" class="col-span-2 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono" />
               <select id="buyerPresetSelect" class="bg-slate-950 border border-slate-700 rounded-xl px-2 py-2 text-indigo-300 font-semibold">
@@ -712,7 +804,7 @@
           </div>
 
           <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2.5">
-            <div class="font-bold text-white">📩 Resumo Semanal (Domingo 20h)</div>
+            <div class="font-bold text-white">📩 4. Resumo Semanal (Domingo 20h)</div>
             <div class="grid grid-cols-2 gap-2">
               <input type="email" id="cfgDigestEmail" onchange="saveDigestConfig()" placeholder="E-mail p/ boletim" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono" />
               <input type="text" id="cfgTelegramChatId" onchange="saveDigestConfig()" placeholder="Telegram Chat ID" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono" />
@@ -737,7 +829,17 @@
 
     const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     const CHART_PALETTE = ['#10b981', '#6366f1', '#06b6d4', '#f59e0b', '#ec4899', '#3b82f6'];
-    const SRS_INTERVAL_DAYS = [14, 30, 60];
+    let SRS_INTERVAL_DAYS = [14, 30, 60];
+    let globalAppConfig = {
+      googleClientId: '',
+      appName: 'Performance Studio',
+      allowSelfSignup: true,
+      maintenanceMode: false,
+      globalAnnouncement: '',
+      supportUrl: '',
+      maxDailyGoalHours: 4,
+      defaultSrsDays: '14,30,60'
+    };
 
     const DEFAULT_ERROR_TAGS = [
       { id: 't_lacuna', name: '📚 Lacuna Teórica', category: 'knowledge' },
@@ -988,14 +1090,61 @@
     }
 
     // ==================== 4. GOOGLE SIGN-IN & LOGIN GATE ====================
-    async function bootstrapGoogleSignIn() {
-      if (!GOOGLE_CLIENT_ID) {
-        try {
-          const cfgUrl = new URL(gasWebAppUrl); cfgUrl.searchParams.set('action', 'config'); const res = await fetch(cfgUrl.toString(), { redirect: 'follow' });
-          const cfg = await res.json();
-          if (cfg && cfg.googleClientId) GOOGLE_CLIENT_ID = cfg.googleClientId;
-        } catch (e) {}
+    function applyGlobalConfig(cfg) {
+      if (!cfg) return;
+      globalAppConfig = Object.assign({}, globalAppConfig, cfg);
+      if (cfg.googleClientId) GOOGLE_CLIENT_ID = cfg.googleClientId;
+      if (cfg.defaultSrsDays) {
+        const parsed = String(cfg.defaultSrsDays).split(',').map(x => Math.max(1, parseInt(x.trim(), 10))).filter(n => !isNaN(n));
+        if (parsed.length === 3) SRS_INTERVAL_DAYS = parsed;
       }
+
+      // Banner de Aviso Global
+      const ban = document.getElementById('globalAnnouncementBanner');
+      const banTxt = document.getElementById('globalAnnouncementText');
+      if (ban && banTxt) {
+        const msg = String(cfg.globalAnnouncement || '').trim();
+        banTxt.textContent = msg ? `📢 ${msg}` : '';
+        ban.classList.toggle('hidden', !msg);
+      }
+
+      // Link de Suporte na tela de bloqueio
+      const supBtn = document.getElementById('blockedSupportLink');
+      if (supBtn) {
+        const url = String(cfg.supportUrl || '').trim();
+        if (url && (url.startsWith('https://') || url.startsWith('http://'))) {
+          supBtn.href = url;
+          supBtn.classList.remove('hidden');
+        } else {
+          supBtn.classList.add('hidden');
+        }
+      }
+
+      // Modo Manutenção para não-Admins
+      const maint = document.getElementById('maintenanceOverlay');
+      if (maint) maint.classList.toggle('hidden', !(cfg.maintenanceMode && !isAdminSession));
+
+      // Preenche os inputs do Centro de Comando Super-Admin
+      const setVal = (id, v) => { const el = document.getElementById(id); if (el && document.activeElement !== el) el.value = v; };
+      const setChk = (id, v) => { const el = document.getElementById(id); if (el) el.checked = Boolean(v); };
+      setChk('admAllowSignup', cfg.allowSelfSignup !== false);
+      setChk('admMaintenanceMode', Boolean(cfg.maintenanceMode));
+      setVal('admMaxGoalHours', cfg.maxDailyGoalHours || 4);
+      setVal('admGoogleClientId', cfg.googleClientId || '');
+      setVal('admGlobalAnnouncement', cfg.globalAnnouncement || '');
+      setVal('admSupportUrl', cfg.supportUrl || '');
+      setVal('admSrsDays', cfg.defaultSrsDays || '14,30,60');
+      setVal('admAppName', cfg.appName || 'Performance Studio');
+    }
+
+    async function bootstrapGoogleSignIn() {
+      try {
+        const cfgUrl = new URL(gasWebAppUrl);
+        cfgUrl.searchParams.set('action', 'config');
+        const res = await fetch(cfgUrl.toString(), { redirect: 'follow' });
+        const cfg = await res.json();
+        if (cfg && cfg.globalConfig) applyGlobalConfig(cfg.globalConfig);
+      } catch (e) {}
       if (!GOOGLE_CLIENT_ID) return;
 
       const tryRender = () => {
@@ -1086,9 +1235,13 @@
       document.getElementById('loginGateOverlay').classList.remove('hidden');
     }
 
-    function showBlockedScreen() {
+    function showBlockedScreen(customMsg) {
       const el = document.getElementById('blockedAccountEmail');
       if (el) el.textContent = currentAccountKey || 'sua conta';
+      if (customMsg) {
+        const msgEl = document.getElementById('blockedAccountMessage');
+        if (msgEl) msgEl.textContent = customMsg;
+      }
       document.getElementById('blockedAccountOverlay').classList.remove('hidden');
     }
 
@@ -1247,8 +1400,13 @@
         const res = await fetch(u.toString(), { method: 'GET', redirect: 'follow' });
         const data = await res.json();
 
+        if (data.globalConfig) applyGlobalConfig(data.globalConfig);
+        if (data.status === 'maintenance') {
+          document.getElementById('maintenanceOverlay')?.classList.remove('hidden');
+          return;
+        }
         if (data.status === 'blocked') {
-          showBlockedScreen();
+          showBlockedScreen(data.message);
           return;
         }
         if (data.status === 'invalid_pin' || data.status === 'invalid_google_token' || data.status === 'invalid_token') {
@@ -1492,13 +1650,13 @@
       }
     }
 
-    function updateDailyGoal(v) { dailyGoalHours = Math.min(4, Math.max(0.5, Number(v) || 1.5)); saveState(); }
+    function updateDailyGoal(v) { dailyGoalHours = Math.min(globalAppConfig.maxDailyGoalHours || 4, Math.max(0.5, Number(v) || 1.5)); saveState(); }
     function promptCustomDailyGoalHours() {
       openAppModal({
         title: 'Meta Diária (Máx 4h)',
         bodyHtml: `<input type="number" inputmode="decimal" id="modalGoalH" value="${dailyGoalHours}" min="0.25" max="4" step="0.25" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">`,
         onConfirm: () => {
-          dailyGoalHours = Math.min(4, Math.max(0.25, parseFloat(document.getElementById('modalGoalH').value) || 1.5));
+          dailyGoalHours = Math.min(globalAppConfig.maxDailyGoalHours || 4, Math.max(0.25, parseFloat(document.getElementById('modalGoalH').value) || 1.5));
           closeAppModal(); saveState();
         }
       });
@@ -1801,6 +1959,162 @@
       storedWeekStartIso = CURRENT_WEEK_SUNDAY_ISO;
       saveState();
       showToast('Semana arquivada!', '📦');
+    }
+
+    // ==================== SUPER-ADMIN COMMAND CENTER API ====================
+    async function callAdminApi(action, extraPayload = {}) {
+      if (!isAdminSession) return null;
+      const body = Object.assign({
+        action,
+        userKey: currentAccountKey,
+        userPin: currentAccountPin,
+        googleToken: currentGoogleToken,
+        accessToken: currentAccessToken
+      }, extraPayload);
+      const res = await fetch(String(gasWebAppUrl), {
+        method: 'POST',
+        redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(body)
+      });
+      return await res.json();
+    }
+
+    async function loadAdminUsersList() {
+      const box = document.getElementById('adminUsersTableContainer');
+      if (!box || !isAdminSession) return;
+      box.innerHTML = '<div class="py-3 text-center text-slate-400">Carregando assinantes...</div>';
+      try {
+        const data = await callAdminApi('admin_list_users');
+        if (data && data.globalConfig) applyGlobalConfig(data.globalConfig);
+        if (!data || data.status !== 'ok') {
+          box.innerHTML = `<div class="text-rose-400">${escapeHtml(data?.message || 'Erro ao carregar lista.')}</div>`;
+          return;
+        }
+        const users = data.users || [];
+        document.getElementById('adminUsersCount').textContent = users.length;
+        if (!users.length) {
+          box.innerHTML = '<div class="py-2 text-slate-500">Nenhum aluno cadastrado ainda.</div>';
+          return;
+        }
+        const baseUrl = window.location.origin + window.location.pathname;
+        box.innerHTML = `
+          <table class="w-full text-left text-[11px] min-w-[600px]">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 uppercase">
+                <th class="py-2 pr-2">Conta / E-mail</th>
+                <th class="py-2 px-2">Status</th>
+                <th class="py-2 px-2">PIN</th>
+                <th class="py-2 px-2">Atividade</th>
+                <th class="py-2 text-right">Ações Super-Admin</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/60">
+              ${users.map(u => {
+                const isAdm = u.userKey === 'admin';
+                const isAtivo = u.status === 'ATIVO';
+                const tokLink = u.token ? `${baseUrl}?token=${encodeURIComponent(u.token)}` : `${baseUrl}?u=${encodeURIComponent(u.userKey)}`;
+                return `
+                  <tr>
+                    <td class="py-2 pr-2 font-mono font-bold text-white">${escapeHtml(u.userKey)}</td>
+                    <td class="py-2 px-2"><span class="px-2 py-0.5 rounded-full font-mono text-[10px] ${isAtivo ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">${escapeHtml(u.status)}</span></td>
+                    <td class="py-2 px-2 font-mono text-slate-300">${escapeHtml(u.pin || '—')}</td>
+                    <td class="py-2 px-2 text-slate-400">${escapeHtml(u.summary)}</td>
+                    <td class="py-2 text-right space-x-1 whitespace-nowrap">
+                      <button type="button" onclick="copyText('${escapeHtml(tokLink)}', 'Link de acesso copiado!')" class="px-2 py-1 rounded bg-slate-800 text-cyan-300 hover:bg-slate-700" title="Copiar Link Mágico">🔗</button>
+                      <button type="button" onclick="adminPromptResetPin('${escapeHtml(u.userKey)}')" class="px-2 py-1 rounded bg-slate-800 text-amber-300 hover:bg-slate-700" title="Redefinir PIN">🔑</button>
+                      ${!isAdm ? `<button type="button" onclick="adminToggleUserStatus('${escapeHtml(u.userKey)}', '${isAtivo ? 'BLOQUEADO' : 'ATIVO'}')" class="px-2 py-1 rounded ${isAtivo ? 'bg-rose-500/20 text-rose-300' : 'bg-emerald-500/20 text-emerald-300'} font-semibold">${isAtivo ? 'Bloquear' : 'Ativar'}</button>` : '<span class="text-[10px] text-indigo-300 font-bold px-1">DONO</span>'}
+                      ${!isAdm ? `<button type="button" onclick="adminDeleteUser('${escapeHtml(u.userKey)}')" class="px-2 py-1 rounded bg-slate-900 text-slate-500 hover:text-rose-400" title="Excluir conta">✕</button>` : ''}
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        `;
+      } catch (e) {
+        box.innerHTML = '<div class="text-rose-400">Sem conexão com o servidor Apps Script.</div>';
+      }
+    }
+
+    async function adminCreateUserNow() {
+      const email = (document.getElementById('adminNewUserEmail')?.value || '').trim().toLowerCase();
+      const pin = (document.getElementById('adminNewUserPin')?.value || '').trim();
+      if (!email) return showToast('Digite o e-mail do aluno.', '⚠️');
+      try {
+        const res = await callAdminApi('admin_create_user', { targetUserKey: email, targetPin: pin });
+        if (res && res.status === 'ok') {
+          document.getElementById('adminNewUserEmail').value = '';
+          document.getElementById('adminNewUserPin').value = '';
+          const baseUrl = window.location.origin + window.location.pathname;
+          copyText(`${baseUrl}?token=${encodeURIComponent(res.token)}`, `Aluno liberado! PIN: ${res.pin} (Link copiado)`);
+          loadAdminUsersList();
+        } else {
+          showToast(res?.message || 'Erro ao criar aluno.', '⚠️');
+        }
+      } catch (e) { showToast('Erro de conexão.', '⚠️'); }
+    }
+
+    async function adminToggleUserStatus(userKey, newStatus) {
+      try {
+        const res = await callAdminApi('admin_set_status', { targetUserKey: userKey, newStatus });
+        if (res && res.status === 'ok') {
+          showToast(`${userKey} agora está ${newStatus}!`, newStatus === 'ATIVO' ? '✅' : '🔒');
+          loadAdminUsersList();
+        }
+      } catch (e) { showToast('Erro de conexão.', '⚠️'); }
+    }
+
+    function adminPromptResetPin(userKey) {
+      openAppModal({
+        title: `🔑 Redefinir PIN de ${userKey}`,
+        bodyHtml: `<input type="text" inputmode="numeric" id="modalAdmNewPin" placeholder="Novo PIN (ou deixe vazio p/ remover)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">`,
+        onConfirm: async () => {
+          const newPin = (document.getElementById('modalAdmNewPin')?.value || '').trim();
+          closeAppModal();
+          try {
+            const res = await callAdminApi('admin_reset_pin', { targetUserKey: userKey, newPin });
+            if (res && res.status === 'ok') { showToast('PIN atualizado!', '🔑'); loadAdminUsersList(); }
+          } catch (e) { showToast('Erro de conexão.', '⚠️'); }
+        }
+      });
+    }
+
+    async function adminDeleteUser(userKey) {
+      openAppModal({
+        title: `Excluir conta ${userKey}?`,
+        bodyHtml: `<p>Essa ação remove a linha do usuário em <b>Usuarios_SaaS</b>.</p>`,
+        confirmText: 'Excluir',
+        onConfirm: async () => {
+          closeAppModal();
+          try {
+            const res = await callAdminApi('admin_delete_user', { targetUserKey: userKey });
+            if (res && res.status === 'ok') { showToast('Conta removida.', '🗑️'); loadAdminUsersList(); }
+          } catch (e) { showToast('Erro de conexão.', '⚠️'); }
+        }
+      });
+    }
+
+    async function adminSaveGlobalConfig() {
+      const patch = {
+        allowSelfSignup: Boolean(document.getElementById('admAllowSignup')?.checked),
+        maintenanceMode: Boolean(document.getElementById('admMaintenanceMode')?.checked),
+        maxDailyGoalHours: Math.min(12, Math.max(1, Number(document.getElementById('admMaxGoalHours')?.value) || 4)),
+        googleClientId: (document.getElementById('admGoogleClientId')?.value || '').trim(),
+        globalAnnouncement: (document.getElementById('admGlobalAnnouncement')?.value || '').trim(),
+        supportUrl: (document.getElementById('admSupportUrl')?.value || '').trim(),
+        defaultSrsDays: (document.getElementById('admSrsDays')?.value || '14,30,60').trim(),
+        appName: (document.getElementById('admAppName')?.value || 'Performance Studio').trim()
+      };
+      try {
+        const res = await callAdminApi('admin_update_config', { configPatch: patch });
+        if (res && res.status === 'ok') {
+          applyGlobalConfig(res.globalConfig);
+          showToast('Parâmetros globais aplicados a todos os usuários!', '🛡️');
+        } else {
+          showToast(res?.message || 'Erro ao salvar parâmetros.', '⚠️');
+        }
+      } catch (e) { showToast('Erro de conexão.', '⚠️'); }
     }
 
     // Admin tools
@@ -2137,6 +2451,7 @@
       const accLbl = document.getElementById('headerAccountLabel');
       if (accLbl) accLbl.textContent = currentAccountKey ? (currentAccountKey.length > 14 ? currentAccountKey.slice(0, 12) + '…' : currentAccountKey) : 'Entrar';
       document.getElementById('adminOnlyPanel')?.classList.toggle('hidden', !isAdminSession);
+      document.getElementById('headerAdminBadge')?.classList.toggle('hidden', !isAdminSession);
 
       const b1 = document.getElementById('btn-focus1'), b2 = document.getElementById('btn-focus2'), bb = document.getElementById('btn-break');
       if (b1) b1.textContent = `Foco ${pomoConfig.focus1}m`;
