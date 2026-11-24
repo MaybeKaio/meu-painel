@@ -57,40 +57,82 @@
       transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
-    /* MODO CLARO */
+    /* MODO CLARO (ALTO CONTRASTE COMPLETO) */
     body.surface-light {
-      --bg-main: #f8fafc;
+      --bg-main: #f1f5f9;
       --bg-card: #ffffff;
-      --border-card: #e2e8f0;
+      --border-card: #cbd5e1;
       color: #0f172a;
     }
     body.surface-light header,
     body.surface-light #bottomAppNav {
-      background-color: rgba(255, 255, 255, 0.96) !important;
-      border-color: #e2e8f0 !important;
+      background-color: rgba(255, 255, 255, 0.97) !important;
+      border-color: #cbd5e1 !important;
     }
-    body.surface-light .glass-card { box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05); }
+    body.surface-light .glass-card { box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06); }
     body.surface-light .text-white,
     body.surface-light .text-slate-100,
     body.surface-light .text-slate-200 { color: #0f172a !important; }
-    body.surface-light .text-slate-300 { color: #334155 !important; }
-    body.surface-light .text-slate-400 { color: #64748b !important; }
+    body.surface-light .text-slate-300 { color: #1e293b !important; }
+    body.surface-light .text-slate-400 { color: #475569 !important; }
+    body.surface-light .text-slate-500,
+    body.surface-light .text-slate-600 { color: #64748b !important; }
+    body.surface-light .text-cyan-300,
+    body.surface-light .text-cyan-400 { color: #0e7490 !important; }
+    body.surface-light .text-amber-300,
+    body.surface-light .text-amber-400 { color: #b45309 !important; }
+    body.surface-light .text-emerald-300,
+    body.surface-light .text-emerald-400 { color: #047857 !important; }
+    body.surface-light .text-indigo-200,
+    body.surface-light .text-indigo-300,
+    body.surface-light .text-indigo-400 { color: #4338ca !important; }
+    body.surface-light .text-rose-300,
+    body.surface-light .text-rose-400 { color: #be123c !important; }
+    body.surface-light .accent-text { color: color-mix(in srgb, var(--accent-primary) 72%, #000000) !important; }
+    body.surface-light .secondary-text { color: color-mix(in srgb, var(--accent-secondary) 75%, #000000) !important; }
+    body.surface-light .accent-bg,
+    body.surface-light .accent-bg span { color: #020617 !important; }
+    body.surface-light .secondary-bg,
+    body.surface-light .secondary-bg span { color: #ffffff !important; }
     body.surface-light .bg-slate-950,
+    body.surface-light .bg-slate-950\/95,
+    body.surface-light .bg-slate-950\/90,
+    body.surface-light .bg-slate-950\/80,
+    body.surface-light .bg-slate-950\/60,
     body.surface-light .bg-slate-900,
+    body.surface-light .bg-slate-900\/90,
     body.surface-light .bg-slate-900\/80,
     body.surface-light .bg-slate-900\/70,
-    body.surface-light .bg-slate-900\/60 {
-      background-color: #f1f5f9 !important;
+    body.surface-light .bg-slate-900\/60,
+    body.surface-light .bg-slate-900\/40 {
+      background-color: #f8fafc !important;
       border-color: #cbd5e1 !important;
       color: #0f172a !important;
     }
-    body.surface-light .bg-slate-800 {
+    body.surface-light .bg-slate-800,
+    body.surface-light .bg-slate-800\/90 {
       background-color: #e2e8f0 !important;
       border-color: #cbd5e1 !important;
       color: #1e293b !important;
     }
+    body.surface-light .bg-slate-800:hover { background-color: #cbd5e1 !important; }
+    body.surface-light .bg-rose-950\/50 { background-color: #ffe4e6 !important; border-color: #fda4af !important; }
+    body.surface-light .bg-indigo-500\/10,
+    body.surface-light .bg-indigo-500\/20 { background-color: #e0e7ff !important; }
+    body.surface-light .bg-amber-500\/15,
+    body.surface-light .bg-amber-500\/20 { background-color: #fef3c7 !important; }
+    body.surface-light .bg-emerald-500\/10,
+    body.surface-light .bg-emerald-500\/15,
+    body.surface-light .bg-emerald-500\/20 { background-color: #d1fae5 !important; }
+    body.surface-light .bg-cyan-500\/15 { background-color: #cffafe !important; }
     body.surface-light .border-slate-800,
-    body.surface-light .border-slate-700 { border-color: #e2e8f0 !important; }
+    body.surface-light .border-slate-800\/80,
+    body.surface-light .border-slate-800\/60,
+    body.surface-light .border-slate-700 { border-color: #cbd5e1 !important; }
+    body.surface-light .divide-slate-800\/80 > :not([hidden]) ~ :not([hidden]),
+    body.surface-light .divide-slate-800\/60 > :not([hidden]) ~ :not([hidden]) { border-color: #e2e8f0 !important; }
+    body.surface-light select option { background-color: #ffffff !important; color: #0f172a !important; }
+    body.surface-light input::placeholder { color: #64748b !important; }
     body.surface-light .timer-glow { text-shadow: none !important; }
 
     .accent-bg { background-color: var(--accent-primary); }
